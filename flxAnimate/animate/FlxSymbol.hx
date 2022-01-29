@@ -1,4 +1,4 @@
-package blueprinter.animate;
+package flxAnimate.animate;
 
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -7,7 +7,7 @@ import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
 import flixel.math.FlxMatrix;
 import openfl.geom.Matrix;
 
-class BlueprinterSymbol extends FlxSprite
+class FlxSymbol extends FlxSprite
 {
 	public var coolParse:Parsed;
 	public var oldMatrix:Array<Float> = [];

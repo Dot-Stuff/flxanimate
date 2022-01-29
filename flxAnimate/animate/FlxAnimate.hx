@@ -1,4 +1,4 @@
-package blueprinter.animate;
+package flxAnimate.animate;
 
 import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
 import flixel.system.FlxAssets.FlxGraphicAsset;
@@ -12,7 +12,7 @@ import openfl.geom.Rectangle;
 
 using StringTools;
 
-class BlueprinterAnimate
+class FlxAnimate
 {
 	/**
 	 * Parsing method for Animate texture atlases

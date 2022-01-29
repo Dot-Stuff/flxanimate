@@ -1,6 +1,6 @@
-package blueprinter;
+package flxAnimate;
 
-class Blueprinter extends blueprinter.animate.BlueprinterSymbol
+class FlxAtlas extends flxAnimate.animate.FlxSymbol
 {
     /**
      * Testing
@@ -15,7 +15,7 @@ class Blueprinter extends blueprinter.animate.BlueprinterSymbol
 
 		super(x, y, coolParse);
 
-        frames = animate.BlueprinterAnimate.fromAnimate('$path/spritemap1.png', '$path/spritemap1.json');
+        frames = flxAnimate.animate.FlxAnimate.fromAnimate('$path/spritemap1.png', '$path/spritemap1.json');
     }
 
     var frameTickTypeShit:Float;
