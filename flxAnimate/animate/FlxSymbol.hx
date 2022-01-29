@@ -1,4 +1,4 @@
-package flxAnimate.animate;
+package flxanimate.animate;
 
 import flixel.FlxCamera;
 import flixel.FlxG;

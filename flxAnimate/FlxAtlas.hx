@@ -1,6 +1,6 @@
 package flxAnimate;
 
-class FlxAtlas extends flxAnimate.animate.FlxSymbol
+class FlxAtlas extends flxanimate.animate.FlxSymbol
 {
     /**
      * Testing
@@ -15,7 +15,7 @@ class FlxAtlas extends flxAnimate.animate.FlxSymbol
 
 		super(x, y, coolParse);
 
-        frames = flxAnimate.animate.FlxAnimate.fromAnimate('$path/spritemap1.png', '$path/spritemap1.json');
+        frames = flxanimate.animate.FlxAnimate.fromAnimate('$path/spritemap1.png', '$path/spritemap1.json');
     }
 
     var frameTickTypeShit:Float;

@@ -1,4 +1,4 @@
-package flxAnimate.animate;
+package flxanimate.animate;
 
 import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
 import flixel.system.FlxAssets.FlxGraphicAsset;
