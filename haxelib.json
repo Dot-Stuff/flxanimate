@@ -1,0 +1,17 @@
+{
+    "name": "blueprinter",
+    "url": "https://github.com/Dot-Stuff/Blueprinter/",
+    "license": "MIT",
+    "tags": [
+        "animate",
+        "texture_sheet"
+    ],
+    "description": "An Adobe Animate Texture Sheet player.",
+    "version": "1.0.0",
+    "releasenote": "Everything should be broken!!",
+    "contributors": [
+        "DotWith",
+        "Jason"
+    ],
+    "dependencies": {}
+}
