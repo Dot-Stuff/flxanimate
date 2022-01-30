@@ -205,7 +205,7 @@ class FlxAnim extends FlxSprite
 	
 	function set_curFrame(value:Int):Int
 	{
-		return Math.abs(value);
+		return Std.int(Math.abs(value));
 	}
 	
 }
