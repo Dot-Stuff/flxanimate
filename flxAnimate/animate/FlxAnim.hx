@@ -66,7 +66,7 @@ class FlxAnim extends FlxSprite
 					var m3d = element.ASI.M3D;
 					var dumbassMatrix:Matrix = new Matrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 
-					var spr:FlxSymbol = new FlxAnim(x, y, coolParsed);
+					var spr:FlxAnim = new FlxAnim(x, y, coolParsed);
 					matrixExposed = true;
 					spr.frames = frames;
 					spr.frame = spr.frames.getByName(element.ASI.N);
@@ -88,7 +88,7 @@ class FlxAnim extends FlxSprite
 				else if (Reflect.hasField(element, 'SI'))
 				{
 					var nestedSymbol = symbolMap.get(element.SI.SN);
-					var nestedShit:FlxSymbol = new FlxAnim(x, y, coolParse);
+					var nestedShit:FlxAnim = new FlxAnim(x, y, coolParse);
 					nestedShit.frames = frames;
 
 					var swagMatrix:FlxMatrix = new FlxMatrix(element.SI.M3D[0], element.SI.M3D[1], element.SI.M3D[4], element.SI.M3D[5], element.SI.M3D[12], element.SI.M3D[13]);
