@@ -9,6 +9,7 @@ import flixel.math.FlxRect;
 import haxe.Json;
 import openfl.Assets;
 import openfl.geom.Rectangle;
+import flxAnimate.data.SpriteMapData;
 
 using StringTools;
 
@@ -25,19 +26,11 @@ class FlxAnimate
 	 */
 	public static function fromAnimate(Source:FlxGraphicAsset, Description:String):FlxAtlasFrames
 	{
+		if (Source == null || Description == null)
+			return null;
 		var graphic:FlxGraphic = FlxG.bitmap.add(Source);
-		if (graphic == null)
-			return null;
 
-		// No need to parse data again
-		var frames:FlxAtlasFrames = FlxAtlasFrames.findFrame(graphic);
-		if (frames != null)
-			return frames;
-
-		if (graphic == null || Description == null)
-			return null;
-
-		frames = new FlxAtlasFrames(graphic);
+		var frames = new FlxAtlasFrames(graphic);
 
 		trace(Description);
 		if (Assets.exists(Description))
@@ -64,28 +57,3 @@ class FlxAnimate
 		return frames;
 	}
 }
-
-typedef AnimateAtlas =
-{
-	var ATLAS:AnimateSprites;
-};
-
-typedef AnimateSprites =
-{
-	var SPRITES:Array<AnimateSprite>;
-};
-
-typedef AnimateSprite =
-{
-	var SPRITE:AnimateSpriteData;
-};
-
-typedef AnimateSpriteData =
-{
-	var name:String;
-	var x:Float;
-	var y:Float;
-	var w:Float;
-	var h:Float;
-	var rotated:Bool;
-};
