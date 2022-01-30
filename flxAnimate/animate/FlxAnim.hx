@@ -14,7 +14,7 @@ import flixel.math.FlxAngle;
 import flixel.math.FlxMath;
 import flixel.math.FlxMatrix;
 import flixel.math.FlxPoint;
-import flixelatlas.data.AnimationData;
+import flxAnimate.data.AnimationData;
 
 class FlxAnim extends FlxSprite
 {

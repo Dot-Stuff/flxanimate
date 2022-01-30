@@ -1,6 +1,6 @@
 package flxAnimate.animate;
 
-import flixelatlas.data.AnimationData.Parsed;
+import flxAnimate.data.AnimationData.Parsed;
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
 import flixel.graphics.FlxGraphic;
@@ -13,17 +13,17 @@ import haxe.ds.IntMap;
 import flixel.FlxG;
 import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
 import flixel.group.FlxSpriteGroup;
-import flixelatlas.data.SpriteMapData;
+import flxAnimate.data.SpriteMapData;
 
 using StringTools;
 
 class FlxSpriteMap extends FlxSprite
 {
-	var nestedShit:IntMap<FlxSymbol> = new IntMap<FlxSymbol>();
+	var nestedShit:IntMap<FlxAnim> = new IntMap<FlxAnim>();
 	var frameTickTypeShit:Float;
 	var playingAnim:Bool;
 	public var framerate:Float;
-	public var anim:FlxSymbol;
+	public var anim:FlxAnim;
 	
 	public var animationJSON:Parsed;
 	public var spritesJSON:AnimateAtlas;
@@ -31,7 +31,7 @@ class FlxSpriteMap extends FlxSprite
 	public function new(X:Float, Y:Float, Anim:String, ?Framerate:Float = null)
 	{
 		var jsontxt = Assets.getText(Paths.file('images/$Anim/Animation.json'));
-		anim = new FlxSymbol(X,Y, Json.parse(jsontxt));
+		anim = new FlxAnim(X,Y, Json.parse(jsontxt));
 		var spritesjsontxt = Assets.getText(Paths.file('images/$Anim/spritemap1.json'));
 		animationJSON = anim.coolParse;
 
