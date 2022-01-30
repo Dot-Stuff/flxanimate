@@ -30,9 +30,9 @@ class FlxSpriteMap extends FlxSprite
 
 	public function new(X:Float, Y:Float, Anim:String, ?Framerate:Float = null)
 	{
-		var jsontxt = Assets.getText(Paths.file('images/$Anim/Animation.json'));
+		var jsontxt = Assets.getText(Paths.file('$Anim/Animation.json'));
 		anim = new FlxAnim(X,Y, Json.parse(jsontxt));
-		var spritesjsontxt = Assets.getText(Paths.file('images/$Anim/spritemap1.json'));
+		var spritesjsontxt = Assets.getText(Paths.file('$Anim/spritemap1.json'));
 		animationJSON = anim.coolParse;
 
 		anim.antialiasing = antialiasing;
@@ -52,7 +52,7 @@ class FlxSpriteMap extends FlxSprite
 			framerate = animationJSON.MD.FRT;
 		super(X, Y);
 
-		anim.frames = fromAnimate(Paths.image('$Anim/${spritesJSON.meta.image}'), spritesJSON);
+		anim.frames = fromAnimate('$Anim/${spritesJSON.meta.image}', spritesJSON);
 	}
 
 	function fromAnimate(rawImg:String, json:AnimateAtlas):FlxAtlasFrames
