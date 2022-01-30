@@ -1,6 +1,7 @@
 ![FlxAnimate](./FlxAnimate.png)
 # FlxAnimate
 A way to introduce texture atlases through your flixel projects.
+Run `haxelib install https://github.com/Dot-Stuff/flxanimate.git` to install FlxAnimate.
 
 FlxAnimate introduces a way to add single animations through the texture atlas from the Adobe Animate, making the animations be more modifiable through the png so instead of the whole animation stamped in sheets, it's a recap of all the drawings which will be used for the animation later on.
 Right now it's in development, so it's very possible the name functions, variables and/or classes will change on the future.
