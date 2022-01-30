@@ -31,7 +31,7 @@ class FlxAtlas extends flxanimate.animate.FlxAnim
 
             if (frameTickTypeShit >= 1 / coolParse.MD.FRT)
             {
-                changeFrame(1);
+                curFrame += 1;
                 frameTickTypeShit = 0;
             }
         }

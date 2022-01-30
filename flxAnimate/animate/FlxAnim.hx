@@ -198,13 +198,6 @@ class FlxAnim extends FlxSprite
 	public var curFrame:Int;
 	public var matrixExposed:Bool;
 
-	function changeFrame(frameChange:Int = 0):Void
-	{
-		// renderFrame(coolParse.AN.TL, coolParse);
-		if (!(curFrame == 0 && frameChange == -1))
-			curFrame += frameChange;
-	}
-
 	public function renderFrames()
 	{
 		renderFrame(coolParse.AN.TL, coolParse);

@@ -105,17 +105,14 @@ class FlxSpriteMap extends FlxSprite
 			
 			if (frameTickTypeShit >= 1 / framerate)
 			{
-				@:privateAccess
-				anim.changeFrame(1);
+				anim.curFrame += 1;
 				frameTickTypeShit = 0;
 			}
 		}
 
 		if (FlxG.keys.justPressed.RIGHT || FlxG.mouse.wheel > 0)
-			@:privateAccess
-			anim.changeFrame(1);
+			anim.curFrame += 1;
 		if (FlxG.keys.justPressed.LEFT || FlxG.mouse.wheel < 0)
-			@:privateAccess
-			anim.changeFrame(-1);
+			anim.curFrame -= 1;
 	}
 }
