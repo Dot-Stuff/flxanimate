@@ -195,11 +195,23 @@ class FlxAnim extends FlxSprite
 		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
 	}
 
-	public var curFrame:Int;
+	@:isVar public var curFrame(get, set):Int;
 	public var matrixExposed:Bool;
 
 	public function renderFrames()
 	{
 		renderFrame(coolParse.AN.TL, coolParse);
 	}
+	
+	function get_curFrame():Int
+	{
+		return curFrame;
+	}
+	function set_curFrame(value:Int):Int
+	{
+		if (!(value <= 0))
+			curFrame = value;
+		return curFrame;
+	}
+	
 }
