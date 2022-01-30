@@ -7,6 +7,7 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import haxe.Json;
+import flixel.FlxG;
 import openfl.Assets;
 import openfl.geom.Rectangle;
 import flxAnimate.data.SpriteMapData;
