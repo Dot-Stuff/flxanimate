@@ -1,13 +1,7 @@
 package flxAnimate;
 
-class FlxAtlas extends flxAnimate.animate.FlxAnim
+/*class FlxAtlas extends flxAnimate.animate.FlxAnim
 {
-    /**
-     * Testing
-     * @param x 
-     * @param y 
-     * @param path 
-     */
     public function new(x:Float, y:Float, path:String)
     {
         coolParse = haxe.Json.parse(path);
@@ -36,4 +30,4 @@ class FlxAtlas extends flxAnimate.animate.FlxAnim
             }
         }
     }
-}
+}*/
