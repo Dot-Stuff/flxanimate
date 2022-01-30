@@ -29,13 +29,13 @@ class FlxAnim extends FlxSprite
 	 * @param x the X axis
 	 * @param y the Y axis
 	 * @param coolParsed The Animation.json file
-	 * @param daFrame Which frame do you want to begin with, the default one is 0
+	 * @param frame Which frame do you want to begin with, the default one is 0
 	 */
-	public function new(x:Float, y:Float, coolParsed:Parsed, daFrame:Int = 0)
+	public function new(x:Float, y:Float, coolParsed:Parsed, frame:Int = 0)
 	{
 		super(x, y);
 		this.coolParse = coolParsed;
-		this.daFrame = daFrame;
+		curFrame = frame;
 		
 		if (Reflect.hasField(coolParsed.AN, "STI"))
 		{
@@ -64,9 +64,9 @@ class FlxAnim extends FlxSprite
 			switch (daLoopType)
 			{
 				case LOOP, null:
-					newFrameNum = daFrame % frameStuff.length;
+					newFrameNum = curFrame % frameStuff.length;
 				case PLAY_ONCE:
-					newFrameNum = (daFrame >= frameStuff.length - 1) ? daFrame = frameStuff.length - 1 : daFrame;
+					newFrameNum = (curFrame >= frameStuff.length - 1) ? curFrame = frameStuff.length - 1 : curFrame;
 				case SINGLE_FRAME:
 					newFrameNum = firstFrame;
 			}
@@ -98,9 +98,9 @@ class FlxAnim extends FlxSprite
 					nestedShit.origin.set(element.SI.TRP.x, element.SI.TRP.y);
 					nestedShit.scrollFactor.set(scrollFactor.x, scrollFactor.y);
 					
-					nestedShit.daFrame = newFrameNum;
+					nestedShit.curFrame = newFrameNum;
 					if (FlxG.keys.justPressed.FOUR)
-						trace('Layer ${layer.LN} frame: ${nestedShit.daFrame}');
+						trace('Layer ${layer.LN} frame: ${nestedShit.curFrame}');
 					if (FlxG.keys.justPressed.FIVE)
 						trace('Layer ${layer.LN} duration: ${swagFrame.DU}, frameLength: ${frameStuff.length}');
 					nestedShit.renderFrame(nestedSymbol, coolParsed);
@@ -127,7 +127,7 @@ class FlxAnim extends FlxSprite
 					spr.transformMatrix.concat(atlasM);
 					origin.add(spr.x, spr.y);
 
-					spr.daFrame = newFrameNum;
+					spr.curFrame = newFrameNum;
 					spr.draw();
 					if (FlxG.keys.justPressed.ONE)
 					{
@@ -195,31 +195,18 @@ class FlxAnim extends FlxSprite
 		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
 	}
 
-	public var daFrame:Int;
+	public var curFrame:Int;
 	public var matrixExposed:Bool;
 
 	function changeFrame(frameChange:Int = 0):Void
 	{
 		// renderFrame(coolParse.AN.TL, coolParse);
-		if (!(daFrame == 0 && frameChange == -1))
-			daFrame += frameChange;
+		if (!(curFrame == 0 && frameChange == -1))
+			curFrame += frameChange;
 	}
 
 	public function renderFrames()
 	{
 		renderFrame(coolParse.AN.TL, coolParse);
-	}
-	
-	@:noCompletion function parseDurationFrames(frame:Array<Frame>):Array<Frame>
-	{
-		var frames:Array<Frame> = [];
-		for (frame in frame)
-		{
-			for (i in 0...frame.DU)
-			{
-				frames.push(frame);
-			}
-		}
-		return frames;
 	}
 }

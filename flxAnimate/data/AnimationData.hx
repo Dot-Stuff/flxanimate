@@ -6,23 +6,23 @@ class AnimationData
     @:noCompletion
     public static function parseLoopType(str:String):LoopType 
     {
-        switch (str)
+        return switch (str)
         {
-            case "LP", "loop": return LOOP;
-            case "PO": return PLAY_ONCE;
-            case "SF": return SINGLE_FRAME;
-            default: return null;
+            case "LP", "loop": LOOP;
+            case "PO": PLAY_ONCE;
+            case "SF": SINGLE_FRAME;
+            default: null;
         }
     }   
     @:noCompletion
     public static function parseSymbolType(str:String):SymbolType
     {
-        switch(str)
+        return switch (str)
         {
-            case "G", "graphic": return GRAPHIC;
-            case "MC": return MOVIE_CLIP;
-            case "B": return BUTTON;
-            default: return null;
+            case "G", "graphic": GRAPHIC;
+            case "MC": MOVIE_CLIP;
+            case "B": BUTTON;
+            default: null;
         }
     }
     @:noCompletion
