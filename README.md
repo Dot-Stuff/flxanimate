@@ -9,6 +9,7 @@ Currently, FlxAnimate supports:
   - Graphics
   - Optimised Texture Atlas
   - SpriteMaps of 1 image file
+
 If you use MovieClips or Buttons, an unoptimised version of the atlas or spritemaps of more than one spritemap, It won't work. also that it's kinda fucky on some symbols for some reason, pls check this as a pre-pre-alpha.
 ## Version which is supported
 The Animate version which is tested and supported is 21, We actually don't know if it works on another versions so if you don't have that version, Please check if it works on your texture atlas, if it doesn't open an issue remarking what's the issue and the Adobe Animate that you use.
