@@ -87,11 +87,11 @@ enum abstract LoopType(String) from String to String
 	var SINGLE_FRAME = "SF";
 }
 
-enum SymbolType
+enum abstract SymbolType(String) from String to String
 {
-	GRAPHIC;
-	MOVIE_CLIP;
-	BUTTON;
+	var GRAPHIC = "G";
+	var MOVIE_CLIP = "PO";
+	var BUTTON = "B";
 }
 
 typedef AtlasSymbolInstance =
