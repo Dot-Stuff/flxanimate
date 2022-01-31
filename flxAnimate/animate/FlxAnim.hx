@@ -49,16 +49,15 @@ class FlxAnim extends FlxSprite
 
 		if (Reflect.hasField(coolParsed.AN, "STI"))
 		{
-			loopType = AnimationData.parseLoopType(coolParsed.AN.STI.SI.LP);
+			loopType = coolParsed.AN.STI.SI.LP;
 		}
-		var hasSymbolDictionary:Bool = Reflect.hasField(coolParse, "SD");
-		if (hasSymbolDictionary)
+		if (Reflect.hasField(coolParse, "SD"))
 		{
-			symbolAtlasShit = parseSymbolDictionary(coolParse);
+			symbolAtlas = parseSymbolDictionary(coolParse);
 		}
 	}
 
-	public var symbolAtlasShit:Map<String, String> = new Map();
+	public var symbolAtlas:Map<String, String> = new Map();
 
 	public var transformMatrix:FlxMatrix = new FlxMatrix();
 
@@ -73,7 +72,7 @@ class FlxAnim extends FlxSprite
 			var newFrameNum:Int = 0;
 			switch (loopType)
 			{
-				case LOOP, null:
+				case LOOP:
 					newFrameNum = curFrame % frameStuff.length;
 				case PLAY_ONCE:
 					newFrameNum = (curFrame >= frameStuff.length - 1) ? curFrame = frameStuff.length - 1 : curFrame;
@@ -106,7 +105,7 @@ class FlxAnim extends FlxSprite
 						}
 
 						nestedShit.firstFrame = element.SI.FF;
-						nestedShit.loopType = AnimationData.parseLoopType(element.SI.LP);
+						nestedShit.loopType = element.SI.LP;
 						nestedShit.matrixExposed = true;
 						nestedShit.origin.set(element.SI.TRP.x, element.SI.TRP.y);
 						nestedShit.scrollFactor.set(scrollFactor.x, scrollFactor.y);
@@ -184,6 +183,26 @@ class FlxAnim extends FlxSprite
 		return awesomeMap;
 	}
 
+	/*function thing(coolParsed:Parsed):Map<String, String>
+	{
+		for (symbol in coolParsed.SD.S)
+		{
+			for (layer in symbol.TL.L)
+			{
+				for (frame in layer.FR)
+				{
+					for (element in frame.E)
+					{
+						var type = element.SI.ST;
+						type
+					}
+				}
+			}
+		}
+
+		return null;
+	}*/
+
 	public override function drawComplex(camera:FlxCamera):Void
 	{
 		_frame.prepareMatrix(_matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
@@ -221,6 +240,7 @@ class FlxAnim extends FlxSprite
 	{
 		return curFrame = value <= 0 ? curFrame : value;
 	}
+
 	public function setLayers()
 	{
 		coolParse.AN.TL.L.reverse();
