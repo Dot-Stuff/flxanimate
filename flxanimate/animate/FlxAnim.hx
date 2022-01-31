@@ -4,7 +4,6 @@ import openfl.geom.Point;
 import openfl.filters.BlurFilter;
 import openfl.display.BlendMode;
 import flixel.group.FlxSpriteGroup;
-import lime.math.Vector4;
 import openfl.display.Bitmap;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -105,7 +104,7 @@ class FlxAnim extends FlxSprite
 								nestedShit.loopType = element.SI.LP;
 							case MOVIE_CLIP:
 								nestedShit.firstFrame = 0;
-								nestedShit.loopType = LOOP;
+								nestedShit.loopType = SINGLE_FRAME;
 							case BUTTON:
 
 						}

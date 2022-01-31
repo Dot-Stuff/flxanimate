@@ -9,7 +9,7 @@ FlxAnimate introduces a way to add single animations through the texture atlas f
 Right now it's in development, so it's very possible the name functions, variables and/or classes will change on the future.
 
 FlxAnimate only supports
-  - Openfl with lime and Flixel
+  - Openfl Flixel
   - Optimized texture sheets
   - Graphics and only spritemap1
 
