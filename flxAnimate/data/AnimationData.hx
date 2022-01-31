@@ -6,17 +6,19 @@ class AnimationData
 	@:noCompletion
 	public static function parseDurationFrames(frames:Array<Frame>):Array<Frame>
 	{
-		var framesResults:Array<Frame> = [];
+		var result:Array<Frame> = [];
 
 		for (frame in frames)
 		{
-			for (i in 0...frame.DU)
+			var i = 0;
+			while (i < frame.DU)
 			{
-				framesResults.push(frame);
+				i++;
+				result.push(frame);
 			}
 		}
 
-		return framesResults;
+		return result;
 	}
 }
 
