@@ -35,17 +35,8 @@ class FlxSpriteMap extends FlxSprite
 	{
 		var jsontxt = haxe.Json.parse(openfl.Assets.getText('$Path/Animation.json'));
 		anim = new FlxAnim(X, Y, jsontxt);
-
 		// TODO: Move into FlxAnim
-		anim.coolParse.AN.TL.L.reverse();
-
-		if (Reflect.hasField(anim.coolParse, "SD"))
-		{
-			for (e in anim.coolParse.SD.S)
-			{
-				e.TL.L.reverse();
-			}
-		}
+		anim.setLayers();
 
 		framerate = Framerate >= 0 ? anim.coolParse.MD.FRT : Framerate;
 
