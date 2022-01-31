@@ -90,8 +90,6 @@ class FlxAnim extends FlxSprite
 					{
 						var nestedSymbol = symbolMap.get(element.SI.SN);
 						var nestedShit:FlxAnim = new FlxAnim(x, y, coolParse);
-						if (FlxG.keys.justPressed.SIX)
-							trace('[FlxAnimate] ${layer.LN} [${nestedShit.toString()}]');
 						nestedShit.frames = frames;
 
 						nestedShit.frame = nestedShit.frames.getByName(element.SI.SN);
@@ -99,30 +97,25 @@ class FlxAnim extends FlxSprite
 							element.SI.M3D[13]);
 						symbolM.concat(_matrix);
 						nestedShit._matrix.concat(symbolM);
-						if (FlxG.keys.justPressed.ONE)
+
+						switch (element.SI.ST)
 						{
-							trace('[FlxAnimate] SI - ${layer.LN}: ${element.SI.SN} - LO');
+							case GRAPHIC:
+								nestedShit.firstFrame = element.SI.FF;
+								nestedShit.loopType = element.SI.LP;
+							case MOVIE_CLIP:
+								nestedShit.firstFrame = 0;
+								nestedShit.loopType = LOOP;
+							case BUTTON:
+
 						}
 
-						nestedShit.firstFrame = element.SI.FF;
-						nestedShit.loopType = element.SI.LP;
 						nestedShit.matrixExposed = true;
 						nestedShit.origin.set(element.SI.TRP.x, element.SI.TRP.y);
 						nestedShit.scrollFactor.set(scrollFactor.x, scrollFactor.y);
 
 						nestedShit.curFrame = newFrameNum;
-						if (FlxG.keys.justPressed.FOUR)
-							trace('[FlxAnimate] Layer ${layer.LN} Frame: ${nestedShit.curFrame}');
-						if (FlxG.keys.justPressed.FIVE)
-							trace('[FlxAnimate] Layer ${layer.LN} Duration: ${selectedFrame.DU}, FrameLength: ${frameStuff.length}');
 						nestedShit.renderFrame(nestedSymbol, coolParsed);
-
-						switch (element.SI.ST)
-						{
-							case GRAPHIC:
-							case MOVIE_CLIP:
-							case BUTTON:
-						}
 					}
 					else if (Reflect.hasField(element, 'ASI'))
 					{

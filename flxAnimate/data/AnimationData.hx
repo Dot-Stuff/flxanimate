@@ -94,7 +94,7 @@ enum abstract LoopType(String) from String to String
 enum abstract SymbolType(String) from String to String
 {
 	var GRAPHIC = "G";
-	var MOVIE_CLIP = "PO";
+	var MOVIE_CLIP = "MC";
 	var BUTTON = "B";
 }
 

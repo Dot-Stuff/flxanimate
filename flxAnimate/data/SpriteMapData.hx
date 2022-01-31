@@ -1,19 +1,23 @@
 package flxanimate.data;
 
-typedef AnimateAtlas = {
-    var ATLAS:AnimateSprites;
+typedef AnimateAtlas =
+{
+	var ATLAS:AnimateSprites;
 	var meta:MetaStuff;
 };
 
-typedef AnimateSprites = {
-    var SPRITES:Array<AnimateSprite>;
+typedef AnimateSprites =
+{
+	var SPRITES:Array<AnimateSprite>;
 };
 
-typedef AnimateSprite = {
-    var SPRITE:AnimateSpriteData;
+typedef AnimateSprite =
+{
+	var SPRITE:AnimateSpriteData;
 };
 
-typedef MetaStuff = {
+typedef MetaStuff =
+{
 	var app:String;
 	var version:String;
 	var image:String;
@@ -22,16 +26,18 @@ typedef MetaStuff = {
 	var resolution:String;
 }
 
-typedef SizeMeta = 
+typedef SizeMeta =
 {
 	var w:Float;
 	var h:Float;
 }
-typedef AnimateSpriteData = {
-    var name:String;
-    var x:Float;
-    var y:Float;
-    var w:Float;
-    var h:Float;
+
+typedef AnimateSpriteData =
+{
+	var name:String;
+	var x:Float;
+	var y:Float;
+	var w:Float;
+	var h:Float;
 	var rotated:Bool;
 };
