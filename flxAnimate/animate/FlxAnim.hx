@@ -221,4 +221,16 @@ class FlxAnim extends FlxSprite
 	{
 		return curFrame = value <= 0 ? curFrame : value;
 	}
+	public function setLayers()
+	{
+		coolParse.AN.TL.L.reverse();
+
+		if (Reflect.hasField(coolParse, "SD"))
+		{
+			for (e in coolParse.SD.S)
+			{
+				e.TL.L.reverse();
+			}
+		}
+	}
 }
