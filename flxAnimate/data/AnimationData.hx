@@ -74,7 +74,7 @@ typedef Element =
 typedef SymbolInstance =
 {
 	var SN:String;
-	var ST:String;
+	var ST:SymbolType;
 
 	var FF:Int;
 	var LP:LoopType;
