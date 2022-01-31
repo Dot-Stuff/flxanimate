@@ -1,4 +1,4 @@
-package flxAnimate.data;
+package flxanimate.data;
 
 typedef AnimateAtlas = {
     var ATLAS:AnimateSprites;

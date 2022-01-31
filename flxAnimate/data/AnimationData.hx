@@ -1,4 +1,4 @@
-package flxAnimate.data;
+package flxanimate.data;
 
 @:noCompletion
 class AnimationData 
