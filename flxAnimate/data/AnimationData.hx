@@ -11,11 +11,13 @@ class AnimationData
 		for (frame in frames)
 		{
 			var i = 0;
-			while (i < frame.DU)
+
+			do
 			{
 				i++;
 				result.push(frame);
 			}
+			while (i < frame.DU);
 		}
 
 		return result;

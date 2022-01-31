@@ -116,6 +116,13 @@ class FlxAnim extends FlxSprite
 						if (FlxG.keys.justPressed.FIVE)
 							trace('[FlxAnimate] Layer ${layer.LN} Duration: ${selectedFrame.DU}, FrameLength: ${frameStuff.length}');
 						nestedShit.renderFrame(nestedSymbol, coolParsed);
+
+						switch (element.SI.ST)
+						{
+							case GRAPHIC:
+							case MOVIE_CLIP:
+							case BUTTON:
+						}
 					}
 					else if (Reflect.hasField(element, 'ASI'))
 					{
@@ -151,7 +158,7 @@ class FlxAnim extends FlxSprite
 		}
 	}
 
-	var symbolMap:Map<String, Timeline> = new Map();
+	var symbolMap:Map<String, Timeline> = new Map<String, Timeline>();
 
 	function parseSymbolDictionary(coolParsed:Parsed):Map<String, String>
 	{
@@ -182,26 +189,6 @@ class FlxAnim extends FlxSprite
 
 		return awesomeMap;
 	}
-
-	/*function thing(coolParsed:Parsed):Map<String, String>
-	{
-		for (symbol in coolParsed.SD.S)
-		{
-			for (layer in symbol.TL.L)
-			{
-				for (frame in layer.FR)
-				{
-					for (element in frame.E)
-					{
-						var type = element.SI.ST;
-						type
-					}
-				}
-			}
-		}
-
-		return null;
-	}*/
 
 	public override function drawComplex(camera:FlxCamera):Void
 	{
