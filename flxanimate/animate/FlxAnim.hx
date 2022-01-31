@@ -110,6 +110,8 @@ class FlxAnim extends FlxSprite
 						}
 
 						nestedShit.matrixExposed = true;
+						nestedShit.antialiasing = antialiasing;
+						nestedShit.shader = shader;
 						nestedShit.origin.set(element.SI.TRP.x, element.SI.TRP.y);
 						nestedShit.scrollFactor.set(scrollFactor.x, scrollFactor.y);
 
@@ -133,7 +135,8 @@ class FlxAnim extends FlxSprite
 
 						atlasM.concat(_matrix);
 						spr.matrixExposed = true;
-						spr.antialiasing = true;
+						spr.antialiasing = antialiasing;
+						spr.shader = shader;
 						spr.origin.set();
 						spr.transformMatrix.concat(atlasM);
 						origin.add(spr.x, spr.y);
