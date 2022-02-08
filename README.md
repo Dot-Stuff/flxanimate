@@ -16,10 +16,11 @@ FlxAnimate only supports
 
 ## TODO
 * Test Animate versions besides 21.
-* Add 2018 Adobe Animate support
+* Add 2018 Adobe Animate support.
 * Add MovieClip and Buttons.
-* Add Unoptimized export
-* Add spritemap2, spritemap3 etc
+* Add Unoptimized export.
+* Add spritemap2, spritemap3 etc.
+* Fix debug being laggy.
 
 # Support
 You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
