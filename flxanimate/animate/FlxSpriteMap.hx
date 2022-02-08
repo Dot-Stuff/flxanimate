@@ -93,17 +93,17 @@ class FlxSpriteMap extends FlxSprite
 
 	public override function update(elapsed:Float)
 	{
-		super.update(elapsed);
-		
-		if (isPlaying)
-		{
-			frameTick += elapsed;
+		if (!isPlaying)
+			return;
 
-			if (frameTick >= 1 / framerate)
-			{
-				anim.curFrame += 1;
-				frameTick = 0;
-			}
+		frameTick += elapsed;
+
+		if (frameTick >= 1 / framerate)
+		{
+			anim.curFrame += 1;
+			frameTick = 0;
 		}
+
+		super.update(elapsed);
 	}
 }
