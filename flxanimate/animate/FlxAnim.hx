@@ -14,6 +14,7 @@ import flixel.math.FlxMath;
 import flixel.math.FlxMatrix;
 import flixel.math.FlxPoint;
 import flxanimate.data.AnimationData;
+import flixel.graphics.frames.FlxFrame.FlxFrameType;
 
 class FlxAnim extends FlxSprite
 {
@@ -34,14 +35,14 @@ class FlxAnim extends FlxSprite
 	/**
 	 * Add a new texture atlas sprite
 	 * 
-	 * @param x 			the X axis
-	 * @param y 			the Y axis
+	 * @param X 			the X axis
+	 * @param Y 			the Y axis
 	 * @param coolParsed 	The Animation.json file
 	 * @param frame 		Which frame do you want to begin with, the default one is 0
 	 */
-	public function new(x:Float, y:Float, coolParsed:Parsed, frame:Int = 0)
+	public function new(?X:Float, ?Y:Float, coolParsed:Parsed, frame:Int = 0)
 	{
-		super(x, y);
+		super(X, Y);
 
 		this.coolParse = coolParsed;
 		curFrame = frame;
@@ -60,7 +61,7 @@ class FlxAnim extends FlxSprite
 
 	public var transformMatrix:FlxMatrix = new FlxMatrix();
 
-	function renderFrame(TL:Timeline, coolParsed:Parsed, ?traceShit:Bool = false)
+	function renderFrame(TL:Timeline, coolParsed:Parsed)
 	{
 		for (layer in TL.L)
 		{
@@ -138,6 +139,7 @@ class FlxAnim extends FlxSprite
 						spr.antialiasing = antialiasing;
 						spr.shader = shader;
 						spr.origin.set();
+						spr.scrollFactor.set(scrollFactor.x, scrollFactor.y);
 						spr.transformMatrix.concat(atlasM);
 						origin.add(spr.x, spr.y);
 
@@ -185,6 +187,27 @@ class FlxAnim extends FlxSprite
 		return awesomeMap;
 	}
 
+	public override function draw()
+	{
+		checkEmptyFrame();
+
+		if (alpha == 0 || _frame.type == FlxFrameType.EMPTY)
+			return;
+
+		if (dirty) // rarely
+			calcFrame(useFramePixels);
+
+		for (camera in cameras)
+		{
+			if (!camera.visible || !camera.exists || !isOnScreen(camera))
+				continue;
+
+			getScreenPosition(_point, camera).subtractPoint(offset);
+
+			drawComplex(camera);
+		}
+	}
+
 	public override function drawComplex(camera:FlxCamera):Void
 	{
 		_frame.prepareMatrix(_matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
@@ -198,12 +221,16 @@ class FlxAnim extends FlxSprite
 			if (angle != 0)
 				_matrix.rotateWithTrig(_cosAngle, _sinAngle);
 		}
+
 		_point.addPoint(origin);
+
 		if (isPixelPerfectRender(camera))
 		{
 			_point.x = Math.floor(_point.x);
 			_point.y = Math.floor(_point.y);
 		}
+
+		_point.putWeak();
 
 		_matrix.translate(_point.x, _point.y);
 		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);

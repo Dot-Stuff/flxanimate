@@ -1,6 +1,7 @@
-package flxanimate.animate;
+package flxanimate;
 
 import flixel.FlxSprite;
+import flixel.graphics.frames.FlxFramesCollection;
 
 class FlxSpriteMap extends FlxSprite
 {
@@ -9,7 +10,10 @@ class FlxSpriteMap extends FlxSprite
 	 */
 	public var isPlaying(default, null):Bool = false;
 
-	public var anim(default, null):FlxAnim;
+	/**
+	 * Internal, the first frame of the `FlxSpriteMap`.
+	 */
+	var anim(default, null):FlxAnim;
 
 	/**
 	 * Internal, used for each skip between frames.
@@ -39,27 +43,11 @@ class FlxSpriteMap extends FlxSprite
 
 		framerate = Framerate >= 0 ? anim.coolParse.MD.FRT : Framerate;
 
-		super(X, Y);
-
-		anim.frames = FlxAnimateFrames.fromAnimate('$Path/spritemap1.png', '$Path/spritemap1.json');
-
-		setEmptyBackground();
-	}
-
-	public function setEmptyBackground()
-	{
-		var orgWidth = width;
-		var orgHeight = height;
-
-		makeGraphic(1, 1, 0);
-		width = orgWidth;
-		height = orgHeight;
+		super();
 	}
 
 	public override function draw()
 	{
-		super.draw();
-
 		if (anim != null)
 		{
 			anim.visible = visible;
@@ -87,7 +75,7 @@ class FlxSpriteMap extends FlxSprite
 
 	public function stopAnim()
 	{
-		pauseAnim();
+		isPlaying = false;
 		anim.curFrame = 0;
 	}
 
@@ -105,5 +93,22 @@ class FlxSpriteMap extends FlxSprite
 		}
 
 		super.update(elapsed);
+	}
+
+	@:noCompletion
+	override function set_frames(Frames:FlxFramesCollection):FlxFramesCollection
+	{
+		if (Frames != null)
+		{
+			frames = Frames;
+			anim.frames = Frames;
+		}
+		else
+		{
+			frames = null;
+			anim.frames = null;
+		}
+
+		return Frames;
 	}
 }

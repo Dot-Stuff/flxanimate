@@ -1,8 +1,9 @@
 package;
 
-import flxanimate.animate.FlxSpriteMap;
+import flxanimate.FlxSpriteMap;
 import flixel.FlxState;
 import flixel.addons.display.FlxGridOverlay;
+import flxanimate.FlxAnimateFrames;
 import flixel.FlxG;
 
 class PlayState extends FlxState
@@ -16,8 +17,10 @@ class PlayState extends FlxState
 		bg.screenCenter();
 		add(bg);
 
-		char = new FlxSpriteMap(0, 0, 'assets/images/picoShoot');
+		var charPath = 'assets/images/picoShoot';
+		char = new FlxSpriteMap('assets/images/picoShoot');
 		char.antialiasing = true;
+		char.frames = FlxAnimateFrames.fromAnimate('$charPath/spritemap1.png', '$charPath/spritemap1.json');
 		add(char);
 
 		super.create();
