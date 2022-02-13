@@ -11,6 +11,7 @@ Right now it's in development, so it's very possible the name functions, variabl
 
 ## TODO
 * Fix debug being laggy.
+* Add more stuff into instances, more likely as a separator just in case you want to add animations thro the texture atlas
 
 # Support
 You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
