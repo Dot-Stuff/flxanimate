@@ -49,7 +49,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
 					for (e in data2.ATLAS.SPRITES)
 					{
-						e.SPRITE.y += bitmap.height;
+						e.SPRITE.x += bitmap.width;
 						data.ATLAS.SPRITES.push(e);
 					}
 
