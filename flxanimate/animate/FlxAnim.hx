@@ -32,6 +32,10 @@ class FlxAnim extends FlxSprite
 	 * Internal, the parsed loop type
 	 */
 	var loopType(default, null):LoopType = LOOP;
+	
+	var OnClick:Void->Void;
+	
+	var Sound:FlxSound;
 
 	public var symbolType:SymbolType = GRAPHIC;
 
@@ -85,7 +89,7 @@ class FlxAnim extends FlxSprite
 			switch (loopType)
 			{
 				case LOOP:
-					newFrameNum = curFrame % frameLength;
+					curFrame = curFrame % frameLength;
 				case PLAY_ONCE:
 					curFrame = (curFrame >= length) ? length : curFrame;
 				case SINGLE_FRAME:
