@@ -128,8 +128,13 @@ class FlxSpriteMap extends FlxSprite
 
 	public override function update(elapsed:Float)
 	{
+		@:privateAccess
 		if (anim.symbolType == BUTTON)
 		{
+			if (anim.OnClick != onClick)
+				anim.OnClick = onClick;
+			if (anim.Sound != sound)
+				anim.Sound = sound;
 			if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(anim) && !badPress)
 			{
 				badPress = true;
