@@ -42,7 +42,9 @@ class FlxSpriteMap extends FlxSprite
 
 	public var reversed:Bool = false;
 	
+	#if FLX_SOUND_SYSTEM
 	public var sound:FlxSound;
+	#end
 
 	var badPress:Bool = false;
 
@@ -133,8 +135,10 @@ class FlxSpriteMap extends FlxSprite
 		{
 			if (anim.OnClick != onClick)
 				anim.OnClick = onClick;
+			#if FLX_SOUND_SYSTEM
 			if (anim.Sound != sound)
 				anim.Sound = sound;
+			#end
 			if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(anim) && !badPress)
 			{
 				badPress = true;
