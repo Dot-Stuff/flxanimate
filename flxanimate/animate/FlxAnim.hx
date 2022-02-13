@@ -131,7 +131,7 @@ class FlxAnim extends FlxSprite
 						nestedShit.origin.set(element.SI.TRP.x, element.SI.TRP.y);
 						nestedShit.scrollFactor.set(scrollFactor.x, scrollFactor.y);
 
-						nestedShit.curFrame = curFrame;
+						nestedShit.curFrame = element.SI.FF;
 						nestedShit.renderFrame(nestedSymbol, coolParsed);
 					}
 					else if (element.ASI != null)
