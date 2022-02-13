@@ -18,7 +18,7 @@ import flixel.graphics.frames.FlxFrame.FlxFrameType;
 
 class FlxAnim extends FlxSprite
 {
-	public var coolParse(default, null):Parsed;
+	public var coolParse(default, null):AnimAtlas;
 
 	public var firstFrame(default, null):Int = 0;
 
@@ -31,6 +31,12 @@ class FlxAnim extends FlxSprite
 	 * Internal, the parsed loop type
 	 */
 	var loopType(default, null):LoopType = LOOP;
+	
+	public var symbolType:SymbolType = GRAPHIC;
+
+	var length:Int = 0;
+	
+	var graphicset:Bool = false;
 
 	/**
 	 * Add a new texture atlas sprite
@@ -40,20 +46,25 @@ class FlxAnim extends FlxSprite
 	 * @param coolParsed 	The Animation.json file
 	 * @param frame 		Which frame do you want to begin with, the default one is 0
 	 */
-	public function new(?X:Float, ?Y:Float, coolParsed:Parsed, frame:Int = 0)
+	public function new(?X:Float, ?Y:Float, coolParsed:AnimAtlas, frame:Int = 0)
 	{
 		super(X, Y);
 
-		this.coolParse = coolParsed;
+		coolParse = coolParsed;
 		curFrame = frame;
 
-		if (Reflect.hasField(coolParsed.AN, "STI"))
+		if (coolParse.AN.STI != null)
 		{
-			loopType = coolParsed.AN.STI.SI.LP;
+			loopType = coolParse.AN.STI.SI.LP;
 		}
-		if (Reflect.hasField(coolParse, "SD"))
+		if (coolParse.SD != null)
 		{
 			symbolAtlas = parseSymbolDictionary(coolParse);
+		}
+		for (len in coolParsed.AN.TL.L)
+		{
+			if (length < AnimationData.parseDurationFrames(len.FR).length - 1)
+				length = AnimationData.parseDurationFrames(len.FR).length - 1;
 		}
 	}
 
@@ -61,7 +72,7 @@ class FlxAnim extends FlxSprite
 
 	public var transformMatrix:FlxMatrix = new FlxMatrix();
 
-	function renderFrame(TL:Timeline, coolParsed:Parsed)
+	function renderFrame(TL:Timeline, coolParsed:AnimAtlas)
 	{
 		for (layer in TL.L)
 		{
@@ -69,24 +80,24 @@ class FlxAnim extends FlxSprite
 			if (FlxG.keys.justPressed.TWO)
 				trace('[FlxAnimate] ${layer.LN}');
 
-			var newFrameNum:Int = 0;
+			var frameLength = (symbolType == MOVIE_CLIP) ? length : frameStuff.length;
 			switch (loopType)
 			{
 				case LOOP:
-					newFrameNum = curFrame % frameStuff.length;
+					newFrameNum = curFrame % frameLength;
 				case PLAY_ONCE:
-					newFrameNum = (curFrame >= frameStuff.length - 1) ? curFrame = frameStuff.length - 1 : curFrame;
+					curFrame = (curFrame >= length) ? length : curFrame;
 				case SINGLE_FRAME:
-					newFrameNum = firstFrame;
+					curFrame = firstFrame;
 			}
 
-			selectedFrame = frameStuff[newFrameNum];
+			selectedFrame = frameStuff[curFrame];
 
 			if (selectedFrame != null)
 			{
 				for (element in selectedFrame.E)
 				{
-					if (Reflect.hasField(element, 'SI'))
+					if (element.SI != null)
 					{
 						var nestedSymbol = symbolMap.get(element.SI.SN);
 						var nestedShit:FlxAnim = new FlxAnim(x, y, coolParse);
@@ -116,10 +127,10 @@ class FlxAnim extends FlxSprite
 						nestedShit.origin.set(element.SI.TRP.x, element.SI.TRP.y);
 						nestedShit.scrollFactor.set(scrollFactor.x, scrollFactor.y);
 
-						nestedShit.curFrame = newFrameNum;
+						nestedShit.curFrame = curFrame;
 						nestedShit.renderFrame(nestedSymbol, coolParsed);
 					}
-					else if (Reflect.hasField(element, 'ASI'))
+					else if (element.ASI != null)
 					{
 						var m3d = element.ASI.M3D;
 
@@ -143,7 +154,7 @@ class FlxAnim extends FlxSprite
 						spr.transformMatrix.concat(atlasM);
 						origin.add(spr.x, spr.y);
 
-						spr.curFrame = newFrameNum;
+						spr.curFrame = curFrame;
 						spr.draw();
 						if (FlxG.keys.justPressed.ONE)
 						{
@@ -166,8 +177,7 @@ class FlxAnim extends FlxSprite
 			{
 				symbolMap.set(symbol.SN, symbol.TL);
 				var symbolName = symbol.SN;
-				// on time reverse?
-
+				
 				for (layer in symbol.TL.L)
 				{
 					for (frame in layer.FR)
@@ -205,6 +215,28 @@ class FlxAnim extends FlxSprite
 			getScreenPosition(_point, camera).subtractPoint(offset);
 
 			drawComplex(camera);
+		}
+	}
+
+	// Small wip, don't worry, be happy
+	public function setButtonFrames(sprite:FlxAnim, badPress:Bool)
+	{
+		if (FlxG.mouse.overlaps(sprite) && !badPress)
+		{
+			if (FlxG.mouse.justPressed)
+				new ButtonEvent(OnClick, Sound).fire();
+			if (FlxG.mouse.pressed)
+			{
+				firstFrame = 2;
+			}
+			else
+			{
+				firstFrame = 1;
+			}
+		}
+		else
+		{
+			firstFrame = 0;
 		}
 	}
 
@@ -261,5 +293,59 @@ class FlxAnim extends FlxSprite
 				e.TL.L.reverse();
 			}
 		}
+	}
+}
+
+class ButtonEvent
+{
+	/**
+	 * The callback function to call when this even fires.
+	 */
+	public var callback:Void->Void;
+
+	#if FLX_SOUND_SYSTEM
+	/**
+	 * The sound to play when this event fires.
+	 */
+	public var sound:FlxSound;
+	#end
+
+	/**
+	 * @param   Callback   The callback function to call when this even fires.
+	 * @param   sound      The sound to play when this event fires.
+	 */
+	public function new(?Callback:Void->Void, ?sound:FlxSound)
+	{
+		callback = Callback;
+
+		#if FLX_SOUND_SYSTEM
+		this.sound = sound;
+		#end
+	}
+
+	/**
+	 * Cleans up memory.
+	 */
+	public inline function destroy():Void
+	{
+		callback = null;
+
+		#if FLX_SOUND_SYSTEM
+		sound.destroy();
+		#end
+	}
+
+	/**
+	 * Fires this event (calls the callback and plays the sound)
+	 */
+	public inline function fire():Void
+	{
+		if (callback != null)
+			callback();
+
+		#if FLX_SOUND_SYSTEM
+		if (sound != null)
+			sound.play(true);
+		#end
 	}
 }
