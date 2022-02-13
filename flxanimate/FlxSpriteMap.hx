@@ -54,7 +54,7 @@ class FlxSpriteMap extends FlxSprite
 	 * @param Path 		
 	 * @param Framerate The initial framerate of the texture sheet.
 	 */
-	public function new(?X:Float = 0, ?Y:Float = 0, Path:String, ?Framerate:Int = 0, , ?Settings:Settings)
+	public function new(?X:Float = 0, ?Y:Float = 0, Path:String, ?Framerate:Int = 0, ?Settings:Settings)
 	{
 		var jsontxt = haxe.Json.parse(openfl.Assets.getText('$Path/Animation.json'));
 		anim = new FlxAnim(X, Y, jsontxt);
