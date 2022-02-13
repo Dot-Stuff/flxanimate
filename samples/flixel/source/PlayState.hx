@@ -17,10 +17,8 @@ class PlayState extends FlxState
 		bg.screenCenter();
 		add(bg);
 
-		var charPath = 'assets/images/picoShoot';
 		char = new FlxSpriteMap('assets/images/picoShoot');
 		char.antialiasing = true;
-		char.frames = FlxAnimateFrames.fromAnimate('$charPath/spritemap1.png', '$charPath/spritemap1.json');
 		add(char);
 
 		super.create();

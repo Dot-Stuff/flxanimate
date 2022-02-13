@@ -15,6 +15,7 @@ import flixel.math.FlxMatrix;
 import flixel.math.FlxPoint;
 import flxanimate.data.AnimationData;
 import flixel.graphics.frames.FlxFrame.FlxFrameType;
+import flixel.system.FlxSound;
 
 class FlxAnim extends FlxSprite
 {
@@ -31,11 +32,11 @@ class FlxAnim extends FlxSprite
 	 * Internal, the parsed loop type
 	 */
 	var loopType(default, null):LoopType = LOOP;
-	
+
 	public var symbolType:SymbolType = GRAPHIC;
 
 	var length:Int = 0;
-	
+
 	var graphicset:Bool = false;
 
 	/**
@@ -118,7 +119,6 @@ class FlxAnim extends FlxSprite
 								nestedShit.firstFrame = 0;
 								nestedShit.loopType = SINGLE_FRAME;
 							case BUTTON:
-
 						}
 
 						nestedShit.matrixExposed = true;
@@ -168,7 +168,7 @@ class FlxAnim extends FlxSprite
 
 	var symbolMap:Map<String, Timeline> = new Map<String, Timeline>();
 
-	function parseSymbolDictionary(coolParsed:Parsed):Map<String, String>
+	function parseSymbolDictionary(coolParsed:AnimAtlas):Map<String, String>
 	{
 		var awesomeMap:Map<String, String> = new Map();
 		for (symbol in coolParsed.SD.S)
@@ -177,7 +177,7 @@ class FlxAnim extends FlxSprite
 			{
 				symbolMap.set(symbol.SN, symbol.TL);
 				var symbolName = symbol.SN;
-				
+
 				for (layer in symbol.TL.L)
 				{
 					for (frame in layer.FR)

@@ -1,17 +1,24 @@
 package flxanimate;
 
+import flxanimate.animate.FlxAnim;
 import flixel.FlxSprite;
-import flixel.graphics.frames.FlxFramesCollection;
+import flixel.system.FlxSound;
+import flixel.FlxG;
 
-typedef Settings = {
+typedef Settings =
+{
 	?ButtonSettings:ButtonSettings,
 	?FrameRate:Float,
 	?Reversed:Bool,
 	?OnComplete:Void->Void,
 }
-typedef ButtonSettings = {
+
+typedef ButtonSettings =
+{
 	?OnClick:Void->Void,
+	#if FLX_SOUND_SYSTEM
 	?Sound:FlxSound
+	#end
 }
 
 class FlxSpriteMap extends FlxSprite
@@ -21,19 +28,22 @@ class FlxSpriteMap extends FlxSprite
 	 */
 	public var isPlaying(default, null):Bool = false;
 
+	@:isVar
+	public var curFrame(get, set):Int;
+
 	/**
 	 * Internal, the first frame of the `FlxSpriteMap`.
 	 */
 	var anim(default, null):FlxAnim;
-	
+
 	public var onClick:Void->Void;
-	
+
 	public var onComplete:Void->Void;
-	
-	public var reversed:Bool  = false;
-	
+
+	public var reversed:Bool = false;
+
 	var badPress:Bool = false;
-	
+
 	/**
 	 * Internal, used for each skip between frames.
 	 */
@@ -61,7 +71,7 @@ class FlxSpriteMap extends FlxSprite
 		anim.setLayers();
 		setTheSettings(Settings);
 		super();
-		
+
 		anim.frames = FlxAnimateFrames.fromAnimate(Path);
 	}
 
@@ -98,7 +108,7 @@ class FlxSpriteMap extends FlxSprite
 			if (anim.curFrame >= anim.length)
 			{
 				anim.curFrame = 0;
-			} 
+			}
 		}
 		isPlaying = true;
 	}
@@ -171,31 +181,25 @@ class FlxSpriteMap extends FlxSprite
 					if (anim.curFrame >= anim.length)
 					{
 						onComplete();
-						isPlaying = false;	
+						isPlaying = false;
 					}
-					
 				}
 			}
 		}
 		super.update(elapsed);
 	}
-	// why??
-	@:noCompletion
-	override function set_frames(Frames:FlxFramesCollection):FlxFramesCollection
-	{
-		if (Frames != null)
-		{
-			frames = Frames;
-			anim.frames = Frames;
-		}
-		else
-		{
-			frames = null;
-			anim.frames = null;
-		}
 
-		return Frames;
+	function get_curFrame():Int
+	{
+		return anim.curFrame;
 	}
+
+	function set_curFrame(value:Int):Int
+	{
+		anim.curFrame = value;
+		return curFrame = value;
+	}
+
 	function setTheSettings(?Settings:Settings)
 	{
 		framerate = 1 / anim.coolParse.MD.FRT;
@@ -207,10 +211,12 @@ class FlxSpriteMap extends FlxSprite
 				{
 					onClick = Settings.ButtonSettings.OnClick;
 				}
+				#if FLX_SOUND_SYSTEM
 				if (Settings.ButtonSettings.Sound != null)
 				{
 					sound = Settings.ButtonSettings.Sound;
 				}
+				#end
 				anim.symbolType = BUTTON;
 			}
 			if (Settings.Reversed != null)
