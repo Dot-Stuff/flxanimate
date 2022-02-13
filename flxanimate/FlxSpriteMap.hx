@@ -41,6 +41,8 @@ class FlxSpriteMap extends FlxSprite
 	public var onComplete:Void->Void;
 
 	public var reversed:Bool = false;
+	
+	public var sound:FlxSound;
 
 	var badPress:Bool = false;
 
