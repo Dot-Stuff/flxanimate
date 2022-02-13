@@ -112,7 +112,8 @@ abstract Animation({})
 	public var TL(get, never):Timeline;
 
 	/**
-	 * Optional: Some docs have an STI, which idk what is it tbh
+	 * STI, aka Stage Instance, is basically how you export it, if you export it clicking on the anim **ON** the Stage, It will export the Stage instances,
+	 * If you export the texture atlas on the library and not on the thing, it'll export the only the animation and not the Stage. export carefully.
 	 */
 	public var STI(get, never):{public var SI:SymbolInstance;};
 
