@@ -10,6 +10,7 @@ FlxAnimate introduces a way to add single animations through the texture atlas f
 Right now it's in development, so it's very possible the name functions, variables and/or classes will change on the future.
 
 ## TODO
+* Add 2018 Adobe Animate texture atlas
 * Fix debug being laggy.
 * Add more stuff into instances, more likely as a separator just in case you want to add animations thro the texture atlas
 
