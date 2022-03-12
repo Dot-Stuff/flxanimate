@@ -3,33 +3,17 @@ package flxanimate.data;
 typedef AnimateAtlas =
 {
 	var ATLAS:AnimateSprites;
-	var meta:MetaStuff;
-};
+	var meta:Meta;
+}
 
 typedef AnimateSprites =
 {
 	var SPRITES:Array<AnimateSprite>;
-};
+}
 
 typedef AnimateSprite =
 {
 	var SPRITE:AnimateSpriteData;
-};
-
-typedef MetaStuff =
-{
-	var app:String;
-	var version:String;
-	var image:String;
-	var format:String;
-	var size:SizeMeta;
-	var resolution:String;
-}
-
-typedef SizeMeta =
-{
-	var w:Float;
-	var h:Float;
 }
 
 typedef AnimateSpriteData =
@@ -40,4 +24,20 @@ typedef AnimateSpriteData =
 	var w:Float;
 	var h:Float;
 	var rotated:Bool;
-};
+}
+@:forward
+abstract Meta({var app:String; var version:String; var image:String; var format:String; var size:Size;})
+{
+	public var resolution(get, never):String;
+
+	inline function get_resolution()
+	{
+		return AnimationData.setFieldBool(this, "resolution", "scale");
+	}
+}
+
+typedef Size =
+{
+	var w:Int;
+	var h:Int;
+}
