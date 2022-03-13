@@ -1,4 +1,4 @@
-package flxanimate.animate;
+package flxanimate;
 
 import flxanimate.zip.Zip;
 import openfl.Assets;
@@ -9,6 +9,7 @@ import flixel.FlxG;
 import flxanimate.data.AnimationData;
 import flixel.FlxSprite;
 import lime._internal.format.Deflate;
+import flxanimate.animate.FlxAnim;
 
 typedef Settings = {
 	?ButtonSettings:ButtonSettings,
