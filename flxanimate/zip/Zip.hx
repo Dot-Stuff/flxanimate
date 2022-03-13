@@ -2,7 +2,9 @@ package flxanimate.zip;
 
 import haxe.zip.Reader;
 import haxe.zip.Entry;
+#if lime
 import lime._internal.format.Deflate;
+#end
 
 class Zip
 {
