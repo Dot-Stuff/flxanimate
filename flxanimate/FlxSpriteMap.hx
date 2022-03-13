@@ -109,7 +109,7 @@ class FlxSpriteMap extends FlxSprite
 	override function checkEmptyFrame()
 	{
 		if (showPivot || anim == null)
-			loadGraphic("assets/images/pivot.png");
+			loadGraphic("flxanimate/images/pivot.png");
 	}
 	public function playAnim(?Name:String, ForceRestart:Bool = false, Looped:Bool = false, Reverse:Bool = false, flipX:Bool = false, flipY:Bool = false)
 	{
