@@ -51,7 +51,7 @@ class Zip
     {
         for (list in f)
         {
-            if (!list.compressed)
+            if (list.compressed)
             {
                 #if !hl
                 var s = haxe.io.Bytes.alloc(list.fileSize);
