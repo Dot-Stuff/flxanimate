@@ -1,5 +1,6 @@
-package flxanimate;
+package flxanimate.animate;
 
+import flxanimate.zip.Zip;
 import openfl.Assets;
 import haxe.io.BytesInput;
 import haxe.zip.Reader;
@@ -8,19 +9,15 @@ import flixel.FlxG;
 import flxanimate.data.AnimationData;
 import flixel.FlxSprite;
 import lime._internal.format.Deflate;
-import flxanimate.animate.FlxAnim;
 
-typedef Settings =
-{
+typedef Settings = {
 	?ButtonSettings:ButtonSettings,
 	?FrameRate:Float,
 	?Reversed:Bool,
 	?OnComplete:Void->Void,
 	?ShowPivot:Bool
 }
-
-typedef ButtonSettings =
-{
+typedef ButtonSettings = {
 	?OnClick:Void->Void,
 	#if FLX_SOUND_SYSTEM
 	?Sound:FlxSound
@@ -70,14 +67,17 @@ class FlxSpriteMap extends FlxSprite
 	 * 
 	 * @param X 		The initial X position of the texture sheet.
 	 * @param Y 		The initial Y position of the texture sheet.
-	 * @param Path 		
+	 * @param Path
 	 * @param Framerate The initial framerate of the texture sheet.
 	 */
-	public function new(?X:Float = 0, ?Y:Float = 0, Path:String, ?Framerate:Int = 0, ?Settings:Settings)
+	public function new(X:Float = 0, Y:Float = 0, Path:String, ?Settings:Settings)
 	{
 		super(X, Y);
-		if (!Assets.exists('$Path/Animation.json'))
-		
+		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
+		{
+			FlxG.log.error('Animation file hasnt been found in Path $Path, Have you written the correct Path?');
+			return;
+		}
 		var jsontxt:AnimAtlas = atlasSetting(Path);
 		timeline = jsontxt.AN.TL;
 		anim = new FlxAnim(X, Y, jsontxt);
@@ -110,7 +110,6 @@ class FlxSpriteMap extends FlxSprite
 		if (showPivot || anim == null)
 			loadGraphic("assets/images/pivot.png");
 	}
-	// TODO: Remodel this to look exactly the same as adding and animation and adding it again
 	public function playAnim(?Name:String, ForceRestart:Bool = false, Looped:Bool = false, Reverse:Bool = false, flipX:Bool = false, flipY:Bool = false)
 	{
 		@:privateAccess
@@ -150,91 +149,78 @@ class FlxSpriteMap extends FlxSprite
 
 	public function stopAnim()
 	{
-		isPlaying = false;
+		pauseAnim();
 		anim.curFrame = 0;
 	}
 
+	function set_framerate(value:Float):Float
+	{
+		frameDelay = 1 / value;
+		return framerate = value;
+	}
 	public override function update(elapsed:Float)
 	{
-		@:privateAccess
-		if (anim.symbolType == BUTTON)
+		super.update(elapsed);
+		if (anim != null && anim.frames != null)
 		{
-			if (anim.OnClick != onClick)
-				anim.OnClick = onClick;
-			#if FLX_SOUND_SYSTEM
-			if (anim.Sound != sound)
-				anim.Sound = sound;
-			#end
-			if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(anim) && !badPress)
+			if ([button, "button"].indexOf(anim.symbolType) != -1)
 			{
-				badPress = true;
+				if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(anim) && !badPress)
+				{
+					badPress = true;
+				}
+				if (FlxG.mouse.released && badPress)
+				{
+					badPress = false;
+				}
+				@:privateAccess
+				anim.setButtonFrames(anim, badPress);
 			}
-			if (FlxG.mouse.released && badPress)
-			{
-				badPress = false;
-			}
-			@:privateAccess
-			anim.setButtonFrames(anim, badPress);
-		}
-		else
-		{
-			@:privateAccess
-			if (!isPlaying)
-				return;
 			else
 			{
-				frameTick += elapsed;
+				@:privateAccess
+				if (!isPlaying)
+					return;
+				else
+				{
+					frameTick += elapsed;
 
-				while (frameTick > framerate)
+					while (frameTick > frameDelay)
+					{
+						if (reversed)
+						{
+							anim.curFrame--;
+						}
+						else
+						{
+							anim.curFrame++;
+						}
+						frameTick -= frameDelay;
+					}
+				}
+				@:privateAccess
+				if (onComplete != null && isPlaying && [playonce, "playonce"].indexOf(anim.loopType) != -1)
 				{
 					if (reversed)
 					{
-						anim.curFrame--;
+						if (anim.curFrame <= 0)
+						{
+							onComplete();
+							isPlaying = false;
+						}
 					}
 					else
 					{
-						anim.curFrame++;
-					}
-					frameTick = 0;
-				}
-				if (reversed && anim.curFrame == 0 && anim.loopType == LOOP)
-				{
-					anim.curFrame = anim.length;
-				}
-			}
-			@:privateAccess
-			if (onComplete != null && isPlaying && anim.loopType == PLAY_ONCE)
-			{
-				if (reversed)
-				{
-					if (anim.curFrame <= 0)
-					{
-						onComplete();
-						isPlaying = false;
-					}
-				}
-				else
-				{
-					if (anim.curFrame >= anim.length)
-					{
-						onComplete();
-						isPlaying = false;
+						if (anim.curFrame >= anim.frameLength - 1)
+						{
+							onComplete();
+							isPlaying = false;	
+						}
+						
 					}
 				}
 			}
 		}
-		super.update(elapsed);
-	}
-
-	function get_curFrame():Int
-	{
-		return anim.curFrame;
-	}
-
-	function set_curFrame(value:Int):Int
-	{
-		anim.curFrame = value;
-		return curFrame = value;
 	}
 
 	function setTheSettings(?Settings:Settings)
@@ -277,16 +263,12 @@ class FlxSpriteMap extends FlxSprite
 		var jsontxt:AnimAtlas = null;
 		if (haxe.io.Path.extension(Path) == "zip")
 		{
-			var thing = Reader.readZip(new BytesInput(Assets.getBytes(Path)));
-			for (list in thing)
+			var thing = Zip.readZip(new BytesInput(Assets.getBytes(Path)));
+			for (list in Zip.unzip(thing))
 			{
 				if (list.fileName.indexOf("Animation.json") != -1)
 				{
-					var bytes = list.data;
-					if (list.compressed)
-						bytes = Deflate.decompress(bytes);
-					
-					jsontxt = haxe.Json.parse(bytes.toString());
+					jsontxt = haxe.Json.parse(list.data.toString());
 				}
 			}
 		}
