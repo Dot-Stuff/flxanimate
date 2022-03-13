@@ -1,16 +1,8 @@
 package flxanimate;
 
-import flxanimate.data.SpriteMapData.AnimateSprite;
-import haxe.zip.InflateImpl;
-import haxe.zip.Uncompress;
-import lime.ui.FileDialog;
 import haxe.io.Bytes;
-import haxe.ds.Vector;
-import haxe.io.Path;
-import openfl.Assets;
+import flxanimate.zip.Zip;
 import haxe.io.BytesInput;
-import haxe.zip.Reader;
-import lime._internal.format.Deflate;
 import flixel.math.FlxMatrix;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
@@ -22,7 +14,6 @@ import flxanimate.data.SpriteMapData.AnimateAtlas;
 import flxanimate.data.SpriteMapData.AnimateSpriteData;
 import openfl.Assets;
 import openfl.display.BitmapData;
-import flxanimate.data.AnimationData;
 
 class FlxAnimateFrames extends FlxAtlasFrames
 {
@@ -38,45 +29,40 @@ class FlxAnimateFrames extends FlxAtlasFrames
         var bitmap:BitmapData = null;
         if (haxe.io.Path.extension(Path) == "zip")
         {
-            var image:Array<Bytes> = [];
+            var imagemap:Map<String, Bytes> = new Map();
             var json:Array<AnimateAtlas> = [];
-            var thing = Reader.readZip(new BytesInput(Assets.getBytes(Path)));
-			for (list in thing)
+            var thing = Zip.readZip(new BytesInput(Assets.getBytes(Path)));
+			for (list in Zip.unzip(thing))
 			{
                 if (!(list.fileName.indexOf("Animation.json") != -1))
                 {
-                    var bytes:Bytes = list.data;
-                    if (list.compressed)
-                    {
-                        @:privateAccess
-                        bytes = Deflate.decompress(bytes);
-                    }
                     if (haxe.io.Path.extension(list.fileName) == "json")
                     {
-                        json.push(haxe.Json.parse(StringTools.replace(bytes.toString(), String.fromCharCode(0xFEFF), "")));
+                        json.push(haxe.Json.parse(StringTools.replace(list.data.toString(), String.fromCharCode(0xFEFF), "")));
                     }
                     else if (haxe.io.Path.extension(list.fileName) == "png")
                     {
-                        image.push(bytes);
+                        var name = list.fileName.split("/");
+                        imagemap.set(name[name.length - 1], list.data);
                     }
                 }
 			}
             // Assuming the json has the same stuff as the image stuff
-            for (num in 0...image.length)
+            for (num in 0...json.length)
             {
-                var curImage = image[num];
                 var curJson = json[num];
                 if (data == null)
+                {
                     data = curJson;
-                if (bitmap == null)
-                    bitmap = BitmapData.fromBytes(curImage);
+                    bitmap = BitmapData.fromBytes(imagemap[data.meta.image]);
+                }
                 else
                 {
-                    var bitmap2 = BitmapData.fromBytes(curImage);
+                    var data2 = curJson;
+                    var bitmap2 = BitmapData.fromBytes(imagemap[data2.meta.image]);
                     var bitmapDraw = new BitmapData(max(bitmap.width, bitmap2.width), bitmap.height + bitmap2.height, true, 0x00000000);
                     bitmapDraw.draw(bitmap);
                     bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, bitmap.height));
-                    var data2 = curJson;
                     for (e in data2.ATLAS.SPRITES)
                     {
                         e.SPRITE.y += bitmap.height;
@@ -91,22 +77,9 @@ class FlxAnimateFrames extends FlxAtlasFrames
             if (Assets.exists('$Path/spritemap1.json'))
             {
                 data = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap1.json'), String.fromCharCode(0xFEFF), ""));
-            }
-            else if (Assets.exists('$Path/spritemap.json'))
-            {
-                data = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap.json'), String.fromCharCode(0xFEFF), ""));
-            }
-            
-            if (data == null)
-            {
-                FlxG.log.warn('No Spritemap json data in $Path!');
-                return null;
-            }
-            if (Assets.exists('$Path/spritemap1.png'))
-            {
                 var i:Int = 1;
-                bitmap = Assets.getBitmapData('$Path/spritemap1.png');
-                while (Assets.exists('$Path/spritemap$i.png'))
+                bitmap = Assets.getBitmapData('$Path/${data.meta.image}');
+                while (Assets.exists('$Path/spritemap$i.json'))
                 {
                     if (i > 1)
                     {
@@ -118,7 +91,8 @@ class FlxAnimateFrames extends FlxAtlasFrames
                             data.ATLAS.SPRITES.push(e);
                         }
 
-                        var bitmap2 = Assets.getBitmapData('$Path/spritemap$i.png');
+                        var bitmap2 = Assets.getBitmapData('$Path/${data.meta.image}');
+                        
                         var bitmapDraw = new BitmapData(max(bitmap.width, bitmap2.width), bitmap.height + bitmap2.height, true, 0x00000000);
                         bitmapDraw.draw(bitmap);
                         bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, bitmap.height));
@@ -128,18 +102,23 @@ class FlxAnimateFrames extends FlxAtlasFrames
                     i++;
                 }
             }
-            else if (Assets.exists('$Path/spritemap.png'))
+            else if (Assets.exists('$Path/spritemap.json'))
             {
-                bitmap = Assets.getBitmapData('$Path/spritemap.png');
+                data = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap.json'), String.fromCharCode(0xFEFF), ""));
+                bitmap = Assets.getBitmapData('$Path/${data.meta.image}');
             }
+        }
+
+        if (data == null)
+        {
+            FlxG.log.warn('No Spritemap json data in $Path!');
+            return null;
         }
         if (bitmap == null)
         {
             FlxG.log.warn('No Spritemap image in $Path!');
             return null;
         }
-        AnimationData.version = data.meta.version;
-        AnimationData.resolution = data.meta.resolution;
         var graphic:FlxGraphic = FlxG.bitmap.add(bitmap);
         var frames:FlxAtlasFrames = new FlxAtlasFrames(graphic);
     
