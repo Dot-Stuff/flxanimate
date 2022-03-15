@@ -1,4 +1,4 @@
-package flxanimate;
+package flxanimate.animate;
 
 import haxe.io.Bytes;
 import flxanimate.zip.Zip;
