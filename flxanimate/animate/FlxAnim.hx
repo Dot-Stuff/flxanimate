@@ -175,22 +175,22 @@ class FlxAnim extends FlxSprite
 							final CT = spr.colorTransform;
 							switch (sInstance.M)
 							{
-								case Tint:
+								case Tint, "Tint":
 								{
 									var color = FlxColor.fromString(sInstance.TC);
 									var opacity = sInstance.TM;
 									CT.redMultiplier -= opacity;
-									CT.redOffset = Math.round(color.red * (opacity - 0.01));
+									CT.redOffset = Math.round(color.red * opacity);
 									CT.greenMultiplier -= opacity;
-									CT.greenOffset = Math.round(color.green * (opacity - 0.01));
+									CT.greenOffset = Math.round(color.green * opacity);
 									CT.blueMultiplier -= opacity;
-									CT.blueOffset = Math.round(color.blue * (opacity - 0.01));
+									CT.blueOffset = Math.round(color.blue * opacity);
 								}
 								case Alpha, "Alpha":
 								{
 									CT.alphaMultiplier = sInstance.AM;
 								}
-								case Brightness:
+								case Brightness, "Brightness":
 								{
 									CT.redMultiplier = CT.greenMultiplier = CT.blueMultiplier -= Math.abs(sInstance.BRT);
 									if (sInstance.BRT >= 0)
@@ -198,7 +198,7 @@ class FlxAnim extends FlxSprite
 										CT.redOffset = CT.greenOffset = CT.blueOffset = 255 * sInstance.BRT;
 									}
 								}
-								case Advanced:
+								case Advanced, "Advanced":
 								{
 									CT.redMultiplier = sInstance.RM;
 									CT.redOffset = sInstance.RO;
