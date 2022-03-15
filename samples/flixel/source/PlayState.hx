@@ -1,14 +1,13 @@
 package;
 
-import flxanimate.FlxSpriteMap;
+import flxanimate.FlxAnimate;
 import flixel.FlxState;
 import flixel.addons.display.FlxGridOverlay;
-import flxanimate.FlxAnimateFrames;
 import flixel.FlxG;
 
 class PlayState extends FlxState
 {
-	var char:FlxSpriteMap;
+	var char:FlxAnimate;
 
 	override public function create()
 	{
@@ -17,7 +16,7 @@ class PlayState extends FlxState
 		bg.screenCenter();
 		add(bg);
 
-		char = new FlxSpriteMap('assets/images/picoShoot');
+		char = new FlxAnimate(0, 0, 'assets/images/picoShoot');
 		char.antialiasing = true;
 		add(char);
 
