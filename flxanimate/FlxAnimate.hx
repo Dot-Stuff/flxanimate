@@ -108,8 +108,9 @@ class FlxAnimate extends FlxSprite
 	}
 	override function checkEmptyFrame()
 	{
+		@:privateAccess
 		if (showPivot || anim == null)
-			loadGraphic("flxanimate/images/pivot.png");
+			super.checkEmptyFrame();
 	}
 	public function playAnim(?Name:String, ForceRestart:Bool = false, Looped:Bool = false, Reverse:Bool = false, flipX:Bool = false, flipY:Bool = false)
 	{
