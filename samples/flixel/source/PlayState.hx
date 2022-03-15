@@ -16,7 +16,7 @@ class PlayState extends FlxState
 		bg.screenCenter();
 		add(bg);
 
-		char = new FlxAnimate(0, 0, 'assets/images/picoShoot');
+		char = new FlxAnimate(0, 0, 'assets/images/ninja-girl');
 		char.antialiasing = true;
 		add(char);
 
