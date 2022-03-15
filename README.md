@@ -2,7 +2,7 @@
 
 # FlxAnimate
 
-Run `haxelib install https://github.com/Dot-Stuff/flxanimate.git` to install FlxAnimate.
+Run `haxelib install flxanimate` to install FlxAnimate.
 
 A way to introduce texture atlases through your flixel projects.
 
