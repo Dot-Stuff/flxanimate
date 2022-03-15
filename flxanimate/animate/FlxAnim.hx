@@ -59,18 +59,22 @@ class FlxAnim extends FlxSprite
 	{
 		for (layer in TL.L)
 		{
-			if ([singleframe, "singleframe"].indexOf(loopType) == -1)
+			if (curFrame < 0)
 			{
-				if (curFrame < 0)
+				if ([loop, "loop"].indexOf(loopType) != -1)
+					curFrame += frameLength;
+				else
+					curFrame = 0;
+			}
+			if (curFrame >= frameLength)
+			{
+				if ([loop, "loop"].indexOf(loopType) != -1)
 				{
-					curFrame = frameLength - 1;
+					curFrame -= (frameLength - 1);
 				}
-				if (curFrame >= frameLength)
+				else
 				{
-					if ([loop, "loop"].indexOf(loopType) != -1)
-					{
-						curFrame = 0;
-					}
+					curFrame = frameLength -1;
 				}
 			}
 			var selectedFrame = layer.FR[curFrame];
