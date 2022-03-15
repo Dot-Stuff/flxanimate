@@ -15,7 +15,7 @@ import flxanimate.data.SpriteMapData.AnimateSpriteData;
 import openfl.Assets;
 import openfl.display.BitmapData;
 
-class FlxAnimateFrames extends FlxAtlasFrames
+class FlxSpriteMap
 {
     static var data:AnimateAtlas = null;
     /**
