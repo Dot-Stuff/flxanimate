@@ -25,7 +25,7 @@ typedef ButtonSettings = {
 	#end
 }
 
-class FlxSpriteMap extends FlxSprite
+class FlxAnimate extends FlxSprite
 {
 	/**
 	 * When ever the animation is playing.
