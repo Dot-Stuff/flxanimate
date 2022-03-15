@@ -216,68 +216,6 @@ class FlxAnim extends FlxSprite
 
 	public var symbolDictionary:Map<String, Timeline> = new Map<String, Timeline>();
 
-	function setSymbolStuff(coolParsed:AnimAtlas)
-	{
-		var amazingMap:Map<String, SymbolInstance> = new Map();
-		if (coolParsed.SD != null)
-		{
-			for (s in coolParsed.SD.S)
-			{
-				for (layer in s.TL.L)
-				{
-					var symbol:SymbolInstance = null;
-					for (frame in layer.FR)
-					{
-						for (element in frame.E)
-						{
-							if (element.SI != null)
-								symbol = element.SI;
-							if (element.ASI != null)
-							{
-								amazingMap.set(element.ASI.N, symbol);
-							}
-						}
-					}
-				}
-			}
-		}
-		if (coolParsed.AN.STI != null)
-		{
-			var symbol:SymbolInstance = null;
-			for (layer in coolParsed.AN.TL.L)
-			{
-				for (frame in layer.FR)
-				{
-					for (element in frame.E)
-					{
-						symbol = coolParsed.AN.STI.SI;
-						if (element.ASI != null)
-						{
-							amazingMap.set(element.ASI.N, symbol);
-						}
-					}
-				}
-			}
-		}
-		
-		for (layer in coolParsed.AN.TL.L)
-		{
-			var symbol:SymbolInstance = null;
-			for (frame in layer.FR)
-			{
-				for (element in frame.E)
-				{
-					if (element.SI != null)
-						symbol = element.SI;
-					if (element.ASI != null)
-					{
-						amazingMap.set(element.ASI.N, symbol);
-					}
-				}
-			}
-		}
-		return amazingMap;
-	}
 	public function setButtonFrames(sprite:FlxAnim, badPress:Bool)
 	{
 		if (FlxG.mouse.overlaps(sprite) && !badPress)
@@ -407,9 +345,12 @@ class FlxAnim extends FlxSprite
 		return length;
 	}
 	/**
-	 * This adds the animation name by a symbol
-	 * @param name The animation name.
-	 * @param SymbolName The symbolName which has an animation.
+	 * Creates an animation using an already made symbol from a texture atlas
+	 * @param Name The name of the animation
+	 * @param SymbolName the name of the symbol you're looking.
+	 * @param X the *x* axis of the animation.
+	 * @param Y  the *y* axis of the animation.
+	 * @param FrameRate the framerate of the animation.
 	 */
 	public function addBySymbol(Name:String, SymbolName:String, X:Float = 0, Y:Float = 0, FrameRate:Float = 30)
 	{
@@ -419,6 +360,12 @@ class FlxAnim extends FlxSprite
 		else
 			FlxG.log.error('No symbol was found with the name $SymbolName!');
 	}
+	/**
+	 * Creates an animation using the indices, looking as a reference the main animation of the texture atlas.
+	 * @param Name The name of the animation you're creating
+	 * @param Indices The indices you're gonna be using for the animation, like `[0,1,2]`.
+	 * @param FrameRate the framerate of the animation.
+	 */
 	public function addByAnimIndices(Name:String, Indices:Array<Int>, FrameRate:Float = 30) 
 	{
 		var layers:Array<Layers> = [];
