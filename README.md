@@ -28,7 +28,7 @@ char.anim.addByAnimIndices(animationName, [0,1,2,3], framerate);
 **WARNING:** Adding animations by indices affects only with the exported symbol, the main animation, do not try with different symbols! it won't work!
 
 ## TODO
-There's nothing much... maybe some adding animations thingy, like with prefixes and retouching stuff, but nothing more than that.
+* Add [frame labels](https://wiki.starling-framework.org/extensions/adobe-animate).
 
 # Support
 You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
