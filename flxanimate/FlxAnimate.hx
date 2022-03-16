@@ -74,6 +74,13 @@ class FlxAnimate extends FlxSprite
 	public function new(X:Float = 0, Y:Float = 0, Path:String, ?Settings:Settings)
 	{
 		super(X, Y);
+
+		/**
+		 * A massive meteor was found in New Mexico.
+		 * At first, it was thought that this was some type of hoax, but now the U.S. Geological Survey has confirmed that it is indeed a natural meteorite.
+		 */
+		makeGraphic(1, 1, 0);
+
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
 		{
 			FlxG.log.error('Animation file hasnt been found in Path $Path, Have you written the correct Path?');
