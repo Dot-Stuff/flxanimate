@@ -18,6 +18,11 @@ class FlxAnim extends FlxSprite
 	public var yFlip(default, set):Bool;
 	public var coolParse(default, null):AnimAtlas;
 	public var animLength(get, never):Int;
+	var frameLabels:Map<String, Int> = new Map();
+	var labelArray:Map<String, String> = new Map();
+	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
+	var badPress:Bool = false;
+	var goodPress:Bool = false;
 
 	var name:String;
 
@@ -59,6 +64,10 @@ class FlxAnim extends FlxSprite
 	{
 		for (layer in TL.L)
 		{
+			if ([button, "button"].indexOf(symbolType) != -1)
+			{
+				setButtonFrames();
+			}
 			if (curFrame < 0)
 			{
 				if ([loop, "loop"].indexOf(loopType) != -1)
@@ -101,7 +110,8 @@ class FlxAnim extends FlxSprite
 						var symbol:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y, this);
 						symbol.colorEffect = colorEffect;
 						symbol.symbolDictionary = symbolDictionary;
-						symbol.frameLength = setSymbolLength(timeline);
+						if (element.SI.bitmap == null)
+							symbol.frameLength = setSymbolLength(timeline);
 						matrix.tx = matrix.ty = 0;
 						symbol._matrix.concat(matrix);
 						if (element.SI.ST != null)
@@ -220,9 +230,20 @@ class FlxAnim extends FlxSprite
 
 	public var symbolDictionary:Map<String, Timeline> = new Map<String, Timeline>();
 
-	public function setButtonFrames(sprite:FlxAnim, badPress:Bool)
+	public function setButtonFrames()
 	{
-		if (FlxG.mouse.overlaps(sprite) && !badPress)
+		if (FlxG.mouse.pressed && FlxG.mouse.overlaps(this))
+			goodPress = true;
+		if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(this) && !goodPress)
+		{
+			badPress = true;
+		}
+		if (!FlxG.mouse.pressed)
+		{
+			badPress = false;
+			goodPress = false;
+		}
+		if (FlxG.mouse.overlaps(this) && !badPress)
 		{
 			if (FlxG.mouse.justPressed)
 				new ButtonEvent(OnClick, Sound).fire();
@@ -291,6 +312,7 @@ class FlxAnim extends FlxSprite
 				colorEffect = [coolParse.AN.STI.SI.C];
 			}
 		}
+		getFrameLabels(coolParse.AN.TL);
 		for (layer in coolParse.AN.TL.L)
 		{
 			layer.FR = AnimationData.parseDurationFrames(layer.FR);
@@ -397,6 +419,52 @@ class FlxAnim extends FlxSprite
 				length = len.FR.length;
 		}
 		return length;
+	}
+	public function getFrameLabel(name:String):Null<Int>
+	{
+		var thingy = frameLabels.get(name);
+
+		if (thingy == null)
+		{
+			FlxG.log.error('The frame label called $name does not exist! maybe you misspelled it?');
+			return null;
+		}
+		return thingy;
+	}
+
+	public function goToFrameLabel(name:String)
+	{
+		var framenum = getFrameLabel(name);
+
+		if (framenum != null)
+			curFrame = framenum;
+	}
+
+	public function getNextToFrameLabel(name:String):Null<String>
+	{
+		var thing = labelArray.get(name);
+		if (thing == null)
+			FlxG.log.error('Frame label $name does not exist! Maybe you mispelled it?');
+		return thing;
+	}
+	function getFrameLabels(TL:Timeline)
+	{
+		frameLabels = new Map();
+		for (layer in TL.L)
+		{
+			var name:Null<String> = null;
+			for (frame in layer.FR)
+			{
+				if (name != frame.N && frame.N != null)
+				{
+					if (name != null)
+						labelArray.set(name, frame.N);
+					name = frame.N;
+					frameLabels.set(name, frame.I);
+
+				}
+			}
+		}
 	}
 }
 @:noCompletion
