@@ -205,7 +205,7 @@ class FlxAnimate extends FlxSprite
 					onComplete();
 					isPlaying = false;	
 				}
-				
+			}
 		}
 	}
 
