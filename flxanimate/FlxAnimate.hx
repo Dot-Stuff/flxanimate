@@ -46,8 +46,6 @@ class FlxAnimate extends FlxSprite
 
 	var reversed:Bool = false;
 
-	var badPress:Bool = false;
-
 	/**
 	 * Internal, used for each skip between frames.
 	 */
@@ -170,65 +168,44 @@ class FlxAnimate extends FlxSprite
 	public override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (anim != null && anim.frames != null)
+		if (!isPlaying || anim == null || anim.frames == null)
+			return;
+		else
 		{
-			if ([button, "button"].indexOf(anim.symbolType) != -1)
+			frameTick += elapsed;
+
+			while (frameTick > frameDelay)
 			{
-				if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(anim) && !badPress)
+				if (reversed)
 				{
-					badPress = true;
+					anim.curFrame--;
 				}
-				if (FlxG.mouse.released && badPress)
+				else
 				{
-					badPress = false;
+					anim.curFrame++;
 				}
-				@:privateAccess
-				anim.setButtonFrames(anim, badPress);
+				frameTick -= frameDelay;
+			}
+		}
+		@:privateAccess
+		if (onComplete != null && [playonce, "playonce"].indexOf(anim.loopType) != -1)
+		{
+			if (reversed)
+			{
+				if (anim.curFrame <= 0)
+				{
+					onComplete();
+					isPlaying = false;
+				}
 			}
 			else
 			{
-				@:privateAccess
-				if (!isPlaying)
-					return;
-				else
+				if (anim.curFrame >= anim.frameLength - 1)
 				{
-					frameTick += elapsed;
-
-					while (frameTick > frameDelay)
-					{
-						if (reversed)
-						{
-							anim.curFrame--;
-						}
-						else
-						{
-							anim.curFrame++;
-						}
-						frameTick -= frameDelay;
-					}
+					onComplete();
+					isPlaying = false;	
 				}
-				@:privateAccess
-				if (onComplete != null && isPlaying && [playonce, "playonce"].indexOf(anim.loopType) != -1)
-				{
-					if (reversed)
-					{
-						if (anim.curFrame <= 0)
-						{
-							onComplete();
-							isPlaying = false;
-						}
-					}
-					else
-					{
-						if (anim.curFrame >= anim.frameLength - 1)
-						{
-							onComplete();
-							isPlaying = false;	
-						}
-						
-					}
-				}
-			}
+				
 		}
 	}
 
