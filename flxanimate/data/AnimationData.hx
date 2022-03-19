@@ -253,6 +253,15 @@ abstract Frame({}) from {}
 	 * The elements that the frame has. Drawings/symbols to be specific
 	 */
 	public var E(get, never):Array<Element>;
+	/**
+     * The name of the drawing, basically determines which one of the sprites on spritemap should be used.
+     */
+	public var N(get, never):String;
+
+	inline function get_N()
+	{
+		return AnimationData.setFieldBool(this, "N", "name");
+	}
 
 	inline function get_I():Int
 	{
@@ -538,7 +547,6 @@ abstract AtlasSymbolInstance({}) from {}
 
 	inline function get_N()
 	{
-		
 		return AnimationData.setFieldBool(this, "N", "name");
 	}
 
