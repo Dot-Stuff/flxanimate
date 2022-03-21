@@ -17,12 +17,10 @@ class FlxAnim extends FlxSprite
 	public var xFlip(default, set):Bool;
 	public var yFlip(default, set):Bool;
 	public var coolParse(default, null):AnimAtlas;
-	public var animLength(get, never):Int;
+	public var length(get, never):Int;
 	var frameLabels:Map<String, Int> = new Map();
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
-	var badPress:Bool = false;
-	var goodPress:Bool = false;
 	var curLabel:Null<String> = null; 
 	var name:String;
 
@@ -30,7 +28,7 @@ class FlxAnim extends FlxSprite
 
 	public var Sound:FlxSound;
 
-	public var curFrame(default, set):Int;
+	public var curFrame:Int;
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
 
@@ -44,8 +42,6 @@ class FlxAnim extends FlxSprite
 	public var symbolType:SymbolType = "G";
 	
 	var frameLength:Int = 0;
-	
-	var symbolNested:Bool;
 
 	/**
 	 * Add a new texture atlas sprite
@@ -68,22 +64,23 @@ class FlxAnim extends FlxSprite
 			{
 				setButtonFrames();
 			}
+			
 			if (curFrame < 0)
 			{
 				if ([loop, "loop"].indexOf(loopType) != -1)
-					curFrame += frameLength;
+					curFrame += (length > 0) ? length : curFrame;
 				else
 					curFrame = 0;
 			}
-			if (curFrame >= frameLength)
+			if (curFrame >= length)
 			{
 				if ([loop, "loop"].indexOf(loopType) != -1)
 				{
-					curFrame -= (frameLength - 1);
+					curFrame -= (length > 0) ? length : curFrame;
 				}
 				else
 				{
-					curFrame = frameLength -1;
+					curFrame = length;
 				}
 			}
 			var selectedFrame = layer.FR[curFrame];
@@ -96,15 +93,8 @@ class FlxAnim extends FlxSprite
 					if (element.SI != null)
 					{
 						var timeline = symbolDictionary.get(element.SI.SN);
-						var m3d = (element.SI.M3D is Array) ? element.SI.M3D : [element.SI.M3D.m00, element.SI.M3D.m01, 
-							element.SI.M3D.m02, element.SI.M3D.m03, element.SI.M3D.m10,element.SI.M3D.m11,
-							element.SI.M3D.m12,element.SI.M3D.m13,element.SI.M3D.m20,element.SI.M3D.m21,element.SI.M3D.m22,
-							element.SI.M3D.m23,element.SI.M3D.m30,element.SI.M3D.m31,element.SI.M3D.m32,element.SI.M3D.m33];
-						if (element.SI.bitmap != null)
-						{
-							m3d[12] += element.SI.bitmap.POS.x;
-							m3d[13] += element.SI.bitmap.POS.y;
-						}
+						var m3d = element.SI.M3D;
+						
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
 						var symbol:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y, this);
@@ -114,25 +104,13 @@ class FlxAnim extends FlxSprite
 							symbol.frameLength = setSymbolLength(timeline);
 						matrix.tx = matrix.ty = 0;
 						symbol._matrix.concat(matrix);
-						if (element.SI.ST != null)
-						{
-							symbol.symbolType = element.SI.ST;
-						}
+						symbol.symbolType = element.SI.ST;
 
-						switch (symbol.symbolType)
-						{
-							case "G", "graphic":
-								symbol.curFrame = element.SI.FF;
-								symbol.loopType = element.SI.LP;
-							case movieclip, "movieclip", "button", button:
-								symbol.loopType = singleframe;
-						}
+						if (["G", "graphic"].indexOf(symbol.symbolType) != -1)
+							symbol.curFrame = element.SI.FF; symbol.loopType = element.SI.LP;
+						else
+							symbol.loopType = singleframe;
 						
-						symbol.symbolNested = true;
-						if ([button, "button"].indexOf(symbolType) != -1)
-						{
-							symbol.curFrame = curFrame;
-						}
 						if (element.SI.C != null)
 						{
 							if (symbol.colorEffect == null)
@@ -155,27 +133,13 @@ class FlxAnim extends FlxSprite
 					}
 					else if (element.ASI != null) // It's a drawing?
 					{
-						var m3d = (element.ASI.M3D != null) ? (element.ASI.M3D is Array) ? element.ASI.M3D : [element.ASI.M3D.m00, element.ASI.M3D.m01, 
-							element.ASI.M3D.m02, element.ASI.M3D.m03, element.ASI.M3D.m10,element.ASI.M3D.m11,
-							element.ASI.M3D.m12,element.ASI.M3D.m13,element.ASI.M3D.m20,element.ASI.M3D.m21,element.ASI.M3D.m22,
-							element.ASI.M3D.m23,element.ASI.M3D.m30,element.ASI.M3D.m31,element.ASI.M3D.m32,element.ASI.M3D.m33] : [1.0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-						
-						if (element.ASI.POS != null)
-						{
-							m3d[12] += element.ASI.POS.x;
-							m3d[13] += element.ASI.POS.y;
-						}
+						var m3d = element.ASI.M3D;
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 
 						matrix.concat(_matrix);
 						var spr:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y,this);
 
 						spr.frame = spr.frames.getByName(element.ASI.N);
-						spr.setSize(width, height);
-						if (FlxG.keys.justPressed.W)
-						{
-							trace(width, height, spr.width, spr.height);
-						}
 						matrix.tx = matrix.ty = 0;
 						spr.transformMatrix.concat(matrix);
 						// TODO: Remodel this shit
@@ -232,6 +196,8 @@ class FlxAnim extends FlxSprite
 
 	public function setButtonFrames()
 	{
+		var badPress:Bool = false;
+		var goodPress:Bool = false;
 		if (FlxG.mouse.pressed && FlxG.mouse.overlaps(this))
 			goodPress = true;
 		if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(this) && !goodPress)
@@ -267,13 +233,7 @@ class FlxAnim extends FlxSprite
 		renderSymbol(timeline);
 	}
 
-	@:noCompletion
-	function set_curFrame(value:Int):Int
-	{
-		return curFrame = value;
-	}
-
-	public function setLayers()
+	function reverseLayers()
 	{
 		coolParse.AN.TL.L.reverse();
 
@@ -287,6 +247,45 @@ class FlxAnim extends FlxSprite
 	}
 	function setSymbols(Anim:AnimAtlas)
 	{
+		for (layer in Anim.AN.TL.L)
+		{
+			for (fr in layer.FR)
+			{
+				for (element in fr.E)
+				{
+					var ASI = element.ASI;
+					var SI = element.SI;
+					if (ASI != null)
+					{
+						ASI.M3D = (ASI.M3D != null) ? (ASI.M3D is Array) ? ASI.M3D : [ASI.M3D.m00,ASI.M3D.m01,ASI.M3D.m02,ASI.M3D.m03,ASI.M3D.m10,ASI.M3D.m11,ASI.M3D.m12,ASI.M3D.m13,
+							ASI.M3D.m20,ASI.M3D.m21,ASI.M3D.m22,ASI.M3D.m23,ASI.M3D.m30,ASI.M3D.m31,ASI.M3D.m32,ASI.M3D.m33] : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+
+						if (ASI.POS != null)
+						{
+							ASI.M3D[12] += ASI.POS.x;
+							ASI.M3D[13] += ASI.POS.y;
+						}
+					}
+					if (SI != null)
+					{
+						SI.M3D = (SI.M3D is Array) ? SI.M3D : [SI.M3D.m00, SI.M3D.m01,SI.M3D.m02,SI.M3D.m03,SI.M3D.m10,SI.M3D.m11,SI.M3D.m12,SI.M3D.m13,SI.M3D.m20,SI.M3D.m21,SI.M3D.m22,
+							SI.M3D.m23,SI.M3D.m30,SI.M3D.m31,SI.M3D.m32,SI.M3D.m33];
+
+						if (SI.bitmap != null)
+						{
+							SI.M3D[12] += SI.bitmap.POS.x;
+							SI.M3D[13] += SI.bitmap.POS.y;
+						}
+					}
+				}
+			}
+			layer.FR = AnimationData.parseDurationFrames(layer.FR);
+
+			if (frameLength < layer.FR.length)
+			{
+				frameLength = layer.FR.length;
+			}
+		}
 		symbolDictionary.set(Anim.AN.SN, Anim.AN.TL);
 		if (coolParse.SD != null)
 		{
@@ -294,6 +293,36 @@ class FlxAnim extends FlxSprite
 			{
 				for (layer in symbol.TL.L)
 				{
+					for (fr in layer.FR)
+					{
+						for (element in fr.E)
+						{
+							var ASI = element.ASI;
+							var SI = element.SI;
+							if (ASI != null)
+							{
+								ASI.M3D = (ASI.M3D != null) ? (ASI.M3D is Array) ? ASI.M3D : [ASI.M3D.m00,ASI.M3D.m01,ASI.M3D.m02,ASI.M3D.m03,ASI.M3D.m10,ASI.M3D.m11,ASI.M3D.m12,ASI.M3D.m13,
+									ASI.M3D.m20,ASI.M3D.m21,ASI.M3D.m22,ASI.M3D.m23,ASI.M3D.m30,ASI.M3D.m31,ASI.M3D.m32,ASI.M3D.m33] : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+		
+								if (ASI.POS != null)
+								{
+									ASI.M3D[12] += ASI.POS.x;
+									ASI.M3D[13] += ASI.POS.y;
+								}
+							}
+							if (SI != null)
+							{
+								SI.M3D = (SI.M3D is Array) ? SI.M3D : [SI.M3D.m00, SI.M3D.m01,SI.M3D.m02,SI.M3D.m03,SI.M3D.m10,SI.M3D.m11,SI.M3D.m12,SI.M3D.m13,SI.M3D.m20,SI.M3D.m21,SI.M3D.m22,
+									SI.M3D.m23,SI.M3D.m30,SI.M3D.m31,SI.M3D.m32,SI.M3D.m33];
+		
+								if (SI.bitmap != null)
+								{
+									SI.M3D[12] += SI.bitmap.POS.x;
+									SI.M3D[13] += SI.bitmap.POS.y;
+								}
+							}
+						}
+					}
 					layer.FR = AnimationData.parseDurationFrames(layer.FR);
 				}
 				symbolDictionary.set(symbol.SN, symbol.TL);
@@ -302,6 +331,7 @@ class FlxAnim extends FlxSprite
 	}
 	public function setShit()
 	{
+		reverseLayers();
 		setSymbols(coolParse);
 		if (coolParse.AN.STI != null)
 		{
@@ -313,11 +343,6 @@ class FlxAnim extends FlxSprite
 			}
 		}
 		getFrameLabels(coolParse.AN.TL);
-		for (layer in coolParse.AN.TL.L)
-		{
-			layer.FR = AnimationData.parseDurationFrames(layer.FR);
-		}
-		frameLength = animLength;
 	}
 	var oldMatrix:FlxMatrix;
 	function set_xFlip(Value:Bool)
@@ -410,15 +435,9 @@ class FlxAnim extends FlxSprite
 
 		animsMap.set(Name, {timeline: {L: layers}, X: 0, Y: 0, frameRate: FrameRate});
 	}
-	public function get_animLength()
+	public function get_length()
 	{
-		var length:Int = 0;
-		for (len in coolParse.AN.TL.L)
-		{
-			if (length < len.FR.length)
-				length = len.FR.length;
-		}
-		return length;
+		return frameLength - 1;
 	}
 	public function getFrameLabel(name:String):Null<Int>
 	{
@@ -475,7 +494,7 @@ class FlxAnim extends FlxSprite
 		labelcallbacks.set(label, array);
 	}
 
-	public function removeAllCallbacksFrom(label:String, callback:()->Void)
+	public function removeAllCallbacksFrom(label:String)
 	{
 		if (!labelcallbacks.exists(label))
 		{
@@ -517,13 +536,11 @@ class FlxLimb extends FlxAnim
 		offset = Settings.offset;
 		xFlip = Settings.xFlip;
 		yFlip = Settings.yFlip;
-		origin.set();
 		scrollFactor = Settings.scrollFactor;
 	}
 	public override function drawComplex(camera:FlxCamera):Void
 	{
-		_frame.prepareMatrix(_matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
-		_matrix.translate(-origin.x, -origin.y);
+		_frame.prepareMatrix(_matrix);
 		_matrix.scale(scale.x, scale.y);
 		_matrix.concat(transformMatrix);
 		if (bakedRotationAngle <= 0)
@@ -532,7 +549,6 @@ class FlxLimb extends FlxAnim
 			if (angle != 0)
 				_matrix.rotateWithTrig(_cosAngle, _sinAngle);
 		}
-		_point.addPoint(origin);
 		if (isPixelPerfectRender(camera))
 		{
 			_point.x = Math.floor(_point.x);
