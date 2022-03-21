@@ -91,7 +91,7 @@ class FlxSpriteMap
                             data.ATLAS.SPRITES.push(e);
                         }
 
-                        var bitmap2 = Assets.getBitmapData('$Path/${data.meta.image}');
+                        var bitmap2 = Assets.getBitmapData('$Path/${data2.meta.image}');
                         
                         var bitmapDraw = new BitmapData(max(bitmap.width, bitmap2.width), bitmap.height + bitmap2.height, true, 0x00000000);
                         bitmapDraw.draw(bitmap);
