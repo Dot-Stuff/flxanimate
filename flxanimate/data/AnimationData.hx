@@ -242,6 +242,10 @@ abstract MetaData({}) from {}
 abstract Frame({}) from {}
 {
 	/**
+	 * The "name of the frame", basically labels that you can use as thingies for more cool stuff to program lol
+	 */
+	public var N(get, never):String;
+	/**
 	 * The frame index, aka the current number frame.
 	 */
 	public var I(get, never):Int;
@@ -253,16 +257,11 @@ abstract Frame({}) from {}
 	 * The elements that the frame has. Drawings/symbols to be specific
 	 */
 	public var E(get, never):Array<Element>;
-	/**
-     * The name of the drawing, basically determines which one of the sprites on spritemap should be used.
-     */
-	public var N(get, never):String;
 
-	inline function get_N()
+	inline function get_N():String
 	{
 		return AnimationData.setFieldBool(this, "N", "name");
 	}
-
 	inline function get_I():Int
 	{
 		return AnimationData.setFieldBool(this, "I", "index");
@@ -318,7 +317,7 @@ abstract SymbolInstance({}) from {}
 	/**
 	 * bitmap Settings, Used in 2018 and 2019
 	 */
-	public var bitmap(get, never):AtlasSymbolInstance;
+	public var bitmap(get, never):Bitmap;
 
 	/**
 	 * this sets on which frame it's the symbol, Graphic only
@@ -338,7 +337,7 @@ abstract SymbolInstance({}) from {}
 	/**
 	 * The Matrix of the Symbol, Be aware from Neo! He can be anywhere!!! :fearful:
 	 */
-	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
+	public var M3D(get, set):OneOfTwo<Array<Float>, Matrix3D>;
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
@@ -386,6 +385,10 @@ abstract SymbolInstance({}) from {}
 	inline function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, "M3D", "Matrix3D");
+	}
+	inline function set_M3D(value:OneOfTwo<Array<Float>, Matrix3D>)
+	{
+		return AnimationData.setFieldBool(this, "M3D", "Matrix3D", value, false);
 	}
 
 	inline function get_C()
@@ -450,31 +453,31 @@ abstract ColorEffects({}) from {}
 	}
 	inline function get_AO()
 	{
-		return AnimationData.setFieldBool(this, "AO", "AO");
+		return AnimationData.setFieldBool(this, "AO", "AlphaOffset");
 	}
 	inline function get_RM()
 	{
-		return AnimationData.setFieldBool(this, "RM", "RM");
+		return AnimationData.setFieldBool(this, "RM", "RedMultiplier");
 	}
 	inline function get_RO()
 	{
-		return AnimationData.setFieldBool(this, "RO", "RO");
+		return AnimationData.setFieldBool(this, "RO", "redOffset");
 	}
 	inline function get_GM()
 	{
-		return AnimationData.setFieldBool(this, "GM", "GM");
+		return AnimationData.setFieldBool(this, "GM", "greenMultiplier");
 	}
 	inline function get_GO()
 	{
-		return AnimationData.setFieldBool(this, "GO", "GO");
+		return AnimationData.setFieldBool(this, "GO", "greenOffset");
 	}
 	inline function get_BM()
 	{
-		return AnimationData.setFieldBool(this, "BM", "BM");
+		return AnimationData.setFieldBool(this, "BM", "blueMultiplier");
 	}
 	inline function get_BO()
 	{
-		return AnimationData.setFieldBool(this, "BO", "BO");
+		return AnimationData.setFieldBool(this, "BO", "blueOffset");
 	}
 	inline function get_BRT()
 	{
@@ -526,38 +529,45 @@ enum abstract ColorMode(String) from String to String
 	var Alpha = "CA";
 	var Brightness = "CBRT";
 }
-/**
- * The Sprite/Drawing abstract
- */
-abstract AtlasSymbolInstance({}) from {}
+
+abstract Bitmap({}) from {}
 {
 	/**
 	 * The name of the drawing, basically determines which one of the sprites on spritemap should be used.
 	 */
 	public var N(get, never):String;
-	/**
-	 * The matrix of the Sprite, Neo should be here at any second!!!
-	 */
-	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
-	
+
 	/**
 	 * Only used in earliest versions of texture atlas release. checks the position, nothing else lol
 	 */
 	public var POS(get, never):TransformationPoint;
-
 	inline function get_N()
 	{
 		return AnimationData.setFieldBool(this, "N", "name");
 	}
+	inline function get_POS()
+	{
+		return AnimationData.setFieldBool(this, "POS", "Position");
+	}
+}
+/**
+ * The Sprite/Drawing abstract
+ */
+@:forward
+abstract AtlasSymbolInstance(Bitmap) from {}
+{
+	/**
+	 * The matrix of the Sprite, Neo should be here at any second!!!
+	 */
+	public var M3D(get, set):OneOfTwo<Array<Float>, Matrix3D>;
 
 	inline function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, "M3D", "Matrix3D");
 	}
-
-	inline function get_POS()
+	inline function set_M3D(value:OneOfTwo<Array<Float>, Matrix3D>)
 	{
-		return AnimationData.setFieldBool(this, "POS", "Position");
+		return AnimationData.setFieldBool(this, "M3D", "Matrix3D", value, false);
 	}
 }
 
