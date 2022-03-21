@@ -77,7 +77,7 @@ class FlxAnimate extends FlxSprite
 		 * A massive meteor was found in New Mexico.
 		 * At first, it was thought that this was some type of hoax, but now the U.S. Geological Survey has confirmed that it is indeed a natural meteorite.
 		 */
-		makeGraphic(1, 1, 0);
+		makeGraphic(16, 16, 0);
 
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
 		{
@@ -87,10 +87,9 @@ class FlxAnimate extends FlxSprite
 		var jsontxt:AnimAtlas = atlasSetting(Path);
 		timeline = jsontxt.AN.TL;
 		anim = new FlxAnim(X, Y, jsontxt);
-		setTheSettings(Settings);
-		anim.setLayers();
 		anim.frames = FlxSpriteMap.fromAnimate(Path);
 		anim.setShit();
+		setTheSettings(Settings);
 	}
 
 	public override function draw()
@@ -217,7 +216,7 @@ class FlxAnimate extends FlxSprite
 			}
 			else
 			{
-				if (anim.curFrame >= anim.frameLength - 1)
+				if (anim.curFrame >= anim.length)
 				{
 					onComplete();
 					isPlaying = false;	
