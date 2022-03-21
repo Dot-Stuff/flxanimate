@@ -168,7 +168,24 @@ class FlxAnimate extends FlxSprite
 	public override function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		if (!isPlaying || anim == null || anim.frames == null)
+		if (anim == null || anim.frames == null)
+			return;
+		if (anim.clickedButton)
+		{
+			new ButtonEvent(onClick, sound).fire();
+			anim.clickedButton = false;
+		}
+		@:privateAccess
+		if (anim.curLabel != null)
+		{
+			if (anim.labelcallbacks.exists(anim.curLabel))
+			{
+				for (callback in anim.labelcallbacks.get(anim.curLabel))
+					callback();
+			}
+		}
+		@:privateAccess
+		if (!isPlaying)
 			return;
 		else
 		{
