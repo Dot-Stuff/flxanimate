@@ -28,7 +28,6 @@ char.anim.addByAnimIndices(animationName, [0,1,2,3], framerate);
 **WARNING:** Adding animations by indices affects only with the exported symbol, the main animation, do not try with different symbols! it won't work!
 
 ## TODO
-* Add [frame labels](https://github.com/Dot-Stuff/flxanimate/issues/2).
 * (optional/important) Masks and filters.
 
 # Support
