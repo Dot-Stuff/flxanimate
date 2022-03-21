@@ -23,7 +23,7 @@ class FlxAnim extends FlxSprite
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
 	var badPress:Bool = false;
 	var goodPress:Bool = false;
-
+	var curLabel:Null<String> = null; 
 	var name:String;
 
 	public var OnClick:Void->Void;
@@ -87,7 +87,7 @@ class FlxAnim extends FlxSprite
 				}
 			}
 			var selectedFrame = layer.FR[curFrame];
-			
+			curLabel = selectedFrame.N;
 			if (selectedFrame != null)
 			{
 				for (element in selectedFrame.E)
@@ -447,6 +447,44 @@ class FlxAnim extends FlxSprite
 			FlxG.log.error('Frame label $name does not exist! Maybe you mispelled it?');
 		return thing;
 	}
+	public function addCallbackTo(label:String, callback:()->Void)
+	{
+		if (!frameLabels.exists(label))
+		{
+			FlxG.log.error('"$label" does not exist as a frame label! have misspelled it?');
+			return;
+		}
+
+		var array:Array<()->Void> = (labelcallbacks.exists(label)) ? labelcallbacks.get(label) : [];
+
+		array.push(callback);
+
+		labelcallbacks.set(label, array);
+	}
+
+	public function removeCallbackFrom(label:String, callback:()->Void)
+	{
+		if (!labelcallbacks.exists(label))
+		{
+			FlxG.log.warn('There arent any callbacks set in label "$label"!');
+			return;
+		}
+		var array = labelcallbacks.get(label);
+		array.remove(callback);
+
+		labelcallbacks.set(label, array);
+	}
+
+	public function removeAllCallbacksFrom(label:String, callback:()->Void)
+	{
+		if (!labelcallbacks.exists(label))
+		{
+			FlxG.log.warn('There arent any callbacks set in label "$label"!');
+			return;
+		}
+		labelcallbacks.remove(label);
+	}
+	
 	function getFrameLabels(TL:Timeline)
 	{
 		frameLabels = new Map();
