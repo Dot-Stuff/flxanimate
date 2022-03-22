@@ -1,5 +1,9 @@
 package flxanimate.animate;
 
+import openfl.filters.GlowFilter;
+import flixel.graphics.frames.FlxFilterFrames;
+import openfl.filters.BlurFilter;
+import flixel.math.FlxRect;
 import flixel.util.FlxColor;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -21,19 +25,17 @@ class FlxAnim extends FlxSprite
 	var frameLabels:Map<String, Int> = new Map();
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
-	var curLabel:Null<String> = null; 
+	public var clickedButton:Bool = false;
+
 	var name:String;
 
-	public var OnClick:Void->Void;
-
-	public var Sound:FlxSound;
-
-	public var curFrame:Int;
+	public var curFrame:Int = 0;
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
 
 	var colorEffect:Array<ColorEffects>;
-
+	
+	var callbackCalled:Bool = false;
 	/**
 	 * Internal, the parsed loop type
 	 */
@@ -41,7 +43,9 @@ class FlxAnim extends FlxSprite
 
 	public var symbolType:SymbolType = "G";
 	
-	var frameLength:Int = 0;
+	var frameLength:Int = 1;
+
+	var curLabel:Null<String> = null; 
 
 	/**
 	 * Add a new texture atlas sprite
@@ -83,6 +87,7 @@ class FlxAnim extends FlxSprite
 					curFrame = length;
 				}
 			}
+
 			var selectedFrame = layer.FR[curFrame];
 			curLabel = selectedFrame.N;
 			if (selectedFrame != null)
@@ -94,7 +99,7 @@ class FlxAnim extends FlxSprite
 					{
 						var timeline = symbolDictionary.get(element.SI.SN);
 						var m3d = element.SI.M3D;
-						
+
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
 						var symbol:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y, this);
@@ -107,10 +112,9 @@ class FlxAnim extends FlxSprite
 						symbol.symbolType = element.SI.ST;
 
 						if (["G", "graphic"].indexOf(symbol.symbolType) != -1)
-							symbol.curFrame = element.SI.FF; symbol.loopType = element.SI.LP;
+						{symbol.curFrame = element.SI.FF; symbol.loopType = element.SI.LP;}
 						else
 							symbol.loopType = singleframe;
-						
 						if (element.SI.C != null)
 						{
 							if (symbol.colorEffect == null)
@@ -134,11 +138,11 @@ class FlxAnim extends FlxSprite
 					else if (element.ASI != null) // It's a drawing?
 					{
 						var m3d = element.ASI.M3D;
+						
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 
 						matrix.concat(_matrix);
 						var spr:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y,this);
-
 						spr.frame = spr.frames.getByName(element.ASI.N);
 						matrix.tx = matrix.ty = 0;
 						spr.transformMatrix.concat(matrix);
@@ -212,7 +216,7 @@ class FlxAnim extends FlxSprite
 		if (FlxG.mouse.overlaps(this) && !badPress)
 		{
 			if (FlxG.mouse.justPressed)
-				new ButtonEvent(OnClick, Sound).fire();
+				clickedButton = true;
 			if (FlxG.mouse.pressed)
 			{
 				curFrame = 2;
@@ -435,10 +439,12 @@ class FlxAnim extends FlxSprite
 
 		animsMap.set(Name, {timeline: {L: layers}, X: 0, Y: 0, frameRate: FrameRate});
 	}
+
 	public function get_length()
 	{
 		return frameLength - 1;
 	}
+
 	public function getFrameLabel(name:String):Null<Int>
 	{
 		var thingy = frameLabels.get(name);
@@ -466,6 +472,7 @@ class FlxAnim extends FlxSprite
 			FlxG.log.error('Frame label $name does not exist! Maybe you mispelled it?');
 		return thing;
 	}
+
 	public function addCallbackTo(label:String, callback:()->Void)
 	{
 		if (!frameLabels.exists(label))
@@ -503,7 +510,7 @@ class FlxAnim extends FlxSprite
 		}
 		labelcallbacks.remove(label);
 	}
-	
+
 	function getFrameLabels(TL:Timeline)
 	{
 		frameLabels = new Map();
