@@ -18,6 +18,7 @@ import openfl.display.BitmapData;
 class FlxSpriteMap
 {
     static var data:AnimateAtlas = null;
+    static var zip:Null<List<haxe.zip.Entry>>;
     /**
      * Parses the spritemaps into small sprites to use in the animation.
      * 
@@ -27,24 +28,20 @@ class FlxSpriteMap
     public static function fromAnimate(Path:String):FlxAtlasFrames
     {
         var bitmap:BitmapData = null;
-        if (haxe.io.Path.extension(Path) == "zip")
+        if (zip != null)
         {
             var imagemap:Map<String, Bytes> = new Map();
             var json:Array<AnimateAtlas> = [];
-            var thing = Zip.readZip(new BytesInput(Assets.getBytes(Path)));
-			for (list in Zip.unzip(thing))
+			for (list in zip)
 			{
-                if (!(list.fileName.indexOf("Animation.json") != -1))
+                if (haxe.io.Path.extension(list.fileName) == "json")
                 {
-                    if (haxe.io.Path.extension(list.fileName) == "json")
-                    {
-                        json.push(haxe.Json.parse(StringTools.replace(list.data.toString(), String.fromCharCode(0xFEFF), "")));
-                    }
-                    else if (haxe.io.Path.extension(list.fileName) == "png")
-                    {
-                        var name = list.fileName.split("/");
-                        imagemap.set(name[name.length - 1], list.data);
-                    }
+                    json.push(haxe.Json.parse(StringTools.replace(list.data.toString(), String.fromCharCode(0xFEFF), "")));
+                }
+                else if (haxe.io.Path.extension(list.fileName) == "png")
+                {
+                    var name = list.fileName.split("/");
+                    imagemap.set(name[name.length - 1], list.data);
                 }
 			}
             // Assuming the json has the same stuff as the image stuff
@@ -71,18 +68,21 @@ class FlxSpriteMap
                     bitmap = bitmapDraw;
                 }
             }
+            zip == null;
         }
         else
         {
             if (Assets.exists('$Path/spritemap1.json'))
             {
-                data = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap1.json'), String.fromCharCode(0xFEFF), ""));
                 var i:Int = 1;
+                data = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap1.json'), String.fromCharCode(0xFEFF), ""));
                 bitmap = Assets.getBitmapData('$Path/${data.meta.image}');
                 while (Assets.exists('$Path/spritemap$i.json'))
                 {
+                    trace('$Path/spritemap$i.json', Assets.exists('$Path/spritemap$i.json'));
                     if (i > 1)
                     {
+                        trace(i);
                         var data2:AnimateAtlas = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap$i.json'), String.fromCharCode(0xFEFF), ""));
 
                         for (e in data2.ATLAS.SPRITES)
@@ -97,7 +97,7 @@ class FlxSpriteMap
                         bitmapDraw.draw(bitmap);
                         bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, bitmap.height));
                         
-                        bitmap = bitmapDraw;   
+                        bitmap = bitmapDraw;
                     }
                     i++;
                 }
