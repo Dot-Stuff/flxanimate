@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import openfl.geom.ColorTransform;
 import openfl.filters.GlowFilter;
 import flixel.graphics.frames.FlxFilterFrames;
 import openfl.filters.BlurFilter;
@@ -13,8 +14,6 @@ import flxanimate.data.AnimationData;
 import flixel.system.FlxSound;
 import flixel.graphics.frames.FlxFrame;
 
-
-typedef Effects = {var C:ColorEffects;};
 typedef SymbolStuff = {var timeline:Timeline; var X:Float; var Y:Float; var frameRate:Float;};
 class FlxAnim extends FlxSprite
 {
@@ -33,7 +32,7 @@ class FlxAnim extends FlxSprite
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
 
-	var colorEffect:Array<ColorEffects>;
+	var colorEffect:ColorTransform;
 	
 	var callbackCalled:Bool = false;
 	/**
@@ -97,19 +96,21 @@ class FlxAnim extends FlxSprite
 					// Is this a symbol?
 					if (element.SI != null)
 					{
-						var timeline = symbolDictionary.get(element.SI.SN);
 						var m3d = element.SI.M3D;
-
+						var timeline = symbolDictionary.get(element.SI.SN);
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
 						var symbol:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y, this);
-						symbol.colorEffect = colorEffect;
+						symbol.colorEffect = new ColorTransform();
+						symbol.colorEffect.concat(colorEffect);
 						symbol.symbolDictionary = symbolDictionary;
+						symbol.frames = frames;
 						if (element.SI.bitmap == null)
 							symbol.frameLength = setSymbolLength(timeline);
 						matrix.tx = matrix.ty = 0;
 						symbol._matrix.concat(matrix);
 						symbol.symbolType = element.SI.ST;
+						symbol.name = element.SI.SN;
 
 						if (["G", "graphic"].indexOf(symbol.symbolType) != -1)
 						{symbol.curFrame = element.SI.FF; symbol.loopType = element.SI.LP;}
@@ -117,21 +118,13 @@ class FlxAnim extends FlxSprite
 							symbol.loopType = singleframe;
 						if (element.SI.C != null)
 						{
-							if (symbol.colorEffect == null)
-							{
-								symbol.colorEffect = [element.SI.C];
-							}
-							else
-							{
-								symbol.colorEffect.push(element.SI.C);
-							}
+							symbol.addColorEffect(element.SI.C);
 						}
 						if (element.SI.bitmap == null)
 							symbol.renderSymbol(timeline);
 						else
 						{
 							symbol.frame = frames.getByName(element.SI.bitmap.N);
-							symbol.transformMatrix.concat(matrix);
 							symbol.draw();
 						}
 					}
@@ -143,52 +136,11 @@ class FlxAnim extends FlxSprite
 
 						matrix.concat(_matrix);
 						var spr:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y,this);
-						spr.frame = spr.frames.getByName(element.ASI.N);
 						matrix.tx = matrix.ty = 0;
-						spr.transformMatrix.concat(matrix);
+						spr.frame = frames.getByName(element.ASI.N);
+						spr._matrix.concat(matrix);
 						// TODO: Remodel this shit
-						if (colorEffect != null)
-						{
-							var sInstance = colorEffect[0];
-							final CT = spr.colorTransform;
-							switch (sInstance.M)
-							{
-								case Tint, "Tint":
-								{
-									var color = FlxColor.fromString(sInstance.TC);
-									var opacity = sInstance.TM;
-									CT.redMultiplier -= opacity;
-									CT.redOffset = Math.round(color.red * opacity);
-									CT.greenMultiplier -= opacity;
-									CT.greenOffset = Math.round(color.green * opacity);
-									CT.blueMultiplier -= opacity;
-									CT.blueOffset = Math.round(color.blue * opacity);
-								}
-								case Alpha, "Alpha":
-								{
-									CT.alphaMultiplier = sInstance.AM;
-								}
-								case Brightness, "Brightness":
-								{
-									CT.redMultiplier = CT.greenMultiplier = CT.blueMultiplier -= Math.abs(sInstance.BRT);
-									if (sInstance.BRT >= 0)
-									{
-										CT.redOffset = CT.greenOffset = CT.blueOffset = 255 * sInstance.BRT;
-									}
-								}
-								case Advanced, "Advanced":
-								{
-									CT.redMultiplier = sInstance.RM;
-									CT.redOffset = sInstance.RO;
-									CT.greenMultiplier = sInstance.GM;
-									CT.greenOffset = sInstance.GO;
-									CT.blueMultiplier = sInstance.BM;
-									CT.blueOffset = sInstance.BO;
-									CT.alphaMultiplier = sInstance.AM;
-									CT.alphaOffset = sInstance.AO;
-								}
-							}
-						}
+						spr.colorTransform.concat(colorEffect);
 						spr.draw();
 					}
 				}
@@ -197,7 +149,47 @@ class FlxAnim extends FlxSprite
 	}
 
 	public var symbolDictionary:Map<String, Timeline> = new Map<String, Timeline>();
-
+	function addColorEffect(sInstance:ColorEffects)
+	{
+		var CT = new ColorTransform();
+		switch (sInstance.M)
+		{
+			case Tint, "Tint":
+			{
+				var color = FlxColor.fromString(sInstance.TC);
+				var opacity = sInstance.TM;
+				CT.redMultiplier -= opacity;
+				CT.redOffset = Math.round(color.red * opacity);
+				CT.greenMultiplier -= opacity;
+				CT.greenOffset = Math.round(color.green * opacity);
+				CT.blueMultiplier -= opacity;
+				CT.blueOffset = Math.round(color.blue * opacity);
+			}
+			case Alpha, "Alpha":
+			{
+				CT.alphaMultiplier = sInstance.AM;
+			}
+			case Brightness, "Brightness":
+			{
+				CT.redMultiplier = CT.greenMultiplier = CT.blueMultiplier -= Math.abs(sInstance.BRT);
+				if (sInstance.BRT >= 0)
+					CT.redOffset = CT.greenOffset = CT.blueOffset = 255 * sInstance.BRT;
+			}
+			case Advanced, "Advanced":
+			{
+				CT.redMultiplier = sInstance.RM;
+				CT.redOffset = sInstance.RO;
+				CT.greenMultiplier = sInstance.GM;
+				CT.greenOffset = sInstance.GO;
+				CT.blueMultiplier = sInstance.BM;
+				CT.blueOffset = sInstance.BO;
+				CT.alphaMultiplier = sInstance.AM;
+				CT.alphaOffset = sInstance.AO;
+			}
+		}
+		
+		colorEffect.concat(CT);
+	}
 	public function setButtonFrames()
 	{
 		var badPress:Bool = false;
@@ -335,18 +327,19 @@ class FlxAnim extends FlxSprite
 	}
 	public function setShit()
 	{
+		colorEffect = new ColorTransform();
 		reverseLayers();
 		setSymbols(coolParse);
+		getFrameLabels(coolParse.AN.TL);
 		if (coolParse.AN.STI != null)
 		{
 			loopType = coolParse.AN.STI.SI.LP;
 			symbolType = coolParse.AN.STI.SI.ST;
 			if (coolParse.AN.STI.SI.C != null)
 			{
-				colorEffect = [coolParse.AN.STI.SI.C];
+				addColorEffect(coolParse.AN.STI.SI.C);
 			}
 		}
-		getFrameLabels(coolParse.AN.TL);
 	}
 	var oldMatrix:FlxMatrix;
 	function set_xFlip(Value:Bool)
@@ -530,16 +523,32 @@ class FlxAnim extends FlxSprite
 			}
 		}
 	}
+	override function destroy()
+	{
+		xFlip = yFlip = false;
+		coolParse = null;
+		frameLength = 1;
+		curFrame = 0;
+		frameLabels = null;
+		labelArray = null;
+		labelcallbacks = null;
+		name = null;
+		animsMap = null;
+		callbackCalled = false;
+		colorEffect = null;
+		loopType = null;
+		symbolType = null;
+		curLabel = null;
+		super.destroy();
+	}
 }
 @:noCompletion
 class FlxLimb extends FlxAnim
 {
-	public var transformMatrix:FlxMatrix = new FlxMatrix();
 	public function new(X:Float, Y:Float,Settings:FlxAnim) 
 	{
 		super(X, Y, null);
 		antialiasing = Settings.antialiasing;
-		frames = Settings.frames;
 		offset = Settings.offset;
 		xFlip = Settings.xFlip;
 		yFlip = Settings.yFlip;
@@ -547,9 +556,8 @@ class FlxLimb extends FlxAnim
 	}
 	public override function drawComplex(camera:FlxCamera):Void
 	{
-		_frame.prepareMatrix(_matrix);
+		_matrix.concat(_frame.prepareMatrix(new FlxMatrix()));
 		_matrix.scale(scale.x, scale.y);
-		_matrix.concat(transformMatrix);
 		if (bakedRotationAngle <= 0)
 		{
 			updateTrig();
@@ -558,8 +566,7 @@ class FlxLimb extends FlxAnim
 		}
 		if (isPixelPerfectRender(camera))
 		{
-			_point.x = Math.floor(_point.x);
-			_point.y = Math.floor(_point.y);
+			_point.floor();
 		}
 
 		_matrix.translate(_point.x, _point.y);

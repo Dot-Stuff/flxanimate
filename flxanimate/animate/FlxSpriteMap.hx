@@ -79,25 +79,25 @@ class FlxSpriteMap
                 bitmap = Assets.getBitmapData('$Path/${data.meta.image}');
                 while (Assets.exists('$Path/spritemap$i.json'))
                 {
-                    trace('$Path/spritemap$i.json', Assets.exists('$Path/spritemap$i.json'));
                     if (i > 1)
                     {
-                        trace(i);
                         var data2:AnimateAtlas = haxe.Json.parse(StringTools.replace(Assets.getText('$Path/spritemap$i.json'), String.fromCharCode(0xFEFF), ""));
 
                         for (e in data2.ATLAS.SPRITES)
                         {
-                            e.SPRITE.y += bitmap.height;
+                            e.SPRITE.y += data.meta.size.h;
                             data.ATLAS.SPRITES.push(e);
                         }
 
                         var bitmap2 = Assets.getBitmapData('$Path/${data2.meta.image}');
                         
-                        var bitmapDraw = new BitmapData(max(bitmap.width, bitmap2.width), bitmap.height + bitmap2.height, true, 0x00000000);
+                        var bitmapDraw = new BitmapData(max(data.meta.size.w, data2.meta.size.w), data.meta.size.h + data2.meta.size.h, true, 0x00000000);
                         bitmapDraw.draw(bitmap);
-                        bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, bitmap.height));
+                        bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, data.meta.size.h));
                         
                         bitmap = bitmapDraw;
+                        data.meta.size.w = bitmap.width;
+                        data.meta.size.h = bitmap.height;
                     }
                     i++;
                 }

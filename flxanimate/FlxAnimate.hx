@@ -112,6 +112,21 @@ class FlxAnimate extends FlxSprite
 		if (showPivot || anim == null)
 			super.checkEmptyFrame();
 	}
+	override function destroy()
+	{
+		onClick = null;
+		onComplete = null;
+		framerate = 0;
+		reversed = showPivot = isPlaying = false;
+		#if FLX_SOUND_SYSTEM
+		if (sound != null)
+			sound.destroy();
+		#end
+		anim.destroy();
+		anim = null;
+		timeline = null;
+		super.destroy();
+	}
 	public function playAnim(?Name:String, ForceRestart:Bool = false, Looped:Bool = false, Reverse:Bool = false, flipX:Bool = false, flipY:Bool = false)
 	{
 		@:privateAccess
@@ -176,25 +191,22 @@ class FlxAnimate extends FlxSprite
 			new ButtonEvent(onClick, sound).fire();
 			anim.clickedButton = false;
 		}
-		@:privateAccess
 		if (!isPlaying)
 			return;
-		else
-		{
-			frameTick += elapsed;
+		
+		frameTick += elapsed;
 
-			while (frameTick > frameDelay)
+		while (frameTick > frameDelay)
+		{
+			if (reversed)
 			{
-				if (reversed)
-				{
-					anim.curFrame--;
-				}
-				else
-				{
-					anim.curFrame++;
-				}
-				frameTick -= frameDelay;
+				anim.curFrame--;
 			}
+			else
+			{
+				anim.curFrame++;
+			}
+			frameTick -= frameDelay;
 		}
 		@:privateAccess
 		if (anim.curLabel != null)
