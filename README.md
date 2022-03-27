@@ -2,30 +2,34 @@
 
 # FlxAnimate
 
-Run `haxelib install flxanimate` to install FlxAnimate.
+A way to introduce texture atlases in your HaxeFlixel projects.
 
-A way to introduce texture atlases through your flixel projects.
+FlxAnimate introduces a way to add animations from texture atlases exported from Adobe Animate.
+Texture atlases just pack symbols used in the animation, and have a `.json` file which describes how exactly it will be animated.
 
-FlxAnimate introduces a way to add single animations through the texture atlas from the Adobe Animate, making the animations be more modifiable through the png so instead of the whole animation stamped in sheets, it's a recap of all the drawings which will be used for the animation later on.
-Right now it's in development, so it's very possible the name functions, variables and/or classes will change on the future.
+FlxAnimate is currently in development, so it's very possible that classes, functions and variables will be changed in the future.
 
-# How to use it
-It's actually really simple to use! You need to call FlxAnimate, as you would do with like pretty much an FlxSprite
+# Usage
+Using FlxAnimate is really simple! First, you have to create a new instance of FlxAnimate, just like you would with an FlxSprite.
+
 ```haxe
-var char = new FlxAnimate(x,y, 'Path');
+var character:FlxAnimate = new FlxAnimate(X, Y, PathToAtlas);
 ```
-There's also a settings variable, this is used just in case you want to initialize the variables with a Json or something like that, or you don't want to add 70 different variables checking about the stuff and blablabla.
-You can add your own animations too!
-**AT THE MOMENT** you can add animations thro single symbols and with indices, We are planning to add animations with smashing the symbols thro layers and by frame prefixes.
-Adding animations with symbols:
+
+There is also a settings option when creating an FlxAnimate object, but that is optional and can be used if you wanted to set the framerate, antialiasing, what happens when the animation finishes, etc.
+
+**CURRENTLY** you can only add animations with symbols and indices, we are planning to add animations by frame prefixes and symbols through layers.
+Adding animations from a symbol:
 ```haxe
-char.anim.addBySymbol(animationName, SymbolName, X, Y, framerate);
+character.anim.addBySymbol(AnimationName, SymbolName, X, Y, Framerate);
 ```
-Adding animations with indices:
+
+Adding animations from indices:
 ```haxe
-char.anim.addByAnimIndices(animationName, [0,1,2,3], framerate);
+character.anim.addByAnimIndices(AnimationName, Indices ([0, 1, 2, 3...] etc.), Framerate);
 ```
-**WARNING:** Adding animations by indices affects only with the exported symbol, the main animation, do not try with different symbols! it won't work!
+
+**WARNING:** Adding animations by indices works only with the exported symbol and the main animation, don't try with different symbols as it will not work.
 
 ## TODO
 * (optional/important) Masks and filters.
