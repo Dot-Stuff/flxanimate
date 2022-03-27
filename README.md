@@ -7,9 +7,9 @@ A way to introduce texture atlases in your HaxeFlixel projects.
 FlxAnimate introduces a way to add animations from texture atlases exported from Adobe Animate.
 
 A texture atlas is a method of exporting animations in Adobe Animate which exports a specific symbol. In every texture atlas there will be atleast 3 files (depending on the version you're using):
-- Animation.json - Determines the main timeline plus the timelines of symbols within the animation.
-- spritemap(1).json - Determines the sprites and assets needed for the animation.
-- spritemap(1).png - An image containing the assets needed for the animation.
+- `Animation.json` - Determines the main timeline plus the timelines of symbols within the animation.
+- `spritemap(1).json` - Determines the sprites and assets needed for the animation.
+- `spritemap(1).png` - An image containing the assets needed for the animation.
 
 FlxAnimate is currently in development, so it's very possible that classes, functions and variables will be changed in the future.
 
