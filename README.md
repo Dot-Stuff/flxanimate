@@ -9,7 +9,14 @@ Texture atlases just pack symbols used in the animation, and have a `.json` file
 
 FlxAnimate is currently in development, so it's very possible that classes, functions and variables will be changed in the future.
 
-# Usage
+## Installation
+Installing FlxAnimate is as simple as running:
+```
+haxelib install polymod
+```
+in your terminal or command prompt!
+
+## Usage
 Using FlxAnimate is really simple! First, you have to create a new instance of FlxAnimate, just like you would with an FlxSprite.
 
 ```haxe
@@ -34,5 +41,5 @@ character.anim.addByAnimIndices(AnimationName, Indices ([0, 1, 2, 3...] etc.), F
 ## TODO
 * (optional/important) Masks and filters.
 
-# Support
+## Support
 You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
