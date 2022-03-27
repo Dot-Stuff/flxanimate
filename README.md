@@ -12,7 +12,7 @@ FlxAnimate is currently in development, so it's very possible that classes, func
 ## Installation
 Installing FlxAnimate is as simple as running:
 ```
-haxelib install polymod
+haxelib install flxanimate
 ```
 in your terminal or command prompt!
 
