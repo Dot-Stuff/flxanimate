@@ -1,5 +1,6 @@
 package flxanimate;
 
+import flixel.FlxCamera;
 import flxanimate.animate.FlxAnim.ButtonEvent;
 import flxanimate.zip.Zip;
 import openfl.Assets;
@@ -9,7 +10,6 @@ import flixel.system.FlxSound;
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
 import flixel.FlxSprite;
-import lime._internal.format.Deflate;
 import flxanimate.animate.*;
 
 typedef Settings = {
@@ -39,6 +39,13 @@ class FlxAnimate extends FlxSprite
 	public var onClick:Void->Void;
 
 	public var onComplete:Void->Void;
+	/**
+	 * Optimised Draw represents how the anim is gonna be drawing.
+	 * 
+	 * When you use like, rotated sprites from the matrix, frame shit makes the limbs disappear depending on the rotation and how do you position the sprite.
+	 * If you disable this, you won't have this issue but it'll always draw the thing, no matter if the sprite is outside the screen, so take it in mind!
+	 */
+	public var optimisedDraw(get, set):Bool;
 
 	#if FLX_SOUND_SYSTEM
 	public var sound:FlxSound;
@@ -93,18 +100,51 @@ class FlxAnimate extends FlxSprite
 	{
 		if (anim != null && anim.frames != null)
 		{
-			anim.visible = visible;
-			anim.antialiasing = antialiasing;
-			anim.cameras = cameras;
-			anim.x = x;
-			anim.y = y;
 			anim.offset = offset;
 			anim.scrollFactor = scrollFactor;
-			anim.xFlip = flipX;
-			anim.yFlip = flipY;
 			anim.renderFrames(timeline);
 		}
 		super.draw();
+	}
+	override function set_flipX(Value:Bool)
+	{
+		anim.xFlip = Value;
+		return super.set_flipX(Value);
+	}
+	override function set_flipY(Value:Bool)
+	{
+		anim.yFlip = Value;
+		return super.set_flipY(Value);
+	}
+	override function set_x(Value:Float)
+	{
+		if (anim != null)
+			anim.x = Value;
+		return super.set_x(Value);
+	}
+	override function set_y(Value:Float)
+	{
+		if (anim != null)
+			anim.y = Value;
+		return super.set_y(Value);
+	}
+	override function set_cameras(Value:Array<FlxCamera>)
+	{
+		if (anim != null)
+			anim.cameras = Value;
+		return super.set_cameras(Value);
+	}
+	override function set_antialiasing(Value:Bool)
+	{
+		if (anim != null)
+			anim.antialiasing = Value;
+		return super.set_antialiasing(Value);
+	}
+	override function set_visible(Value:Bool)
+	{
+		if (anim != null)
+			anim.visible = Value;
+		return super.set_visible(Value);
 	}
 	override function checkEmptyFrame()
 	{
@@ -180,6 +220,16 @@ class FlxAnimate extends FlxSprite
 	{
 		frameDelay = 1 / value;
 		return framerate = value;
+	}
+	function get_optimisedDraw()
+	{
+		@:privateAccess
+		return anim.optimisedDrawing;
+	}
+	function set_optimisedDraw(value:Bool)
+	{
+		@:privateAccess
+		return anim.optimisedDrawing = value;
 	}
 	public override function update(elapsed:Float)
 	{

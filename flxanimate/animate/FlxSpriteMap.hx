@@ -45,9 +45,8 @@ class FlxSpriteMap
                 }
 			}
             // Assuming the json has the same stuff as the image stuff
-            for (num in 0...json.length)
+            for (curJson in json)
             {
-                var curJson = json[num];
                 if (data == null)
                 {
                     data = curJson;
@@ -56,13 +55,15 @@ class FlxSpriteMap
                 else
                 {
                     var data2 = curJson;
+                    var size = data.meta.size;
+                    var size2 = data2.meta.size;
                     var bitmap2 = BitmapData.fromBytes(imagemap[data2.meta.image]);
-                    var bitmapDraw = new BitmapData(max(bitmap.width, bitmap2.width), bitmap.height + bitmap2.height, true, 0x00000000);
+                    var bitmapDraw = new BitmapData(max(size.w, size2.w), size.h + size2.h, true, 0x00000000);
                     bitmapDraw.draw(bitmap);
-                    bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, bitmap.height));
+                    bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, size.h));
                     for (e in data2.ATLAS.SPRITES)
                     {
-                        e.SPRITE.y += bitmap.height;
+                        e.SPRITE.y += size.h;
                         data.ATLAS.SPRITES.push(e);
                     }
                     bitmap = bitmapDraw;

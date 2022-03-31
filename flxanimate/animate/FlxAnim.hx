@@ -1,5 +1,7 @@
 package flxanimate.animate;
 
+import flixel.FlxBasic;
+import flixel.tweens.FlxTween;
 import openfl.geom.ColorTransform;
 import openfl.filters.GlowFilter;
 import flixel.graphics.frames.FlxFilterFrames;
@@ -25,6 +27,8 @@ class FlxAnim extends FlxSprite
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
 	public var clickedButton:Bool = false;
+	
+	var optimisedDrawing = true;
 
 	var name:String;
 
@@ -131,15 +135,12 @@ class FlxAnim extends FlxSprite
 					else if (element.ASI != null) // It's a drawing?
 					{
 						var m3d = element.ASI.M3D;
-						
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
-
 						matrix.concat(_matrix);
 						var spr:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y,this);
 						matrix.tx = matrix.ty = 0;
 						spr.frame = frames.getByName(element.ASI.N);
 						spr._matrix.concat(matrix);
-						// TODO: Remodel this shit
 						spr.colorTransform.concat(colorEffect);
 						spr.draw();
 					}
@@ -518,7 +519,6 @@ class FlxAnim extends FlxSprite
 						labelArray.set(name, frame.N);
 					name = frame.N;
 					frameLabels.set(name, frame.I);
-
 				}
 			}
 		}
@@ -541,6 +541,35 @@ class FlxAnim extends FlxSprite
 		curLabel = null;
 		super.destroy();
 	}
+	override public function draw():Void
+	{
+		if (alpha == 0)
+			return;
+
+		if (dirty) // rarely
+			calcFrame(useFramePixels);
+
+		for (camera in cameras)
+		{
+			if (!camera.visible || !camera.exists || optimisedDrawing && !isOnScreen(camera))
+				continue;
+
+			getScreenPosition(_point, camera).subtractPoint(offset);
+
+			if (isSimpleRender(camera))
+				drawSimple(camera);
+			else
+				drawComplex(camera);
+
+			#if FLX_DEBUG
+			FlxBasic.visibleCount++;
+			#end
+		}
+		#if FLX_DEBUG
+		if (FlxG.debugger.drawDebug)
+			drawDebug();
+		#end
+	}
 }
 @:noCompletion
 class FlxLimb extends FlxAnim
@@ -553,7 +582,9 @@ class FlxLimb extends FlxAnim
 		xFlip = Settings.xFlip;
 		yFlip = Settings.yFlip;
 		scrollFactor = Settings.scrollFactor;
+		optimisedDrawing = Settings.optimisedDrawing;
 	}
+
 	public override function drawComplex(camera:FlxCamera):Void
 	{
 		_matrix.concat(_frame.prepareMatrix(new FlxMatrix()));

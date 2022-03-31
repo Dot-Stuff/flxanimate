@@ -9,43 +9,42 @@ class AnimationData
 	public static function parseDurationFrames(frames:Array<Frame>):Array<Frame>
 	{
 		var result:Array<Frame> = [];
-
+		var index = 0;
+		var name:Null<String> = null;
 		for (frame in frames)
 		{
 			var i = 0;
-
+			name = frame.N;
 			do
 			{
-				result.push(frame);
+				result.push({N: name, I: index, DU: 1, E: frame.E});
+				if (name != null)
+					name == null;
 				i++;
 			}
 			while (i < frame.DU);
+			index++;
 		}
 		
 		return result;
 	}
 	@:noCompletion
-	public static function setFieldBool(abstracto:Dynamic, thing1:Dynamic, thing2:Dynamic, ?set:Dynamic, get:Bool = true):Dynamic
+	public static function setFieldBool(abstracto:Dynamic, things:Array<String>, ?set:Dynamic):Dynamic
 	{
 		//TODO: The comment below this comment.
 		// GeoKureli told me that Reflect is shit, but I have literally no option but to use this.
 		// If I have another thing to use that works the same, should replace this lol
-		return if (Reflect.hasField(abstracto, thing1))
+		for (thing in things)
 		{
-			if (!get)
+			if (Reflect.hasField(abstracto, thing))
 			{
-				Reflect.setField(abstracto, thing1, set);
+				if (set != null)
+					Reflect.setField(abstracto, thing, set);
+				return Reflect.field(abstracto, thing);
 			}
-			Reflect.field(abstracto, thing1);
 		}
-		else
-		{
-			if (!get)
-			{
-				Reflect.setField(abstracto, thing2, set);
-			}
-			Reflect.field(abstracto, thing2);
-		}
+
+		return Reflect.field(abstracto, "");
 	}
 }
 
@@ -66,16 +65,16 @@ abstract AnimAtlas({}) from {}
 
 	inline function get_AN():Animation
 	{
-		return AnimationData.setFieldBool(this, "AN", "ANIMATION");
+		return AnimationData.setFieldBool(this, ["AN", "ANIMATION"]);
 	}
 
 	inline function get_MD():MetaData
 	{
-		return AnimationData.setFieldBool(this, "MD", "metadata");
+		return AnimationData.setFieldBool(this, ["MD", "metadata"]);
 	}
 	inline function get_SD()
 	{
-		return AnimationData.setFieldBool(this, "SD", "SYMBOL_DICTIONARY");
+		return AnimationData.setFieldBool(this, ["SD", "SYMBOL_DICTIONARY"]);
 	}
 }
 /**
@@ -90,7 +89,7 @@ abstract SymbolDictionary({}) from {}
 
 	inline function get_S():Array<SymbolData>
 	{
-		return AnimationData.setFieldBool(this, "S", "Symbols");
+		return AnimationData.setFieldBool(this, ["S", "Symbols"]);
 	}
 }
 /**
@@ -117,19 +116,19 @@ abstract Animation({}) from {}
 
 	inline function get_SN():String 
 	{
-		return AnimationData.setFieldBool(this, "SN", "SYMBOL_name");
+		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 	inline function get_N():String
 	{
-		return AnimationData.setFieldBool(this, "N", "name");
+		return AnimationData.setFieldBool(this, ["N", "name"]);
 	}
 	inline function get_TL():Timeline
 	{
-		return AnimationData.setFieldBool(this, "TL", "TIMELINE");
+		return AnimationData.setFieldBool(this, ["TL", "TIMELINE"]);
 	}
 	inline function get_STI()
 	{
-		return AnimationData.setFieldBool(this, "STI", "StageInstance");
+		return AnimationData.setFieldBool(this, ["STI", "StageInstance"]);
 	}
 }
 
@@ -139,7 +138,7 @@ abstract StageInstance({})
 
 	inline function get_SI():SymbolInstance
 	{
-		return AnimationData.setFieldBool(this, "SI", "SYMBOL_Instance");
+		return AnimationData.setFieldBool(this, ["SI", "SYMBOL_Instance"]);
 	}
 }
 /**
@@ -158,11 +157,11 @@ abstract SymbolData({}) from {}
 
 	inline function get_SN():String 
 	{
-		return AnimationData.setFieldBool(this, "SN", "SYMBOL_name");
+		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 	inline function get_TL():Timeline
 	{
-		return AnimationData.setFieldBool(this, "TL", "TIMELINE");
+		return AnimationData.setFieldBool(this, ["TL", "TIMELINE"]);
 	}
 }
 /**
@@ -177,11 +176,11 @@ abstract Timeline({}) from {}
 
 	inline function get_L():Array<Layers>
 	{
-		return AnimationData.setFieldBool(this, "L", "LAYERS");
+		return AnimationData.setFieldBool(this, ["L", "LAYERS"]);
 	}
 	inline function set_L(value:Array<Layers>)
 	{
-		return AnimationData.setFieldBool(this, "L", "LAYERS", value, false);
+		return AnimationData.setFieldBool(this, ["L", "LAYERS"], value);
 	}
 }
 /**
@@ -201,23 +200,15 @@ abstract Layers({}) from {}
 	inline function get_LN():String
 	{
 		
-		return AnimationData.setFieldBool(this, "LN", "Layer_name");
+		return AnimationData.setFieldBool(this, ["LN", "Layer_name"]);
 	}
 	inline function get_FR():Array<Frame>
 	{
-		return AnimationData.setFieldBool(this, "FR", "Frames");
+		return AnimationData.setFieldBool(this, ["FR", "Frames"]);
 	}
 	inline function set_FR(value:Array<Frame>):Array<Frame>
 	{
-		if (Reflect.hasField(this, "FR"))
-		{
-			Reflect.setField(this, "FR", value);
-		}
-		else
-		{
-			Reflect.setField(this, "Frames", value);
-		}
-		return FR;
+		return AnimationData.setFieldBool(this, ["FR", "Frames"], value);
 	}
 }
 /**
@@ -233,7 +224,7 @@ abstract MetaData({}) from {}
 	
 	inline function get_FRT()
 	{
-		return AnimationData.setFieldBool(this, "FRT", "framerate");
+		return AnimationData.setFieldBool(this, ["FRT", "framerate"]);
 	}
 }
 /**
@@ -260,19 +251,19 @@ abstract Frame({}) from {}
 
 	inline function get_N():String
 	{
-		return AnimationData.setFieldBool(this, "N", "name");
+		return AnimationData.setFieldBool(this, ["N", "name"]);
 	}
 	inline function get_I():Int
 	{
-		return AnimationData.setFieldBool(this, "I", "index");
+		return AnimationData.setFieldBool(this, ["I", "index"]);
 	}
 	inline function get_DU():Int
 	{
-		return AnimationData.setFieldBool(this, "DU", "duration");
+		return AnimationData.setFieldBool(this, ["DU", "duration"]);
 	}
 	inline function get_E():Array<Element>
 	{
-		return AnimationData.setFieldBool(this, "E", "elements");
+		return AnimationData.setFieldBool(this, ["E", "elements"]);
 	}
 }
 /**
@@ -288,7 +279,7 @@ abstract Element(StageInstance)
 
 	inline function get_ASI():AtlasSymbolInstance
 	{
-		return AnimationData.setFieldBool(this, "ASI", "ATLAS_SPRITE_instance");
+		return AnimationData.setFieldBool(this, ["ASI", "ATLAS_SPRITE_instance"]);
 	}
 }
 /**
@@ -350,59 +341,59 @@ abstract SymbolInstance({}) from {}
 
 	inline function get_SN()
 	{
-		return AnimationData.setFieldBool(this, "SN", "SYMBOL_name");
+		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 
 	inline function get_IN()
 	{
-		return AnimationData.setFieldBool(this, "IN", "Instance_Name");
+		return AnimationData.setFieldBool(this, ["IN", "Instance_Name"]);
 	}
 
 	inline function get_ST()
 	{
-		return AnimationData.setFieldBool(this, "ST", "symbolType");
+		return AnimationData.setFieldBool(this, ["ST", "symbolType"]);
 	}
 
 	inline function get_bitmap()
 	{
-		return AnimationData.setFieldBool(this, "BM", "bitmap");
+		return AnimationData.setFieldBool(this, ["BM", "bitmap"]);
 	}
 	inline function get_FF()
 	{
-		return AnimationData.setFieldBool(this, "FF", "firstFrame");
+		return AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
 	}
 
 	inline function get_LP()
 	{
-		return AnimationData.setFieldBool(this, "LP", "loop");
+		return AnimationData.setFieldBool(this, ["LP", "loop"]);
 	}
 
 	inline function get_TRP()
 	{
-		return AnimationData.setFieldBool(this, "TRP", "transformationPoint");
+		return AnimationData.setFieldBool(this, ["TRP", "transformationPoint"]);
 	}
 
 	inline function get_M3D()
 	{
-		return AnimationData.setFieldBool(this, "M3D", "Matrix3D");
+		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
 	}
 	inline function set_M3D(value:OneOfTwo<Array<Float>, Matrix3D>)
 	{
-		return AnimationData.setFieldBool(this, "M3D", "Matrix3D", value, false);
+		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"], value);
 	}
 
 	inline function get_C()
 	{
-		return AnimationData.setFieldBool(this, "C", "color");
+		return AnimationData.setFieldBool(this, ["C", "color"]);
 	}
 	inline function set_C(value:ColorEffects)
 	{
-		return AnimationData.setFieldBool(this, "C", "color", value, false);
+		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
 
 	inline function get_F()
 	{
-		return AnimationData.setFieldBool(this, "F", "filters");
+		return AnimationData.setFieldBool(this, ["F", "filters"]);
 	}
 }
 abstract ColorEffects({}) from {}
@@ -437,51 +428,51 @@ abstract ColorEffects({}) from {}
 
 	inline function get_M()
 	{
-		return AnimationData.setFieldBool(this, "M", "mode");
+		return AnimationData.setFieldBool(this, ["M", "mode"]);
 	}
 	inline function get_TC()
 	{
-		return AnimationData.setFieldBool(this, "TC", "tintColor");
+		return AnimationData.setFieldBool(this, ["TC", "tintColor"]);
 	}
 	inline function get_TM()
 	{
-		return AnimationData.setFieldBool(this, "TM", "tintMultiplier");
+		return AnimationData.setFieldBool(this, ["TM", "tintMultiplier"]);
 	}
 	inline function get_AM()
 	{
-		return AnimationData.setFieldBool(this, "AM", "alphaMultiplier");
+		return AnimationData.setFieldBool(this, ["AM", "alphaMultiplier"]);
 	}
 	inline function get_AO()
 	{
-		return AnimationData.setFieldBool(this, "AO", "AlphaOffset");
+		return AnimationData.setFieldBool(this, ["AO", "AlphaOffset"]);
 	}
 	inline function get_RM()
 	{
-		return AnimationData.setFieldBool(this, "RM", "RedMultiplier");
+		return AnimationData.setFieldBool(this, ["RM", "RedMultiplier"]);
 	}
 	inline function get_RO()
 	{
-		return AnimationData.setFieldBool(this, "RO", "redOffset");
+		return AnimationData.setFieldBool(this, ["RO", "redOffset"]);
 	}
 	inline function get_GM()
 	{
-		return AnimationData.setFieldBool(this, "GM", "greenMultiplier");
+		return AnimationData.setFieldBool(this, ["GM", "greenMultiplier"]);
 	}
 	inline function get_GO()
 	{
-		return AnimationData.setFieldBool(this, "GO", "greenOffset");
+		return AnimationData.setFieldBool(this, ["GO", "greenOffset"]);
 	}
 	inline function get_BM()
 	{
-		return AnimationData.setFieldBool(this, "BM", "blueMultiplier");
+		return AnimationData.setFieldBool(this, ["BM", "blueMultiplier"]);
 	}
 	inline function get_BO()
 	{
-		return AnimationData.setFieldBool(this, "BO", "blueOffset");
+		return AnimationData.setFieldBool(this, ["BO", "blueOffset"]);
 	}
 	inline function get_BRT()
 	{
-		return AnimationData.setFieldBool(this, "BRT", "Brightness");
+		return AnimationData.setFieldBool(this, ["BRT", "Brightness"]);
 	}
 }
 abstract Filters({})
@@ -493,7 +484,7 @@ abstract Filters({})
 
 	inline function get_ACF()
 	{
-		return AnimationData.setFieldBool(this, "ACF", "AdjustColorFilter");
+		return AnimationData.setFieldBool(this, ["ACF", "AdjustColorFilter"]);
 	}
 }
 // The filters aren't looked much lol
@@ -506,19 +497,19 @@ abstract AdjustColorFilter({})
 
 	inline function get_BRT()
 	{
-		return AnimationData.setFieldBool(this, "BRT", "brightness");
+		return AnimationData.setFieldBool(this, ["BRT", "brightness"]);
 	}
 	inline function get_CT()
 	{
-		return AnimationData.setFieldBool(this, "CT", "contrast");
+		return AnimationData.setFieldBool(this, ["CT", "contrast"]);
 	}
 	inline function get_SAT()
 	{
-		return AnimationData.setFieldBool(this, "SAT", "saturation");
+		return AnimationData.setFieldBool(this, ["SAT", "saturation"]);
 	}
 	inline function get_H()
 	{
-		return AnimationData.setFieldBool(this, "H", "hue");
+		return AnimationData.setFieldBool(this, ["H", "hue"]);
 	}
 }
 
@@ -543,11 +534,11 @@ abstract Bitmap({}) from {}
 	public var POS(get, never):TransformationPoint;
 	inline function get_N()
 	{
-		return AnimationData.setFieldBool(this, "N", "name");
+		return AnimationData.setFieldBool(this, ["N", "name"]);
 	}
 	inline function get_POS()
 	{
-		return AnimationData.setFieldBool(this, "POS", "Position");
+		return AnimationData.setFieldBool(this, ["POS", "Position"]);
 	}
 }
 /**
@@ -563,11 +554,11 @@ abstract AtlasSymbolInstance(Bitmap) from {}
 
 	inline function get_M3D()
 	{
-		return AnimationData.setFieldBool(this, "M3D", "Matrix3D");
+		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
 	}
 	inline function set_M3D(value:OneOfTwo<Array<Float>, Matrix3D>)
 	{
-		return AnimationData.setFieldBool(this, "M3D", "Matrix3D", value, false);
+		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"], value);
 	}
 }
 
