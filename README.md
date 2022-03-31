@@ -2,33 +2,48 @@
 
 # FlxAnimate
 
-Run `haxelib install flxanimate` to install FlxAnimate.
+A way to introduce texture atlases in your HaxeFlixel projects.
 
-A way to introduce texture atlases through your flixel projects.
+FlxAnimate introduces a way to add animations from texture atlases exported from Adobe Animate.
 
-FlxAnimate introduces a way to add single animations through the texture atlas from the Adobe Animate, making the animations be more modifiable through the png so instead of the whole animation stamped in sheets, it's a recap of all the drawings which will be used for the animation later on.
-Right now it's in development, so it's very possible the name functions, variables and/or classes will change on the future.
+A texture atlas is a method of exporting animations in Adobe Animate which exports a specific symbol. In every texture atlas there will be atleast 3 files (depending on the version you're using):
+- `Animation.json` - Determines the main timeline plus the timelines of symbols within the animation.
+- `spritemap(1).json` - Determines the sprites and assets needed for the animation.
+- `spritemap(1).png` - An image containing the assets needed for the animation.
 
-# How to use it
-It's actually really simple to use! You need to call FlxAnimate, as you would do with like pretty much an FlxSprite
-```haxe
-var char = new FlxAnimate(x,y, 'Path');
+FlxAnimate is currently in development, so it's very possible that classes, functions and variables will be changed in the future.
+
+## Installation
+Installing FlxAnimate is as simple as running:
 ```
-There's also a settings variable, this is used just in case you want to initialize the variables with a Json or something like that, or you don't want to add 70 different variables checking about the stuff and blablabla.
-You can add your own animations too!
-**AT THE MOMENT** you can add animations thro single symbols and with indices, We are planning to add animations with smashing the symbols thro layers and by frame prefixes.
-Adding animations with symbols:
-```haxe
-char.anim.addBySymbol(animationName, SymbolName, X, Y, framerate);
+haxelib install flxanimate
 ```
-Adding animations with indices:
+in your terminal or command prompt!
+
+## Usage
+Using FlxAnimate is really simple! First, you have to create a new instance of FlxAnimate, just like you would with an FlxSprite.
+
 ```haxe
-char.anim.addByAnimIndices(animationName, [0,1,2,3], framerate);
+var character:FlxAnimate = new FlxAnimate(X, Y, PathToAtlas);
 ```
-**WARNING:** Adding animations by indices affects only with the exported symbol, the main animation, do not try with different symbols! it won't work!
+
+There is also a settings option when creating an FlxAnimate object used just in case if you wanted to initialise the variables in a JSON, and it's up to you if you wanted to use it.
+
+**CURRENTLY** you can add animations from frame labels, symbols and indices. Support for stamping symbols is planned for later updates.
+Adding animations from a symbol:
+```haxe
+character.anim.addBySymbol(AnimationName, SymbolName, X, Y, Framerate);
+```
+
+Adding animations from indices:
+```haxe
+character.anim.addByAnimIndices(AnimationName, Indices ([0, 1, 2, 3...] etc.), Framerate);
+```
+
+**WARNING:** Adding animations by indices works only with the exported timeline and the main animation, don't try with different symbols as it will not work.
 
 ## TODO
 * (optional/important) Masks and filters.
 
-# Support
+## Support
 You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
