@@ -16,6 +16,7 @@ import flixel.math.FlxMatrix;
 import flxanimate.data.AnimationData;
 import flixel.system.FlxSound;
 import flixel.graphics.frames.FlxFrame;
+import flixel.math.FlxMath;
 
 typedef SymbolStuff = {var timeline:Timeline; var X:Float; var Y:Float; var frameRate:Float;};
 class FlxAnim extends FlxSprite
@@ -28,8 +29,6 @@ class FlxAnim extends FlxSprite
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
 	public var clickedButton:Bool = false;
-	
-	var optimisedDrawing = true;
 
 	var name:String;
 
@@ -553,7 +552,6 @@ class FlxLimb extends FlxAnim
 		xFlip = Settings.xFlip;
 		yFlip = Settings.yFlip;
 		scrollFactor = Settings.scrollFactor;
-		optimisedDrawing = Settings.optimisedDrawing;
 	}
 	override public function draw():Void
 	{
@@ -565,7 +563,7 @@ class FlxLimb extends FlxAnim
 
 		for (camera in cameras)
 		{
-			if (!camera.visible || !camera.exists || optimisedDrawing && !isOnScreen(camera))
+			if (!camera.visible || !camera.exists && !isOnScreen(camera))
 				continue;
 
 			getScreenPosition(_point, camera).subtractPoint(offset);
@@ -586,7 +584,43 @@ class FlxLimb extends FlxAnim
 	}
 	override function isOnScreen(?Camera:FlxCamera):Bool 
 	{
-		return super.isOnScreen(Camera);
+		if (Camera == null)
+			Camera = FlxG.camera;
+
+		var minX:Float = x - offset.x - Camera.scroll.x * scrollFactor.x;
+		var minY:Float = y - offset.y - Camera.scroll.y * scrollFactor.y;
+
+		var radiusX:Float = _halfSize.x;
+		var radiusY:Float = _halfSize.y;
+
+		var ox:Float = origin.x;
+		if (ox != radiusX)
+		{
+			var x1:Float = Math.abs(ox);
+			var x2:Float = Math.abs(frameWidth - ox);
+			radiusX = Math.max(x2, x1);
+		}
+
+		var oy:Float = origin.y;
+		if (oy != radiusY)
+		{
+			var y1:Float = Math.abs(oy);
+			var y2:Float = Math.abs(frameHeight - oy);
+			radiusY = Math.max(y2, y1);
+		}
+
+		radiusX *= Math.abs(scale.x);
+		radiusY *= Math.abs(scale.y);
+		var radius:Float = Math.max(radiusX, radiusY);
+		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
+
+		minX += ox - radius;
+		minY += oy - radius;
+
+		var doubleRadius:Float = 2 * radius;
+
+		_point.set(minX, minY);
+		return Camera.containsPoint(_point, doubleRadius, doubleRadius);
 	}
 	public override function drawComplex(camera:FlxCamera):Void
 	{

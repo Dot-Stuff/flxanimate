@@ -44,7 +44,7 @@ class AnimationData
 			}
 		}
 
-		return Reflect.field(abstracto, "");
+		return Reflect.field(abstracto, null);
 	}
 }
 

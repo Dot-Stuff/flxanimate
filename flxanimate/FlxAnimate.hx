@@ -39,13 +39,6 @@ class FlxAnimate extends FlxSprite
 	public var onClick:Void->Void;
 
 	public var onComplete:Void->Void;
-	/**
-	 * Optimised Draw represents how the anim is gonna be drawing.
-	 * 
-	 * When you use like, rotated sprites from the matrix, frame shit makes the limbs disappear depending on the rotation and how do you position the sprite.
-	 * If you disable this, you won't have this issue but it'll always draw the thing, no matter if the sprite is outside the screen, so take it in mind!
-	 */
-	public var optimisedDraw(get, set):Bool;
 
 	#if FLX_SOUND_SYSTEM
 	public var sound:FlxSound;
@@ -220,16 +213,6 @@ class FlxAnimate extends FlxSprite
 	{
 		frameDelay = 1 / value;
 		return framerate = value;
-	}
-	function get_optimisedDraw()
-	{
-		@:privateAccess
-		return anim.optimisedDrawing;
-	}
-	function set_optimisedDraw(value:Bool)
-	{
-		@:privateAccess
-		return anim.optimisedDrawing = value;
 	}
 	public override function update(elapsed:Float)
 	{
