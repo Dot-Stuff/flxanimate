@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import openfl.geom.Rectangle;
 import flixel.FlxBasic;
 import flixel.tweens.FlxTween;
 import openfl.geom.ColorTransform;
@@ -35,8 +36,6 @@ class FlxAnim extends FlxSprite
 	public var curFrame:Int = 0;
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
-
-	var colorEffect:ColorTransform;
 	
 	var callbackCalled:Bool = false;
 	/**
@@ -105,8 +104,7 @@ class FlxAnim extends FlxSprite
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
 						var symbol:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y, this);
-						symbol.colorEffect = new ColorTransform();
-						symbol.colorEffect.concat(colorEffect);
+						symbol.colorTransform.concat(colorTransform);
 						symbol.symbolDictionary = symbolDictionary;
 						symbol.frames = frames;
 						if (element.SI.bitmap == null)
@@ -141,7 +139,7 @@ class FlxAnim extends FlxSprite
 						matrix.tx = matrix.ty = 0;
 						spr.frame = frames.getByName(element.ASI.N);
 						spr._matrix.concat(matrix);
-						spr.colorTransform.concat(colorEffect);
+						spr.colorTransform.concat(colorTransform);
 						spr.draw();
 					}
 				}
@@ -189,7 +187,7 @@ class FlxAnim extends FlxSprite
 			}
 		}
 		
-		colorEffect.concat(CT);
+		colorTransform.concat(CT);
 	}
 	public function setButtonFrames()
 	{
@@ -328,7 +326,6 @@ class FlxAnim extends FlxSprite
 	}
 	public function setShit()
 	{
-		colorEffect = new ColorTransform();
 		reverseLayers();
 		setSymbols(coolParse);
 		getFrameLabels(coolParse.AN.TL);
@@ -433,6 +430,10 @@ class FlxAnim extends FlxSprite
 
 		animsMap.set(Name, {timeline: {L: layers}, X: 0, Y: 0, frameRate: FrameRate});
 	}
+	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 30)
+	{
+		animsMap.set(Name, {timeline: Timeline, X: 0, Y: 0, frameRate:FrameRate});
+	}
 
 	public function get_length()
 	{
@@ -535,11 +536,24 @@ class FlxAnim extends FlxSprite
 		name = null;
 		animsMap = null;
 		callbackCalled = false;
-		colorEffect = null;
 		loopType = null;
 		symbolType = null;
 		curLabel = null;
 		super.destroy();
+	}
+}
+@:noCompletion
+class FlxLimb extends FlxAnim
+{
+	public function new(X:Float, Y:Float,Settings:FlxAnim) 
+	{
+		super(X, Y, null);
+		antialiasing = Settings.antialiasing;
+		offset = Settings.offset;
+		xFlip = Settings.xFlip;
+		yFlip = Settings.yFlip;
+		scrollFactor = Settings.scrollFactor;
+		optimisedDrawing = Settings.optimisedDrawing;
 	}
 	override public function draw():Void
 	{
@@ -570,21 +584,10 @@ class FlxAnim extends FlxSprite
 			drawDebug();
 		#end
 	}
-}
-@:noCompletion
-class FlxLimb extends FlxAnim
-{
-	public function new(X:Float, Y:Float,Settings:FlxAnim) 
+	override function isOnScreen(?Camera:FlxCamera):Bool 
 	{
-		super(X, Y, null);
-		antialiasing = Settings.antialiasing;
-		offset = Settings.offset;
-		xFlip = Settings.xFlip;
-		yFlip = Settings.yFlip;
-		scrollFactor = Settings.scrollFactor;
-		optimisedDrawing = Settings.optimisedDrawing;
+		return super.isOnScreen(Camera);
 	}
-
 	public override function drawComplex(camera:FlxCamera):Void
 	{
 		_matrix.concat(_frame.prepareMatrix(new FlxMatrix()));

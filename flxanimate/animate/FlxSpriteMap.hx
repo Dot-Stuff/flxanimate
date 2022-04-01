@@ -61,6 +61,7 @@ class FlxSpriteMap
                     var bitmapDraw = new BitmapData(max(size.w, size2.w), size.h + size2.h, true, 0x00000000);
                     bitmapDraw.draw(bitmap);
                     bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, size.h));
+
                     for (e in data2.ATLAS.SPRITES)
                     {
                         e.SPRITE.y += size.h;
