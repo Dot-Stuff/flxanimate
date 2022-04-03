@@ -27,7 +27,7 @@ Using FlxAnimate is really simple! First, you have to create a new instance of F
 ```haxe
 var character:FlxAnimate = new FlxAnimate(X, Y, PathToAtlas);
 ```
-**WARNING:**You need to set the path of the FOLDER!
+**WARNING:** You need to set the path of the FOLDER!
 
 Thanks Runcan Renchu (BSOD) telling about it!
 
