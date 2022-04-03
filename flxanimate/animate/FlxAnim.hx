@@ -553,35 +553,6 @@ class FlxLimb extends FlxAnim
 		yFlip = Settings.yFlip;
 		scrollFactor = Settings.scrollFactor;
 	}
-	override public function draw():Void
-	{
-		if (alpha == 0)
-			return;
-
-		if (dirty) // rarely
-			calcFrame(useFramePixels);
-
-		for (camera in cameras)
-		{
-			if (!camera.visible || !camera.exists && !isOnScreen(camera))
-				continue;
-
-			getScreenPosition(_point, camera).subtractPoint(offset);
-
-			if (isSimpleRender(camera))
-				drawSimple(camera);
-			else
-				drawComplex(camera);
-
-			#if FLX_DEBUG
-			FlxBasic.visibleCount++;
-			#end
-		}
-		#if FLX_DEBUG
-		if (FlxG.debugger.drawDebug)
-			drawDebug();
-		#end
-	}
 	override function isOnScreen(?Camera:FlxCamera):Bool 
 	{
 		if (Camera == null)
@@ -590,37 +561,18 @@ class FlxLimb extends FlxAnim
 		var minX:Float = x - offset.x - Camera.scroll.x * scrollFactor.x;
 		var minY:Float = y - offset.y - Camera.scroll.y * scrollFactor.y;
 
-		var radiusX:Float = _halfSize.x;
-		var radiusY:Float = _halfSize.y;
-
-		var ox:Float = origin.x;
-		if (ox != radiusX)
-		{
-			var x1:Float = Math.abs(ox);
-			var x2:Float = Math.abs(frameWidth - ox);
-			radiusX = Math.max(x2, x1);
-		}
-
-		var oy:Float = origin.y;
-		if (oy != radiusY)
-		{
-			var y1:Float = Math.abs(oy);
-			var y2:Float = Math.abs(frameHeight - oy);
-			radiusY = Math.max(y2, y1);
-		}
+		var radiusX:Float = frameHeight;
+		var radiusY:Float = frameWidth;
 
 		radiusX *= Math.abs(scale.x);
 		radiusY *= Math.abs(scale.y);
 		var radius:Float = Math.max(radiusX, radiusY);
 		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
-
-		minX += ox - radius;
-		minY += oy - radius;
-
-		var doubleRadius:Float = 2 * radius;
+		minY =  minX -= radius;
+		radius *= 2;
 
 		_point.set(minX, minY);
-		return Camera.containsPoint(_point, doubleRadius, doubleRadius);
+		return Camera.containsPoint(_point, radius, radius);
 	}
 	public override function drawComplex(camera:FlxCamera):Void
 	{

@@ -1,5 +1,6 @@
 package flxanimate;
 
+import flixel.math.FlxPoint;
 import flixel.FlxCamera;
 import flxanimate.animate.FlxAnim.ButtonEvent;
 import flxanimate.zip.Zip;
@@ -10,7 +11,8 @@ import flixel.system.FlxSound;
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
 import flixel.FlxSprite;
-import flxanimate.animate.*;
+import flxanimate.animate.FlxAnim;
+import flxanimate.frames.FlxAnimateFrames;
 
 typedef Settings = {
 	?ButtonSettings:ButtonSettings,
@@ -18,7 +20,9 @@ typedef Settings = {
 	?Reversed:Bool,
 	?OnComplete:Void->Void,
 	?ShowPivot:Bool,
-	?Antialiasing:Bool
+	?Antialiasing:Bool,
+	?ScrollFactor:FlxPoint,
+	?Offset:FlxPoint,
 }
 typedef ButtonSettings = {
 	?OnClick:Void->Void,
@@ -84,7 +88,7 @@ class FlxAnimate extends FlxSprite
 		var jsontxt:AnimAtlas = atlasSetting(Path);
 		timeline = jsontxt.AN.TL;
 		anim = new FlxAnim(X, Y, jsontxt);
-		anim.frames = FlxSpriteMap.fromAnimate(Path);
+		anim.frames = FlxAnimateFrames.fromTextureAtlas(Path);
 		anim.setShit();
 		setTheSettings(Settings);
 	}
@@ -94,6 +98,7 @@ class FlxAnimate extends FlxSprite
 		if (anim != null && anim.frames != null)
 		{
 			anim.offset = offset;
+			anim.scale = scale;
 			anim.scrollFactor = scrollFactor;
 			anim.renderFrames(timeline);
 		}
@@ -143,7 +148,7 @@ class FlxAnimate extends FlxSprite
 	{
 		@:privateAccess
 		if (showPivot || anim == null)
-			super.checkEmptyFrame();
+			loadGraphic("flixel/images/logo/default.png");
 	}
 	override function destroy()
 	{
@@ -302,6 +307,10 @@ class FlxAnimate extends FlxSprite
 				showPivot = Settings.ShowPivot;
 			if (Settings.Antialiasing != null)
 				antialiasing = Settings.Antialiasing;
+			if (Settings.ScrollFactor != null)
+				scrollFactor = Settings.ScrollFactor;
+			if (Settings.Offset != null)
+				offset = Settings.Offset;
 		}
 	}
 	function atlasSetting(Path:String):AnimAtlas
@@ -317,11 +326,11 @@ class FlxAnimate extends FlxSprite
 				{
 					jsontxt = haxe.Json.parse(list.data.toString());
 					thing.remove(list);
-					break;
+					continue;
 				}
 			}
 			@:privateAccess
-			FlxSpriteMap.zip = thing;
+			FlxAnimateFrames.zip = thing;
 		}
 		else
 		{

@@ -3,9 +3,9 @@
     "url": "https://github.com/Dot-Stuff/flxanimate/",
     "license": "MIT",
     "tags": ["adobe","flash","animate","texture_sheet", "flixel"],
-    "description": "Adobe Animate's texture atlases player for HaxeFlixel.",
-    "version": "1.0.2",
-    "releasenote": "Fixed some crashing stuff and added a ton of features.",
+    "description": "Adobe Animate's texture atlases player and spritesheets 'enhancer' for HaxeFlixel.",
+    "version": "1.1.0",
+    "releasenote": "Added support to almost all spritesheet formats and optimised some code of the texture atlas",
     "contributors": ["DotWith","MrCheemsAndFriends"],
     "dependencies": {}
 }

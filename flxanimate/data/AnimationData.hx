@@ -36,10 +36,13 @@ class AnimationData
 		// If I have another thing to use that works the same, should replace this lol
 		for (thing in things)
 		{
+			if (set != null)
+			{
+				Reflect.setField(abstracto, thing, set);
+				return set;
+			}
 			if (Reflect.hasField(abstracto, thing))
 			{
-				if (set != null)
-					Reflect.setField(abstracto, thing, set);
 				return Reflect.field(abstracto, thing);
 			}
 		}
@@ -520,7 +523,6 @@ enum abstract ColorMode(String) from String to String
 	var Alpha = "CA";
 	var Brightness = "CBRT";
 }
-
 abstract Bitmap({}) from {}
 {
 	/**
