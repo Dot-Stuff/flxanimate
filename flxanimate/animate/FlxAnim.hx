@@ -558,17 +558,16 @@ class FlxLimb extends FlxAnim
 		if (Camera == null)
 			Camera = FlxG.camera;
 
-		var minX:Float = x - offset.x - Camera.scroll.x * scrollFactor.x;
-		var minY:Float = y - offset.y - Camera.scroll.y * scrollFactor.y;
 
-		var radiusX:Float = frameHeight;
-		var radiusY:Float = frameWidth;
+		var minX:Float = x + offset.x - scrollFactor.x * Camera.scroll.x;
+		var minY:Float = y + offset.y - scrollFactor.y * Camera.scroll.y;
 
-		radiusX *= Math.abs(scale.x);
-		radiusY *= Math.abs(scale.y);
+		var radiusX:Float =  frameHeight * Math.abs(_matrix.a);
+		var radiusY:Float = frameWidth * Math.abs(_matrix.d);
 		var radius:Float = Math.max(radiusX, radiusY);
 		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
-		minY =  minX -= radius;
+		minY -= radius;
+		minX -= radius;
 		radius *= 2;
 
 		_point.set(minX, minY);

@@ -152,6 +152,9 @@ class FlxAnimate extends FlxSprite
 	}
 	override function destroy()
 	{
+		anim.destroy();
+		anim = null;
+		timeline = null;
 		onClick = null;
 		onComplete = null;
 		framerate = 0;
@@ -160,9 +163,6 @@ class FlxAnimate extends FlxSprite
 		if (sound != null)
 			sound.destroy();
 		#end
-		anim.destroy();
-		anim = null;
-		timeline = null;
 		super.destroy();
 	}
 	public function playAnim(?Name:String, ForceRestart:Bool = false, Looped:Bool = false, Reverse:Bool = false, flipX:Bool = false, flipY:Bool = false)

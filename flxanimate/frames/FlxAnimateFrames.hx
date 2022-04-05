@@ -15,12 +15,17 @@ import flxanimate.data.SpriteMapData.AnimateSpriteData;
 import openfl.Assets;
 import openfl.display.BitmapData;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+#if html5
+import lime._internal.backend.html5.HTML5HTTPRequest;
+#end
 #if haxe4
 import haxe.xml.Access;
 #else
 import haxe.xml.Fast as Access;
 #end
-
+#if html5
+@:access(lime._internal.backend.html5.HTML5HTTPRequest)
+#end
 class FlxAnimateFrames
 {
     static var data:AnimateAtlas = null;
@@ -46,7 +51,6 @@ class FlxAnimateFrames
             var imagemap:Map<String, Bytes> = new Map();
             var jsonMap:Map<String, AnimateAtlas> = new Map();
             var thing = (zip != null) ? zip :  Zip.unzip(Zip.readZip(new BytesInput(Assets.getBytes(Path))));
-            trace("HELLO");
 			for (list in thing)
 			{
                 if (haxe.io.Path.extension(list.fileName) == "json")
@@ -55,7 +59,6 @@ class FlxAnimateFrames
                 }
                 else if (haxe.io.Path.extension(list.fileName) == "png")
                 {
-                    trace('IMAGE: ${list.fileName}');
                     var name = list.fileName.split("/");
                     imagemap.set(name[name.length - 1], list.data);
                 }
@@ -66,7 +69,8 @@ class FlxAnimateFrames
                 if (data == null)
                 {
                     data = curJson;
-                    var curImage = BitmapData.loadFromBytes(imagemap[data.meta.image]);
+                    
+                    var curImage = BitmapData.fromBytes(imagemap[data.meta.image]);
 
                     
                     bitmap = curImage;
@@ -76,7 +80,7 @@ class FlxAnimateFrames
                     var data2 = curJson;
                     var size = data.meta.size;
                     var size2 = data2.meta.size;
-                    var bitmap2 = BitmapData.loadFromBytes(imagemap[data.meta.image]);
+                    var bitmap2 = BitmapData.fromBytes(imagemap[data.meta.image]);
                     var bitmapDraw = new BitmapData(max(size.w, size2.w), size.h + size2.h, true, 0x00000000);
                     bitmapDraw.draw(bitmap);
                     bitmapDraw.draw(bitmap2, new FlxMatrix(1,0,0,1, 0, size.h));
