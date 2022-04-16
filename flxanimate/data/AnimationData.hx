@@ -3,6 +3,7 @@ package flxanimate.data;
 @:noCompletion
 class AnimationData
 {
+	public static var filters = new flxanimate.Filters();
 	public static var version:String;
 	public static var resolution:String;
 	@:noCompletion
@@ -21,9 +22,9 @@ class AnimationData
 				if (name != null)
 					name == null;
 				i++;
+				index++;
 			}
 			while (i < frame.DU);
-			index++;
 		}
 		
 		return result;

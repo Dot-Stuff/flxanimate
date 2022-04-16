@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import flixel.FlxBasic;
 import flixel.tweens.FlxTween;
@@ -29,6 +30,7 @@ class FlxAnim extends FlxSprite
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
 	public var clickedButton:Bool = false;
+	var filters:Array<Filters> = [];
 
 	var name:String;
 
@@ -102,16 +104,18 @@ class FlxAnim extends FlxSprite
 						var timeline = symbolDictionary.get(element.SI.SN);
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
-						var symbol:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y, this);
+						var symbol:FlxLimb = new FlxLimb(x, y, this);
 						symbol.colorTransform.concat(colorTransform);
 						symbol.symbolDictionary = symbolDictionary;
 						symbol.frames = frames;
 						if (element.SI.bitmap == null)
 							symbol.frameLength = setSymbolLength(timeline);
-						matrix.tx = matrix.ty = 0;
 						symbol._matrix.concat(matrix);
 						symbol.symbolType = element.SI.ST;
 						symbol.name = element.SI.SN;
+						symbol.filters = filters;
+						if (element.SI.F != null)
+							symbol.filters.push(element.SI.F);
 
 						if (["G", "graphic"].indexOf(symbol.symbolType) != -1)
 						{symbol.curFrame = element.SI.FF; symbol.loopType = element.SI.LP;}
@@ -134,8 +138,7 @@ class FlxAnim extends FlxSprite
 						var m3d = element.ASI.M3D;
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
-						var spr:FlxLimb = new FlxLimb(matrix.tx + x, matrix.ty + y,this);
-						matrix.tx = matrix.ty = 0;
+						var spr:FlxLimb = new FlxLimb(x, y,this);
 						spr.frame = frames.getByName(element.ASI.N);
 						spr._matrix.concat(matrix);
 						spr.colorTransform.concat(colorTransform);
@@ -397,7 +400,7 @@ class FlxAnim extends FlxSprite
 	 * @param Y  the *y* axis of the animation.
 	 * @param FrameRate the framerate of the animation.
 	 */
-	public function addBySymbol(Name:String, SymbolName:String, X:Float = 0, Y:Float = 0, FrameRate:Float = 30)
+	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, X:Float = 0, Y:Float = 0)
 	{
 		var timeline:Timeline = symbolDictionary.get(SymbolName);
 		if (timeline != null)
@@ -413,8 +416,18 @@ class FlxAnim extends FlxSprite
 	 */
 	public function addByAnimIndices(Name:String, Indices:Array<Int>, FrameRate:Float = 30) 
 	{
+		addBySymbolIndices(Name, coolParse.AN.SN, Indices, FrameRate,0,0);
+	}
+	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 30, X:Float = 0, Y:Float = 0) 
+	{
+		var thing = symbolDictionary.get(SymbolName);
+		if (thing == null)
+		{
+			FlxG.log.error('$SymbolName does not exist as a symbol! maybe you misspelled it?');
+			return;
+		}
 		var layers:Array<Layers> = [];
-		for (layer in coolParse.AN.TL.L)
+		for (layer in thing.L)
 		{
 			var frames:Array<Frame> = [];
 			for (i in Indices)
@@ -427,7 +440,7 @@ class FlxAnim extends FlxSprite
 			layers.push({LN: layer.LN, FR: frames});
 		}
 
-		animsMap.set(Name, {timeline: {L: layers}, X: 0, Y: 0, frameRate: FrameRate});
+		animsMap.set(Name, {timeline: {L: layers}, X: X, Y: Y, frameRate: FrameRate});
 	}
 	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 30)
 	{
@@ -538,6 +551,7 @@ class FlxAnim extends FlxSprite
 		loopType = null;
 		symbolType = null;
 		curLabel = null;
+		symbolDictionary = null;
 		super.destroy();
 	}
 }
@@ -559,11 +573,11 @@ class FlxLimb extends FlxAnim
 			Camera = FlxG.camera;
 
 
-		var minX:Float = x + offset.x - scrollFactor.x * Camera.scroll.x;
-		var minY:Float = y + offset.y - scrollFactor.y * Camera.scroll.y;
+		var minX:Float = x + _matrix.tx + offset.x - scrollFactor.x * Camera.scroll.x;
+		var minY:Float = y + _matrix.ty + offset.y - scrollFactor.y * Camera.scroll.y;
 
-		var radiusX:Float =  frameHeight * Math.abs(_matrix.a);
-		var radiusY:Float = frameWidth * Math.abs(_matrix.d);
+		var radiusX:Float =  frameHeight * Math.max(1,_matrix.a);
+		var radiusY:Float = frameWidth * Math.max(1, _matrix.d);
 		var radius:Float = Math.max(radiusX, radiusY);
 		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
 		minY -= radius;
@@ -589,7 +603,8 @@ class FlxLimb extends FlxAnim
 		}
 
 		_matrix.translate(_point.x, _point.y);
-		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
+		// testing shaders? not having much success as I want to smh
+		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, null);
 	}
 }
 class ButtonEvent
