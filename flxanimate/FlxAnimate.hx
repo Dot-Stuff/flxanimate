@@ -221,16 +221,6 @@ class FlxAnimate extends FlxSprite
 	}
 	public override function update(elapsed:Float)
 	{
-		if (FlxG.keys.pressed.RIGHT)
-		{
-			AnimationData.filters.setHue(AnimationData.filters.hue + 0.01);
-		}
-		if (FlxG.keys.pressed.LEFT)
-		{
-			AnimationData.filters.setHue(AnimationData.filters.hue - 0.01);
-		}
-		if (FlxG.keys.justPressed.K)
-			trace(AnimationData.filters.hue);
 		super.update(elapsed);
 		if (sound != null)
 			sound.update(elapsed);
