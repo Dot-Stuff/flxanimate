@@ -19,7 +19,17 @@ import flixel.system.FlxSound;
 import flixel.graphics.frames.FlxFrame;
 import flixel.math.FlxMath;
 
-typedef SymbolStuff = {var timeline:Timeline; var X:Float; var Y:Float; var frameRate:Float;};
+typedef SymbolStuff = {var symbolName:String; var timeline:Timeline; var ?indices:Array<Int>; var X:Float; var Y:Float; var frameRate:Float; var looped:Bool;};
+typedef ClickStuff = {
+	?OnClick:Void->Void,
+	?OnRelease:Void->Void
+}
+typedef ButtonSettings = {
+	?Callbacks:ClickStuff,
+	#if FLX_SOUND_SYSTEM
+	?Sound:FlxSound
+	#end
+}
 class FlxAnim extends FlxSprite
 {
 	public var xFlip(default, set):Bool;
@@ -29,8 +39,9 @@ class FlxAnim extends FlxSprite
 	var frameLabels:Map<String, Int> = new Map();
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
-	public var clickedButton:Bool = false;
 	var filters:Array<Filters> = [];
+	public var finished:Bool = false;
+	var buttonMap:Map<String, ButtonSettings> = new Map();
 
 	var name:String;
 
@@ -88,8 +99,11 @@ class FlxAnim extends FlxSprite
 				else
 				{
 					curFrame = length;
+					finished = true;
 				}
 			}
+			else
+				finished = false;
 
 			var selectedFrame = layer.FR[curFrame];
 			curLabel = selectedFrame.N;
@@ -104,7 +118,7 @@ class FlxAnim extends FlxSprite
 						var timeline = symbolDictionary.get(element.SI.SN);
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
-						var symbol:FlxLimb = new FlxLimb(x, y, this);
+						var symbol:FlxLimb = new FlxLimb(this);
 						symbol.colorTransform.concat(colorTransform);
 						symbol.symbolDictionary = symbolDictionary;
 						symbol.frames = frames;
@@ -138,7 +152,7 @@ class FlxAnim extends FlxSprite
 						var m3d = element.ASI.M3D;
 						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
 						matrix.concat(_matrix);
-						var spr:FlxLimb = new FlxLimb(x, y,this);
+						var spr:FlxLimb = new FlxLimb(this);
 						spr.frame = frames.getByName(element.ASI.N);
 						spr._matrix.concat(matrix);
 						spr.colorTransform.concat(colorTransform);
@@ -191,7 +205,8 @@ class FlxAnim extends FlxSprite
 		
 		colorTransform.concat(CT);
 	}
-	public function setButtonFrames()
+	var pressed:Bool = false;
+	function setButtonFrames()
 	{
 		var badPress:Bool = false;
 		var goodPress:Bool = false;
@@ -208,8 +223,13 @@ class FlxAnim extends FlxSprite
 		}
 		if (FlxG.mouse.overlaps(this) && !badPress)
 		{
-			if (FlxG.mouse.justPressed)
-				clickedButton = true;
+			var event = buttonMap.get(name);
+			if (FlxG.mouse.justPressed && !pressed)
+			{
+				if (event != null)
+					new ButtonEvent((event.Callbacks != null) ? event.Callbacks.OnClick : null #if FLX_SOUND_SYSTEM, event.Sound #end).fire();
+				pressed = true;
+			}
 			if (FlxG.mouse.pressed)
 			{
 				curFrame = 2;
@@ -217,6 +237,12 @@ class FlxAnim extends FlxSprite
 			else
 			{
 				curFrame = 1;
+			}
+			if (FlxG.mouse.justReleased && pressed)
+			{
+				if (event != null)
+					new ButtonEvent((event.Callbacks != null) ? event.Callbacks.OnRelease : null #if FLX_SOUND_SYSTEM, event.Sound #end).fire();
+				pressed = false;
 			}
 		}
 		else
@@ -328,6 +354,7 @@ class FlxAnim extends FlxSprite
 	}
 	public function setShit()
 	{
+		name = coolParse.AN.SN;
 		reverseLayers();
 		setSymbols(coolParse);
 		getFrameLabels(coolParse.AN.TL);
@@ -395,18 +422,33 @@ class FlxAnim extends FlxSprite
 	/**
 	 * Creates an animation using an already made symbol from a texture atlas
 	 * @param Name The name of the animation
-	 * @param SymbolName the name of the symbol you're looking.
+	 * @param SymbolName the name of the symbol you're looking. if you have two symbols beginning by the same name, use `\` at the end
 	 * @param X the *x* axis of the animation.
 	 * @param Y  the *y* axis of the animation.
 	 * @param FrameRate the framerate of the animation.
 	 */
-	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, X:Float = 0, Y:Float = 0)
+	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, X:Float = 0, Y:Float = 0, Looped:Bool = false)
 	{
-		var timeline:Timeline = symbolDictionary.get(SymbolName);
+		var timeline:Timeline = null;
+		for (name in symbolDictionary.keys())
+		{
+			if (startsWith(name, SymbolName))
+			{
+				timeline = symbolDictionary.get(name);
+				break;
+			}
+		}
 		if (timeline != null)
-			animsMap.set(Name, {timeline: timeline, X: X, Y: Y, frameRate: FrameRate});
+			animsMap.set(Name, {symbolName: SymbolName, timeline: timeline, X: X, Y: Y, frameRate: FrameRate, looped: Looped});
 		else
 			FlxG.log.error('No symbol was found with the name $SymbolName!');
+	}
+	function startsWith(reference:String, string:String):Bool
+	{
+		if (StringTools.endsWith(string, String.fromCharCode(92))) // String.fromCharCode(92) == \ :)
+			return reference == string.substring(0, string.length - 1)
+		else
+			return StringTools.startsWith(reference, string);
 	}
 	/**
 	 * Creates an animation using the indices, looking as a reference the main animation of the texture atlas.
@@ -416,9 +458,9 @@ class FlxAnim extends FlxSprite
 	 */
 	public function addByAnimIndices(Name:String, Indices:Array<Int>, FrameRate:Float = 30) 
 	{
-		addBySymbolIndices(Name, coolParse.AN.SN, Indices, FrameRate,0,0);
+		addBySymbolIndices(Name, coolParse.AN.SN, Indices, FrameRate,0,0, (coolParse.AN.STI != null) ? ["loop", "LP"].indexOf(coolParse.AN.STI.SI.LP) != -1 : false);
 	}
-	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 30, X:Float = 0, Y:Float = 0) 
+	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 30, X:Float = 0, Y:Float = 0, Looped:Bool = false) 
 	{
 		var thing = symbolDictionary.get(SymbolName);
 		if (thing == null)
@@ -427,24 +469,32 @@ class FlxAnim extends FlxSprite
 			return;
 		}
 		var layers:Array<Layers> = [];
+		var frameLength = 0;
 		for (layer in thing.L)
 		{
 			var frames:Array<Frame> = [];
 			for (i in Indices)
 			{
-				if (i > frameLength)
-					FlxG.log.error('The index exceeds the length of the anim, which is $frameLength!');
-				else
+				if (layer.FR[i] != null)
 					frames.push(layer.FR[i]);
 			}
 			layers.push({LN: layer.LN, FR: frames});
 		}
 
-		animsMap.set(Name, {timeline: {L: layers}, X: X, Y: Y, frameRate: FrameRate});
+		animsMap.set(Name, {symbolName: SymbolName, timeline: {L: layers}, indices: Indices, X: X, Y: Y, frameRate: FrameRate, looped: false});
 	}
-	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 30)
+	/**
+	 * This adds a new animation by adding a custom timeline, obviously taking as a reference the timeline syntax!
+	 * **WARNING**: I, *CheemsAndFriends*, do **NOT** recommend this unless you're using an extern json file to do this!
+	 * if you wanna make a custom symbol to play around and is separated from the texture atlas, go ahead! but if you wanna just make a new symbol, 
+	 * just do it in Flash directly
+	 * @param Name The name of the new Symbol.
+	 * @param Timeline The timeline which will have the symbol.
+	 * @param FrameRate The framerate it'll go, by default is 30.
+	 */
+	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 30, Looped:Bool = false)
 	{
-		animsMap.set(Name, {timeline: Timeline, X: 0, Y: 0, frameRate:FrameRate});
+		animsMap.set(Name, {symbolName: Name, timeline: Timeline, X: 0, Y: 0, frameRate:FrameRate, looped: Looped});
 	}
 
 	public function get_length()
@@ -471,7 +521,11 @@ class FlxAnim extends FlxSprite
 		if (framenum != null)
 			curFrame = framenum;
 	}
-
+	/**
+	 * Checks the next frame label you're looking for.
+	 * @param name the name of the frame label.
+	 * @return the next frame label, can be null!
+	 */
 	public function getNextToFrameLabel(name:String):Null<String>
 	{
 		var thing = labelArray.get(name);
@@ -536,6 +590,11 @@ class FlxAnim extends FlxSprite
 			}
 		}
 	}
+	
+	public function getByName(name:String)
+	{
+		return animsMap.get(name);
+	}
 	override function destroy()
 	{
 		xFlip = yFlip = false;
@@ -558,14 +617,15 @@ class FlxAnim extends FlxSprite
 @:noCompletion
 class FlxLimb extends FlxAnim
 {
-	public function new(X:Float, Y:Float,Settings:FlxAnim) 
+	public function new(SymbolReference:FlxAnim) 
 	{
-		super(X, Y, null);
-		antialiasing = Settings.antialiasing;
-		offset = Settings.offset;
-		xFlip = Settings.xFlip;
-		yFlip = Settings.yFlip;
-		scrollFactor = Settings.scrollFactor;
+		super(SymbolReference.x, SymbolReference.y, null);
+		
+		antialiasing = SymbolReference.antialiasing;
+		offset = SymbolReference.offset;
+		xFlip = SymbolReference.xFlip;
+		yFlip = SymbolReference.yFlip;
+		scrollFactor = SymbolReference.scrollFactor;
 	}
 	override function isOnScreen(?Camera:FlxCamera):Bool 
 	{
@@ -573,8 +633,8 @@ class FlxLimb extends FlxAnim
 			Camera = FlxG.camera;
 
 
-		var minX:Float = x + _matrix.tx + offset.x - scrollFactor.x * Camera.scroll.x;
-		var minY:Float = y + _matrix.ty + offset.y - scrollFactor.y * Camera.scroll.y;
+		var minX:Float = x + _matrix.tx - offset.x - scrollFactor.x * Camera.scroll.x;
+		var minY:Float = y + _matrix.ty - offset.y - scrollFactor.y * Camera.scroll.y;
 
 		var radiusX:Float =  frameHeight * Math.max(1,_matrix.a);
 		var radiusY:Float = frameWidth * Math.max(1, _matrix.d);
@@ -589,7 +649,6 @@ class FlxLimb extends FlxAnim
 	}
 	public override function drawComplex(camera:FlxCamera):Void
 	{
-		_matrix.concat(_frame.prepareMatrix(new FlxMatrix()));
 		_matrix.scale(scale.x, scale.y);
 		if (bakedRotationAngle <= 0)
 		{
@@ -604,7 +663,7 @@ class FlxLimb extends FlxAnim
 
 		_matrix.translate(_point.x, _point.y);
 		// testing shaders? not having much success as I want to smh
-		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, null);
+		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
 	}
 }
 class ButtonEvent

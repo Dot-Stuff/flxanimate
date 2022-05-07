@@ -26,7 +26,6 @@ class FlxAnimateFrames
 {
     static var data:AnimateAtlas = null;
     static var zip:Null<List<haxe.zip.Entry>>;
-    static var thingies:Map<String, FlxAtlasFrames> = new Map();
     /**
      * Parses the spritemaps into small sprites to use in the animation.
      * 
@@ -35,8 +34,6 @@ class FlxAnimateFrames
      */
     public static function fromTextureAtlas(Path:String):FlxAtlasFrames
     {
-        if (thingies.exists(Path))
-            return thingies.get(Path);
         var frames:FlxAtlasFrames = new FlxAtlasFrames(null);
         if (zip != null || haxe.io.Path.extension(Path) == "zip")
         {
@@ -114,7 +111,6 @@ class FlxAnimateFrames
             FlxG.log.error("the Frames parsing couldn't parse any of the frames, it's competely empty! \n Maybe you misspelled the Path?");
             return null;
         }
-        thingies.set(Path, frames);
         return frames;
     }
     /**
@@ -385,15 +381,22 @@ class FlxAnimateFrames
     }
     static function textureAtlasHelper(SpriteMap:BitmapData, limb:AnimateSpriteData, curMeta:Meta)
     {
-        var sprite = new BitmapData(Std.int(limb.w), Std.int(limb.h), true, 0);
-        sprite.draw(SpriteMap, new FlxMatrix(1,0,0,1,-limb.x,-limb.y));
-        var angle:FlxFrameAngle = (limb.rotated) ? FlxFrameAngle.ANGLE_NEG_90 : FlxFrameAngle.ANGLE_0;
-        var ImageSize:FlxPoint = FlxPoint.get(limb.w / Std.parseInt(curMeta.resolution), limb.w / Std.parseInt(curMeta.resolution));
+        var width = (limb.rotated) ? limb.h : limb.w;
+        var height = (limb.rotated) ? limb.w : limb.h;
+        var sprite = new BitmapData(width, height, true, 0);
+        var matrix = new FlxMatrix(1,0,0,1,-limb.x,-limb.y);
+        if (limb.rotated)
+        {
+            matrix.rotateByNegative90();
+            matrix.translate(0, height);
+        }
+        sprite.draw(SpriteMap, matrix);
+        var ImageSize:FlxPoint = FlxPoint.get(width / Std.parseInt(curMeta.resolution), height / Std.parseInt(curMeta.resolution));
         @:privateAccess
-        var curFrame = new FlxFrame(FlxG.bitmap.add(sprite, true), angle);
+        var curFrame = new FlxFrame(FlxG.bitmap.add(sprite));
         curFrame.name = limb.name;
         curFrame.sourceSize.set(ImageSize.x, ImageSize.y);
-        curFrame.frame = new FlxRect(0,0, limb.w, limb.h);
+        curFrame.frame = new FlxRect(0,0, width, height);
         return curFrame;
     }
     static function max(a:Int, b:Int):Int

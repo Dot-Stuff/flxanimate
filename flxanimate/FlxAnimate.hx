@@ -15,7 +15,7 @@ import flxanimate.animate.FlxAnim;
 import flxanimate.frames.FlxAnimateFrames;
 
 typedef Settings = {
-	?ButtonSettings:ButtonSettings,
+	?ButtonSettings:Map<String, flxanimate.animate.FlxAnim.ButtonSettings>,
 	?FrameRate:Float,
 	?Reversed:Bool,
 	?OnComplete:Void->Void,
@@ -23,12 +23,6 @@ typedef Settings = {
 	?Antialiasing:Bool,
 	?ScrollFactor:FlxPoint,
 	?Offset:FlxPoint,
-}
-typedef ButtonSettings = {
-	?OnClick:Void->Void,
-	#if FLX_SOUND_SYSTEM
-	?Sound:FlxSound
-	#end
 }
 
 class FlxAnimate extends FlxSprite
@@ -45,9 +39,9 @@ class FlxAnimate extends FlxSprite
 	public var onComplete:Void->Void;
 
 	#if FLX_SOUND_SYSTEM
-	public var sound:FlxSound;
+	public var audio:FlxSound;
 	#end
-
+	
 	public var showPivot:Bool = false;
 
 	var reversed:Bool = false;
@@ -160,34 +154,29 @@ class FlxAnimate extends FlxSprite
 		framerate = 0;
 		reversed = showPivot = isPlaying = false;
 		#if FLX_SOUND_SYSTEM
-		if (sound != null)
-			sound.destroy();
+		if (audio != null)
+			audio.destroy();
 		#end
 		super.destroy();
 	}
-	public function playAnim(?Name:String, ForceRestart:Bool = false, Looped:Bool = false, Reverse:Bool = false, flipX:Bool = false, flipY:Bool = false)
+	public function playAnim(?Name:String, Force:Bool = false, Reverse:Bool = false, Frame:Int = 0)
 	{
+		pauseAnim();
 		@:privateAccess
 		var curThing = anim.animsMap.get(Name);
 		@:privateAccess
-		if (curThing != null && anim.name != Name || ForceRestart || !Reverse && anim.curFrame >= anim.length || Reverse && anim.curFrame <= 0)
+		if (curThing != null && anim.name != Name || Force || !Reverse && anim.curFrame >= anim.length || Reverse && anim.curFrame <= 0)
 		{
 			if (!Reverse)
-				anim.curFrame = 0;
+				anim.curFrame = Frame;
 			else
-				anim.curFrame = anim.length;
+				anim.curFrame =  Frame - anim.length;
 		}
 		@:privateAccess
 		if ([null, ""].indexOf(Name) == -1 && curThing != null)
 		{
-			anim.x = x;
-			anim.y = y;
-			timeline = curThing.timeline;
-			if (curThing != null)
-			{
-				anim.x += curThing.X;
-				anim.y += curThing.Y;
-			}
+			anim.x = x + curThing.X;
+			anim.y = y + curThing.Y;
 			anim.frameLength = 0;
 			for (layer in curThing.timeline.L)
 			{
@@ -196,9 +185,11 @@ class FlxAnimate extends FlxSprite
 					anim.frameLength = layer.FR.length;
 				}
 			}
-			anim.renderFrames(timeline);
+			timeline = curThing.timeline;
 			@:privateAccess
-			anim.loopType = Looped ? loop : playonce;
+			anim.loopType = curThing.looped ? loop : playonce;
+			@:privateAccess
+			anim.name = curThing.symbolName;
 		}
 		reversed = Reverse;
 		isPlaying = true;
@@ -219,28 +210,20 @@ class FlxAnimate extends FlxSprite
 		frameDelay = 1 / value;
 		return framerate = value;
 	}
+	override function set_alpha(Alpha:Float)
+	{
+		anim.alpha = Alpha;
+		return super.set_alpha(Alpha);
+	}
+	override function set_color(Value:flixel.util.FlxColor)
+	{
+		anim.color = Value;
+		return super.set_color(Value);
+	}
+
 	public override function update(elapsed:Float)
 	{
-		if (FlxG.keys.pressed.RIGHT)
-		{
-			AnimationData.filters.setHue(AnimationData.filters.hue + 0.01);
-		}
-		if (FlxG.keys.pressed.LEFT)
-		{
-			AnimationData.filters.setHue(AnimationData.filters.hue - 0.01);
-		}
-		if (FlxG.keys.justPressed.K)
-			trace(AnimationData.filters.hue);
 		super.update(elapsed);
-		if (sound != null)
-			sound.update(elapsed);
-		if (anim == null || anim.frames == null)
-			return;
-		if (anim.clickedButton)
-		{
-			new ButtonEvent(onClick, sound).fire();
-			anim.clickedButton = false;
-		}
 		if (!isPlaying)
 			return;
 		
@@ -290,22 +273,20 @@ class FlxAnimate extends FlxSprite
 			}
 		}
 	}
-
+	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end)
+	{
+		@:privateAccess
+		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
+	}
 	function setTheSettings(?Settings:Settings)
 	{
 		framerate = anim.coolParse.MD.FRT;
+		@:privateAccess
 		if (Settings != null)
 		{
 			if (Settings.ButtonSettings != null)
 			{
-				if (Settings.ButtonSettings.OnClick != null)
-				{
-					onClick = Settings.ButtonSettings.OnClick;
-				}
-				if (Settings.ButtonSettings.Sound != null)
-				{
-					sound = Settings.ButtonSettings.Sound;
-				}
+				anim.buttonMap = Settings.ButtonSettings;
 				if ([button, "button"].indexOf(anim.symbolType) == -1)
 					anim.symbolType = button;
 			}

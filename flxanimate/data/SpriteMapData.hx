@@ -21,8 +21,8 @@ typedef AnimateSpriteData =
 	var name:String;
 	var x:Float;
 	var y:Float;
-	var w:Float;
-	var h:Float;
+	var w:Int;
+	var h:Int;
 	var rotated:Bool;
 }
 @:forward
