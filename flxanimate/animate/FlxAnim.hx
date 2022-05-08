@@ -106,7 +106,7 @@ class FlxAnim extends FlxSprite
 				finished = false;
 
 			var selectedFrame = layer.FR[curFrame];
-			curLabel = selectedFrame.N;
+			curLabel = (selectedFrame != null) ? selectedFrame.N : null;
 			if (selectedFrame != null)
 			{
 				for (element in selectedFrame.E)
