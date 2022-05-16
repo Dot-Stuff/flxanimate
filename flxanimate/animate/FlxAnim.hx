@@ -1,23 +1,13 @@
 package flxanimate.animate;
 
-import openfl.geom.Point;
-import openfl.geom.Rectangle;
-import flixel.FlxBasic;
-import flixel.tweens.FlxTween;
 import openfl.geom.ColorTransform;
-import openfl.filters.GlowFilter;
-import flixel.graphics.frames.FlxFilterFrames;
-import openfl.filters.BlurFilter;
-import flixel.math.FlxRect;
-import flixel.util.FlxColor;
-import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.math.FlxMatrix;
 import flxanimate.data.AnimationData;
+#if FLX_SOUND_SYSTEM
 import flixel.system.FlxSound;
-import flixel.graphics.frames.FlxFrame;
-import flixel.math.FlxMath;
+#end
 
 typedef SymbolStuff = {var symbolName:String; var timeline:Timeline; var ?indices:Array<Int>; var X:Float; var Y:Float; var frameRate:Float; var looped:Bool;};
 typedef ClickStuff = {
@@ -36,14 +26,26 @@ class FlxAnim extends FlxSprite
 	public var yFlip(default, set):Bool;
 	public var coolParse(default, null):AnimAtlas;
 	public var length(get, never):Int;
+	public var timeline:Timeline = null;
 	var frameLabels:Map<String, Int> = new Map();
 	var labelArray:Map<String, String> = new Map();
 	var labelcallbacks:Map<String, Array<()->Void>> = new Map();
-	var filters:Array<Filters> = [];
-	public var finished:Bool = false;
+	public var finished(default, null):Bool = false;
+	public var reversed:Bool = false;
 	var buttonMap:Map<String, ButtonSettings> = new Map();
+	public var isPlaying(default, null):Bool = false;
+	public var onComplete:()->Void;
+	var layerHide:Map<String, Array<String>> = new Map();
 
-	var name:String;
+	var frameTick:Float;
+	public var framerate(default, set):Float;
+
+	/**
+	 * Internal, used for each skip between frames.
+	 */
+	var frameDelay:Float;
+
+	var symbolName:String;
 
 	public var curFrame:Int = 0;
 
@@ -74,96 +76,133 @@ class FlxAnim extends FlxSprite
 		coolParse = coolParsed;
 	}
 
-	function renderSymbol(TL:Timeline)
+	public function render()
 	{
-		for (layer in TL.L)
+		for (layer in timeline.L)
 		{
+
 			if ([button, "button"].indexOf(symbolType) != -1)
 			{
 				setButtonFrames();
 			}
-			
 			if (curFrame < 0)
 			{
 				if ([loop, "loop"].indexOf(loopType) != -1)
-					curFrame += (length > 0) ? length : curFrame;
+					curFrame += (length > 0) ? frameLength : curFrame;
 				else
+				{
 					curFrame = 0;
+					finished = true;
+				}
 			}
-			if (curFrame >= length)
+			else if (curFrame > frameLength - 1)
 			{
 				if ([loop, "loop"].indexOf(loopType) != -1)
 				{
-					curFrame -= (length > 0) ? length : curFrame;
+					curFrame -= (frameLength > 0) ? frameLength : curFrame;
 				}
 				else
 				{
-					curFrame = length;
+					curFrame = frameLength;
 					finished = true;
+					pause();
 				}
 			}
 			else
 				finished = false;
 
+			if (layerHide.exists(symbolName) && layerHide.get(symbolName).indexOf(layer.LN) != -1) continue;
+			
 			var selectedFrame = layer.FR[curFrame];
-			curLabel = selectedFrame.N;
-			if (selectedFrame != null)
-			{
-				for (element in selectedFrame.E)
-				{
-					// Is this a symbol?
-					if (element.SI != null)
-					{
-						var m3d = element.SI.M3D;
-						var timeline = symbolDictionary.get(element.SI.SN);
-						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
-						matrix.concat(_matrix);
-						var symbol:FlxLimb = new FlxLimb(this);
-						symbol.colorTransform.concat(colorTransform);
-						symbol.symbolDictionary = symbolDictionary;
-						symbol.frames = frames;
-						if (element.SI.bitmap == null)
-							symbol.frameLength = setSymbolLength(timeline);
-						symbol._matrix.concat(matrix);
-						symbol.symbolType = element.SI.ST;
-						symbol.name = element.SI.SN;
-						symbol.filters = filters;
-						if (element.SI.F != null)
-							symbol.filters.push(element.SI.F);
+			curLabel = (selectedFrame != null) ? selectedFrame.N : null;
+		
+			if (selectedFrame == null || selectedFrame.E == []) continue;
 
-						if (["G", "graphic"].indexOf(symbol.symbolType) != -1)
-						{symbol.curFrame = element.SI.FF; symbol.loopType = element.SI.LP;}
-						else
-							symbol.loopType = singleframe;
-						if (element.SI.C != null)
-						{
-							symbol.addColorEffect(element.SI.C);
-						}
-						if (element.SI.bitmap == null)
-							symbol.renderSymbol(timeline);
-						else
-						{
-							symbol.frame = frames.getByName(element.SI.bitmap.N);
-							symbol.draw();
-						}
-					}
-					else if (element.ASI != null) // It's a drawing?
-					{
-						var m3d = element.ASI.M3D;
-						var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
-						matrix.concat(_matrix);
-						var spr:FlxLimb = new FlxLimb(this);
-						spr.frame = frames.getByName(element.ASI.N);
-						spr._matrix.concat(matrix);
-						spr.colorTransform.concat(colorTransform);
-						spr.draw();
-					}
-				}
+			for (element in selectedFrame.E)
+			{
+				var inst:FlxInstance = new FlxInstance(this,  element.SI);
+				inst.limb = (inst.isSymbol) ? element.SI.bitmap.N : element.ASI.N;
+				var m3d = (inst.isSymbol) ? element.SI.M3D : element.ASI.M3D;
+				var matrix:FlxMatrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
+				matrix.concat(_matrix);
+				inst._matrix.concat(matrix);
+
+				setSize((width < inst.width) ? inst.width : width, (height < inst.height) ? inst.height : height);
+				inst.render();
 			}
 		}
 	}
 
 	public var symbolDictionary:Map<String, Timeline> = new Map<String, Timeline>();
+	public function play(?Name:String, Force:Bool = false, Reverse:Bool = false, Frame:Int = 0)
+	{
+		pause();
+		var curThing = animsMap.get(Name);
+		@:privateAccess
+		if (curThing != null && symbolName != curThing.symbolName|| Force || !Reverse && curFrame >= length || Reverse && curFrame <= 0)
+		{
+			if (!Reverse)
+				curFrame = Frame;
+			else
+				curFrame =  Frame - length;
+		}
+		@:privateAccess
+		if ([null, ""].indexOf(Name) == -1)
+		{
+			if (curThing == null)
+			{
+				FlxG.log.error('theres no animation called $Name!');
+				return;
+			}
+			frameLength = 0;
+			for (layer in curThing.timeline.L)
+			{
+				if (frameLength < layer.FR.length)
+				{
+					frameLength = layer.FR.length;
+				}
+			}
+			timeline = curThing.timeline;
+			@:privateAccess
+			loopType = curThing.looped ? loop : playonce;
+			@:privateAccess
+			symbolName = curThing.symbolName;
+		}
+		
+		reversed = Reverse;
+		isPlaying = true;
+	}
+	public function hideLayer(layer:String)
+	{
+		var hasLayer:Bool = false;
+		for (i in timeline.L)
+		{
+			if (layer == i.LN)
+			{
+				hasLayer = true;
+				break;
+			}
+		}
+		if (!hasLayer) return;
+		var array = (layerHide.get(symbolName) != null) ? layerHide.get(symbolName) : [];
+		array.push(layer);
+		layerHide.set(symbolName, array);
+	}
+	public function showLayer(layer:String)
+	{
+		if (layerHide.get(symbolName) == null) return;
+		layerHide.get(symbolName).remove(layer);
+	}
+	public function pause()
+	{
+		isPlaying = false;
+	}
+	public function stop()
+	{
+		pause();
+		curFrame = 0;
+	}
+
 	function addColorEffect(sInstance:ColorEffects)
 	{
 		var CT = new ColorTransform();
@@ -171,7 +210,7 @@ class FlxAnim extends FlxSprite
 		{
 			case Tint, "Tint":
 			{
-				var color = FlxColor.fromString(sInstance.TC);
+				var color = flixel.util.FlxColor.fromString(sInstance.TC);
 				var opacity = sInstance.TM;
 				CT.redMultiplier -= opacity;
 				CT.redOffset = Math.round(color.red * opacity);
@@ -223,7 +262,7 @@ class FlxAnim extends FlxSprite
 		}
 		if (FlxG.mouse.overlaps(this) && !badPress)
 		{
-			var event = buttonMap.get(name);
+			var event = buttonMap.get(symbolName);
 			if (FlxG.mouse.justPressed && !pressed)
 			{
 				if (event != null)
@@ -249,11 +288,6 @@ class FlxAnim extends FlxSprite
 		{
 			curFrame = 0;
 		}
-	}
-
-	public function renderFrames(timeline:Timeline)
-	{
-		renderSymbol(timeline);
 	}
 
 	function reverseLayers()
@@ -309,6 +343,7 @@ class FlxAnim extends FlxSprite
 				frameLength = layer.FR.length;
 			}
 		}
+		frameLength--;
 		symbolDictionary.set(Anim.AN.SN, Anim.AN.TL);
 		if (coolParse.SD != null)
 		{
@@ -354,17 +389,58 @@ class FlxAnim extends FlxSprite
 	}
 	public function setShit()
 	{
-		name = coolParse.AN.SN;
+		symbolName = coolParse.AN.SN;
 		reverseLayers();
 		setSymbols(coolParse);
 		getFrameLabels(coolParse.AN.TL);
 		if (coolParse.AN.STI != null)
 		{
-			loopType = coolParse.AN.STI.SI.LP;
-			symbolType = coolParse.AN.STI.SI.ST;
-			if (coolParse.AN.STI.SI.C != null)
+			var STI = coolParse.AN.STI.SI;
+			loopType = STI.LP;
+			symbolType = STI.ST;
+			curFrame = STI.FF;
+			_matrix.concat(FlxInstance.prepareMatrix(STI.M3D));
+			
+			if (STI.C != null)
 			{
-				addColorEffect(coolParse.AN.STI.SI.C);
+				addColorEffect(STI.C);
+			}
+		}
+		timeline = symbolDictionary.get(symbolName);
+	}
+	override function update(elapsed:Float)
+	{
+		super.update(elapsed);
+		if (!isPlaying)
+			return;
+		frameTick += elapsed;
+		while (frameTick > frameDelay)
+		{
+			if (reversed)
+			{
+				curFrame--;
+			}
+			else
+			{
+				curFrame++;
+			}
+			frameTick -= frameDelay;
+		}
+		if ([playonce, "playonce"].indexOf(loopType) != -1)
+		{
+			if (finished)
+			{
+				if (onComplete != null)
+					onComplete();
+				stop();	
+			}
+		}
+		if (curLabel != null)
+		{
+			if (labelcallbacks.exists(curLabel))
+			{
+				for (callback in labelcallbacks.get(curLabel))
+					callback();
 			}
 		}
 	}
@@ -380,11 +456,13 @@ class FlxAnim extends FlxSprite
 		{
 			_matrix.a = -oldMatrix.a;
 			_matrix.c = -oldMatrix.c;
+			_matrix.tx += width;
 		}
 		else
 		{
 			_matrix.a = oldMatrix.a;
 			_matrix.c = oldMatrix.c;
+			_matrix.tx = (_matrix.tx == oldMatrix.tx + width) ? oldMatrix.tx : _matrix.tx; 
 		}
 		return Value;
 	}
@@ -399,11 +477,13 @@ class FlxAnim extends FlxSprite
 		{
 			_matrix.b = -oldMatrix.b;
 			_matrix.d = -oldMatrix.d;
+			_matrix.translate(0, height);
 		}
 		else
 		{
 			_matrix.b = oldMatrix.b;
 			_matrix.d = oldMatrix.d;
+			_matrix.ty = (_matrix.ty == oldMatrix.ty + height) ? oldMatrix.ty : _matrix.ty; 
 		}
 		return Value;
 	}
@@ -417,6 +497,7 @@ class FlxAnim extends FlxSprite
 				length = layer.FR.length;
 			}
 		}
+		length--;
 		return length;
 	}
 	/**
@@ -427,7 +508,7 @@ class FlxAnim extends FlxSprite
 	 * @param Y  the *y* axis of the animation.
 	 * @param FrameRate the framerate of the animation.
 	 */
-	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, X:Float = 0, Y:Float = 0, Looped:Bool = false)
+	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, Looped:Bool = false, X:Float = 0, Y:Float = 0)
 	{
 		var timeline:Timeline = null;
 		for (name in symbolDictionary.keys())
@@ -458,9 +539,9 @@ class FlxAnim extends FlxSprite
 	 */
 	public function addByAnimIndices(Name:String, Indices:Array<Int>, FrameRate:Float = 30) 
 	{
-		addBySymbolIndices(Name, coolParse.AN.SN, Indices, FrameRate,0,0, (coolParse.AN.STI != null) ? ["loop", "LP"].indexOf(coolParse.AN.STI.SI.LP) != -1 : false);
+		addBySymbolIndices(Name, coolParse.AN.SN, Indices, FrameRate, (coolParse.AN.STI != null) ? ["loop", "LP"].indexOf(coolParse.AN.STI.SI.LP) != -1 : false, 0,0);
 	}
-	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 30, X:Float = 0, Y:Float = 0, Looped:Bool = false) 
+	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 30, Looped:Bool = false, X:Float = 0, Y:Float = 0) 
 	{
 		var thing = symbolDictionary.get(SymbolName);
 		if (thing == null)
@@ -469,7 +550,6 @@ class FlxAnim extends FlxSprite
 			return;
 		}
 		var layers:Array<Layers> = [];
-		var frameLength = 0;
 		for (layer in thing.L)
 		{
 			var frames:Array<Frame> = [];
@@ -483,6 +563,12 @@ class FlxAnim extends FlxSprite
 
 		animsMap.set(Name, {symbolName: SymbolName, timeline: {L: layers}, indices: Indices, X: X, Y: Y, frameRate: FrameRate, looped: false});
 	}
+
+	function set_framerate(value:Float):Float
+	{
+		frameDelay = 1 / value;
+		return framerate = value;
+	}
 	/**
 	 * This adds a new animation by adding a custom timeline, obviously taking as a reference the timeline syntax!
 	 * **WARNING**: I, *CheemsAndFriends*, do **NOT** recommend this unless you're using an extern json file to do this!
@@ -494,12 +580,16 @@ class FlxAnim extends FlxSprite
 	 */
 	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 30, Looped:Bool = false)
 	{
+		for (l in Timeline.L)
+		{
+			l.FR = AnimationData.parseDurationFrames(l.FR);
+		}
 		animsMap.set(Name, {symbolName: Name, timeline: Timeline, X: 0, Y: 0, frameRate:FrameRate, looped: Looped});
 	}
 
 	public function get_length()
 	{
-		return frameLength - 1;
+		return frameLength + 1;
 	}
 
 	public function getFrameLabel(name:String):Null<Int>
@@ -513,7 +603,10 @@ class FlxAnim extends FlxSprite
 		}
 		return thingy;
 	}
-
+	/**
+	 * Redirects the frame into a frame with a frame label of that type.
+	 * @param name the name of the label.
+	 */
 	public function goToFrameLabel(name:String)
 	{
 		var framenum = getFrameLabel(name);
@@ -524,7 +617,7 @@ class FlxAnim extends FlxSprite
 	/**
 	 * Checks the next frame label you're looking for.
 	 * @param name the name of the frame label.
-	 * @return the next frame label, can be null!
+	 * @return A `String`. WARNING: it can be `null`
 	 */
 	public function getNextToFrameLabel(name:String):Null<String>
 	{
@@ -533,20 +626,24 @@ class FlxAnim extends FlxSprite
 			FlxG.log.error('Frame label $name does not exist! Maybe you mispelled it?');
 		return thing;
 	}
-
-	public function addCallbackTo(label:String, callback:()->Void)
+	/**
+	 * Links a callback into a label.
+	 * @param name the name of the label.
+	 * @param callback the callback you're going to add 
+	 */
+	public function addCallbackTo(name:String, callback:()->Void)
 	{
-		if (!frameLabels.exists(label))
+		if (!frameLabels.exists(name))
 		{
-			FlxG.log.error('"$label" does not exist as a frame label! have misspelled it?');
+			FlxG.log.error('"$name" does not exist as a frame label! have misspelled it?');
 			return;
 		}
 
-		var array:Array<()->Void> = (labelcallbacks.exists(label)) ? labelcallbacks.get(label) : [];
+		var array:Array<()->Void> = (labelcallbacks.exists(name)) ? labelcallbacks.get(name) : [];
 
 		array.push(callback);
 
-		labelcallbacks.set(label, array);
+		labelcallbacks.set(name, array);
 	}
 
 	public function removeCallbackFrom(label:String, callback:()->Void)
@@ -599,123 +696,21 @@ class FlxAnim extends FlxSprite
 	{
 		xFlip = yFlip = false;
 		coolParse = null;
-		frameLength = 1;
+		frameLength = -1;
 		curFrame = 0;
 		frameLabels = null;
 		labelArray = null;
 		labelcallbacks = null;
-		name = null;
+		symbolName = null;
+		framerate = 0;
+		frameTick = 0;
 		animsMap = null;
 		callbackCalled = false;
 		loopType = null;
 		symbolType = null;
 		curLabel = null;
 		symbolDictionary = null;
+		frames.destroy();
 		super.destroy();
-	}
-}
-@:noCompletion
-class FlxLimb extends FlxAnim
-{
-	public function new(SymbolReference:FlxAnim) 
-	{
-		super(SymbolReference.x, SymbolReference.y, null);
-		
-		antialiasing = SymbolReference.antialiasing;
-		offset = SymbolReference.offset;
-		xFlip = SymbolReference.xFlip;
-		yFlip = SymbolReference.yFlip;
-		scrollFactor = SymbolReference.scrollFactor;
-	}
-	override function isOnScreen(?Camera:FlxCamera):Bool 
-	{
-		if (Camera == null)
-			Camera = FlxG.camera;
-
-
-		var minX:Float = x + _matrix.tx - offset.x - scrollFactor.x * Camera.scroll.x;
-		var minY:Float = y + _matrix.ty - offset.y - scrollFactor.y * Camera.scroll.y;
-
-		var radiusX:Float =  frameHeight * Math.max(1,_matrix.a);
-		var radiusY:Float = frameWidth * Math.max(1, _matrix.d);
-		var radius:Float = Math.max(radiusX, radiusY);
-		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
-		minY -= radius;
-		minX -= radius;
-		radius *= 2;
-
-		_point.set(minX, minY);
-		return Camera.containsPoint(_point, radius, radius);
-	}
-	public override function drawComplex(camera:FlxCamera):Void
-	{
-		_matrix.scale(scale.x, scale.y);
-		if (bakedRotationAngle <= 0)
-		{
-			updateTrig();
-			if (angle != 0)
-				_matrix.rotateWithTrig(_cosAngle, _sinAngle);
-		}
-		if (isPixelPerfectRender(camera))
-		{
-			_point.floor();
-		}
-
-		_matrix.translate(_point.x, _point.y);
-		// testing shaders? not having much success as I want to smh
-		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
-	}
-}
-class ButtonEvent
-{
-	/**
-	 * The callback function to call when this even fires.
-	 */
-	public var callback:Void->Void;
-
-	#if FLX_SOUND_SYSTEM
-	/**
-	 * The sound to play when this event fires.
-	 */
-	public var sound:FlxSound;
-	#end
-
-	/**
-	 * @param   Callback   The callback function to call when this even fires.
-	 * @param   sound      The sound to play when this event fires.
-	 */
-	public function new(?Callback:Void->Void, ?sound:FlxSound)
-	{
-		callback = Callback;
-
-		#if FLX_SOUND_SYSTEM
-		this.sound = sound;
-		#end
-	}
-
-	/**
-	 * Cleans up memory.
-	 */
-	public inline function destroy():Void
-	{
-		callback = null;
-
-		#if FLX_SOUND_SYSTEM
-		sound.destroy();
-		#end
-	}
-
-	/**
-	 * Fires this event (calls the callback and plays the sound)
-	 */
-	public inline function fire():Void
-	{
-		if (callback != null)
-			callback();
-
-		#if FLX_SOUND_SYSTEM
-		if (sound != null)
-			sound.play(true);
-		#end
 	}
 }
