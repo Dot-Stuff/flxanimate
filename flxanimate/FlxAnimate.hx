@@ -2,7 +2,7 @@ package flxanimate;
 
 import flixel.math.FlxPoint;
 import flixel.FlxCamera;
-import flxanimate.animate.FlxAnim.ButtonEvent;
+import flxanimate.animate.*;
 import flxanimate.zip.Zip;
 import openfl.Assets;
 import haxe.io.BytesInput;
@@ -46,21 +46,7 @@ class FlxAnimate extends FlxSprite
 
 	var reversed:Bool = false;
 
-	/**
-	 * Internal, used for each skip between frames.
-	 */
-	@:noCompletion
-	var frameTick:Float;
 
-
-	public var framerate(default, set):Float;
-
-	/**
-	 * Internal, used for each skip between frames.
-	 */
-	var frameDelay:Float;
-
-	var timeline:Timeline;
 	/**
 	 * Creates a `FlxSpriteMap` at specified position.
 	 * 
@@ -72,7 +58,6 @@ class FlxAnimate extends FlxSprite
 	public function new(X:Float = 0, Y:Float = 0, Path:String, ?Settings:Settings)
 	{
 		super(X, Y);
-		makeGraphic(16,16,0);
 		
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
 		{
@@ -80,7 +65,6 @@ class FlxAnimate extends FlxSprite
 			return;
 		}
 		var jsontxt:AnimAtlas = atlasSetting(Path);
-		timeline = jsontxt.AN.TL;
 		anim = new FlxAnim(X, Y, jsontxt);
 		anim.frames = FlxAnimateFrames.fromTextureAtlas(Path);
 		anim.setShit();
@@ -94,48 +78,50 @@ class FlxAnimate extends FlxSprite
 			anim.offset = offset;
 			anim.scale = scale;
 			anim.scrollFactor = scrollFactor;
-			anim.renderFrames(timeline);
+			anim.render();
 		}
 		super.draw();
 	}
 	override function set_flipX(Value:Bool)
 	{
+		if (anim == null) return false;
 		anim.xFlip = Value;
 		return super.set_flipX(Value);
 	}
 	override function set_flipY(Value:Bool)
 	{
+		if (anim == null) return false;
 		anim.yFlip = Value;
 		return super.set_flipY(Value);
 	}
 	override function set_x(Value:Float)
 	{
-		if (anim != null)
-			anim.x = Value;
+		if (anim == null) return 0.0;
+		anim.x = Value;
 		return super.set_x(Value);
 	}
 	override function set_y(Value:Float)
 	{
-		if (anim != null)
-			anim.y = Value;
+		if (anim == null) return 0.0;
+		anim.y = Value;
 		return super.set_y(Value);
 	}
 	override function set_cameras(Value:Array<FlxCamera>)
 	{
-		if (anim != null)
-			anim.cameras = Value;
+		if (anim == null) return [FlxG.camera];
+		anim.cameras = Value;
 		return super.set_cameras(Value);
 	}
 	override function set_antialiasing(Value:Bool)
 	{
-		if (anim != null)
-			anim.antialiasing = Value;
+		if (anim == null) return false;
+		anim.antialiasing = Value;
 		return super.set_antialiasing(Value);
 	}
 	override function set_visible(Value:Bool)
 	{
-		if (anim != null)
-			anim.visible = Value;
+		if (anim == null) return true;
+		anim.visible = Value;
 		return super.set_visible(Value);
 	}
 	override function checkEmptyFrame()
@@ -143,15 +129,15 @@ class FlxAnimate extends FlxSprite
 		@:privateAccess
 		if (showPivot || anim == null)
 			loadGraphic("flxanimate/images/pivot.png");
+		else
+			makeGraphic(16,16,0);
 	}
 	override function destroy()
 	{
 		anim.destroy();
 		anim = null;
-		timeline = null;
 		onClick = null;
 		onComplete = null;
-		framerate = 0;
 		reversed = showPivot = isPlaying = false;
 		#if FLX_SOUND_SYSTEM
 		if (audio != null)
@@ -159,57 +145,7 @@ class FlxAnimate extends FlxSprite
 		#end
 		super.destroy();
 	}
-	public function playAnim(?Name:String, Force:Bool = false, Reverse:Bool = false, Frame:Int = 0)
-	{
-		pauseAnim();
-		@:privateAccess
-		var curThing = anim.animsMap.get(Name);
-		@:privateAccess
-		if (curThing != null && anim.name != Name || Force || !Reverse && anim.curFrame >= anim.length || Reverse && anim.curFrame <= 0)
-		{
-			if (!Reverse)
-				anim.curFrame = Frame;
-			else
-				anim.curFrame =  Frame - anim.length;
-		}
-		@:privateAccess
-		if ([null, ""].indexOf(Name) == -1 && curThing != null)
-		{
-			anim.x = x + curThing.X;
-			anim.y = y + curThing.Y;
-			anim.frameLength = 0;
-			for (layer in curThing.timeline.L)
-			{
-				if (anim.frameLength < layer.FR.length)
-				{
-					anim.frameLength = layer.FR.length;
-				}
-			}
-			timeline = curThing.timeline;
-			@:privateAccess
-			anim.loopType = curThing.looped ? loop : playonce;
-			@:privateAccess
-			anim.name = curThing.symbolName;
-		}
-		reversed = Reverse;
-		isPlaying = true;
-	}
 
-	public function pauseAnim()
-	{
-		isPlaying = false;
-	}
-	public function stopAnim()
-	{
-		pauseAnim();
-		anim.curFrame = 0;
-	}
-	
-	function set_framerate(value:Float):Float
-	{
-		frameDelay = 1 / value;
-		return framerate = value;
-	}
 	override function set_alpha(Alpha:Float)
 	{
 		anim.alpha = Alpha;
@@ -223,55 +159,16 @@ class FlxAnimate extends FlxSprite
 
 	public override function update(elapsed:Float)
 	{
+		if (FlxG.keys.pressed.H)
+		{
+			AnimationData.filters.hue = (AnimationData.filters.hue + 2) % 360;
+		}
+		if (FlxG.keys.pressed.S)
+			AnimationData.filters.saturation = (AnimationData.filters.saturation + 2) % 100;
+		if (FlxG.keys.anyPressed([V, B]))
+			AnimationData.filters.brightness = (AnimationData.filters.brightness + 2);
 		super.update(elapsed);
-		if (!isPlaying)
-			return;
-		
-		frameTick += elapsed;
-
-		while (frameTick > frameDelay)
-		{
-			if (reversed)
-			{
-				anim.curFrame--;
-			}
-			else
-			{
-				anim.curFrame++;
-			}
-			frameTick -= frameDelay;
-		}
-		@:privateAccess
-		if (anim.curLabel != null)
-		{
-			if (anim.labelcallbacks.exists(anim.curLabel))
-			{
-				for (callback in anim.labelcallbacks.get(anim.curLabel))
-					callback();
-			}
-		}
-		@:privateAccess
-		if ([playonce, "playonce"].indexOf(anim.loopType) != -1)
-		{
-			if (reversed)
-			{
-				if (anim.curFrame <= 0)
-				{
-					if (onComplete != null)
-						onComplete();
-					isPlaying = false;
-				}
-			}
-			else
-			{
-				if (anim.curFrame >= anim.length)
-				{
-					if (onComplete != null)
-						onComplete();
-					isPlaying = false;	
-				}
-			}
-		}
+		anim.update(elapsed);
 	}
 	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end)
 	{
@@ -280,7 +177,7 @@ class FlxAnimate extends FlxSprite
 	}
 	function setTheSettings(?Settings:Settings)
 	{
-		framerate = anim.coolParse.MD.FRT;
+		anim.framerate = anim.coolParse.MD.FRT;
 		@:privateAccess
 		if (Settings != null)
 		{
@@ -293,7 +190,7 @@ class FlxAnimate extends FlxSprite
 			if (Settings.Reversed != null)
 				reversed = Settings.Reversed;
 			if (Settings.FrameRate != null)
-				framerate = (Settings.FrameRate > 0 ? anim.coolParse.MD.FRT : Settings.FrameRate);
+				anim.framerate = (Settings.FrameRate > 0 ? anim.coolParse.MD.FRT : Settings.FrameRate);
 			if (Settings.OnComplete != null)
 				onComplete = Settings.OnComplete;
 			if (Settings.ShowPivot != null)
