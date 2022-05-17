@@ -46,14 +46,13 @@ class FlxAnimate extends FlxSprite
 
 	var reversed:Bool = false;
 
-
 	/**
-	 * Creates a `FlxSpriteMap` at specified position.
+	 * Creates a `FlxAnimate` at a specified position from Adobe Animate texture atlas files.
 	 * 
-	 * @param X 		The initial X position of the texture sheet.
-	 * @param Y 		The initial Y position of the texture sheet.
-	 * @param Path
-	 * @param Framerate The initial framerate of the texture sheet.
+	 * @param X 		The initial X position of the sprite.
+	 * @param Y 		The initial Y position of the ssprite.
+	 * @param Path      The path to the Animate CC texture atlas files.
+	 * @param Settings  Optional settings for the animation (antialiasing, framerate, reversed, etc.).
 	 */
 	public function new(X:Float = 0, Y:Float = 0, Path:String, ?Settings:Settings)
 	{
@@ -61,9 +60,10 @@ class FlxAnimate extends FlxSprite
 		
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
 		{
-			FlxG.log.error('Animation file hasnt been found in Path $Path, Have you written the correct Path?');
+			FlxG.log.error('Animation file not found in specified path: "$path", have you written the correct path?');
 			return;
 		}
+
 		var jsontxt:AnimAtlas = atlasSetting(Path);
 		anim = new FlxAnim(X, Y, jsontxt);
 		anim.frames = FlxAnimateFrames.fromTextureAtlas(Path);
@@ -71,7 +71,7 @@ class FlxAnimate extends FlxSprite
 		setTheSettings(Settings);
 	}
 
-	public override function draw()
+	public override function draw():Void
 	{
 		if (anim != null && anim.frames != null)
 		{
@@ -82,57 +82,66 @@ class FlxAnimate extends FlxSprite
 		}
 		super.draw();
 	}
-	override function set_flipX(Value:Bool)
+
+	override function set_flipX(Value:Bool):Bool
 	{
 		if (anim == null) return false;
 		anim.xFlip = Value;
 		return super.set_flipX(Value);
 	}
-	override function set_flipY(Value:Bool)
+
+	override function set_flipY(Value:Bool):Bool
 	{
 		if (anim == null) return false;
 		anim.yFlip = Value;
 		return super.set_flipY(Value);
 	}
-	override function set_x(Value:Float)
+
+	override function set_x(Value:Float):Float
 	{
 		if (anim == null) return 0.0;
 		anim.x = Value;
 		return super.set_x(Value);
 	}
-	override function set_y(Value:Float)
+
+	override function set_y(Value:Float):Float
 	{
 		if (anim == null) return 0.0;
 		anim.y = Value;
 		return super.set_y(Value);
 	}
-	override function set_cameras(Value:Array<FlxCamera>)
+
+	override function set_cameras(Value:Array<FlxCamera>):Array<FlxCamera>
 	{
 		if (anim == null) return [FlxG.camera];
 		anim.cameras = Value;
 		return super.set_cameras(Value);
 	}
-	override function set_antialiasing(Value:Bool)
+
+	override function set_antialiasing(Value:Bool):Bool
 	{
 		if (anim == null) return false;
 		anim.antialiasing = Value;
 		return super.set_antialiasing(Value);
 	}
-	override function set_visible(Value:Bool)
+
+	override function set_visible(Value:Bool):Bool
 	{
 		if (anim == null) return true;
 		anim.visible = Value;
 		return super.set_visible(Value);
 	}
-	override function checkEmptyFrame()
+
+	override function checkEmptyFrame():Void
 	{
 		@:privateAccess
 		if (showPivot || anim == null)
 			loadGraphic("flxanimate/images/pivot.png");
 		else
-			makeGraphic(16,16,0);
+			makeGraphic(16, 16, 0);
 	}
-	override function destroy()
+
+	override function destroy():Void
 	{
 		anim.destroy();
 		anim = null;
@@ -146,36 +155,39 @@ class FlxAnimate extends FlxSprite
 		super.destroy();
 	}
 
-	override function set_alpha(Alpha:Float)
+	override function set_alpha(Alpha:Float):Float
 	{
 		anim.alpha = Alpha;
 		return super.set_alpha(Alpha);
 	}
-	override function set_color(Value:flixel.util.FlxColor)
+
+	override function set_color(Value:flixel.util.FlxColor):flixel.util.FlxColor
 	{
 		anim.color = Value;
 		return super.set_color(Value);
 	}
 
-	public override function update(elapsed:Float)
+	public override function update(elapsed:Float):Void
 	{
+		#if debug
 		if (FlxG.keys.pressed.H)
-		{
 			AnimationData.filters.hue = (AnimationData.filters.hue + 2) % 360;
-		}
 		if (FlxG.keys.pressed.S)
 			AnimationData.filters.saturation = (AnimationData.filters.saturation + 2) % 100;
 		if (FlxG.keys.anyPressed([V, B]))
 			AnimationData.filters.brightness = (AnimationData.filters.brightness + 2);
+		#end
 		super.update(elapsed);
 		anim.update(elapsed);
 	}
-	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end)
+
+	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end):Void
 	{
 		@:privateAccess
 		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
 	}
-	function setTheSettings(?Settings:Settings)
+
+	function setTheSettings(?Settings:Settings):Void
 	{
 		anim.framerate = anim.coolParse.MD.FRT;
 		@:privateAccess
@@ -203,6 +215,7 @@ class FlxAnimate extends FlxSprite
 				offset = Settings.Offset;
 		}
 	}
+
 	function atlasSetting(Path:String):AnimAtlas
 	{
 		var jsontxt:AnimAtlas = null;
