@@ -2,24 +2,49 @@
 
 # FlxAnimate
 
-A way to introduce texture atlases in your HaxeFlixel projects.
+FlxAnimate is a repository made by [CheemsAndFriends](https://github.com/CheemsAndFriends) and [DotWith](https://github.com/DotWith) made for playing all spritesheet formats and the mysterious but interesting export called `Texture Atlas`
 
-FlxAnimate introduces a way to add animations from texture atlases exported from Adobe Animate and enhances the way of adding spritesheet parsing on some formats that FlxAtlasFrames can't (at the moment).
+## Support
+You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
 
-# Texture Atlas
-A texture atlas is a method of exporting animations in Adobe Animate which exports a specific symbol. In every texture atlas there will be atleast 3 files (depending on the version you're using):
-- `Animation.json` - Determines the main timeline plus the timelines of symbols within the animation.
-- `spritemap(1).json` - Determines the sprites and assets needed for the animation.
-- `spritemap(1).png` - An image containing the assets needed for the animation.
+## TODO
+* (optional/important) Masks and filters.
 
-FlxAnimate is currently in development, so it's very possible that classes, functions and variables will be changed in the future.
+# Installation
 
-## Installation
-Installing FlxAnimate is as simple as running:
+there are two ways of downloading FlxAnimate:
+
+## 1. By haxelib:
+
+normally, haxelib tries (but sometimes fails) to be the most stable version of it.
+
+You can download it by typing:
 ```
 haxelib install flxanimate
 ```
-in your terminal or command prompt!
+in your terminal or command prompt.
+
+## 2. By git:
+
+if you want to use the latest commits that are released from time to time, type this command:
+```
+haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate
+```
+on your terminal or command prompt.
+
+
+# Texture Atlas
+
+**WARNING:** This repo's texture atlas player does not support **SPRITESHEET EXPORTS!!!** if you want to translate from atlases to spritesheets (even though I 100% don't recommend), use [Smokey's repo](https://github.com/Smokey555/Flixel-TextureAtlas)
+
+
+A Texture Atlas is one of the methods of exporting animations in Adobe Animate which it can only export a single symbol. In every texture atlas, no matter if it is 2018 or the latest one, there will be atleast 2 main types:
+- `Animation` - explains the timelines of the main animation plus the symbols that the main one uses.
+- `spritemap` - slices the limbs that are used in the animation, variable.
+
+"FlxAnimate is literally so fuckin fragile I don't wanna call it a final version unless it has all the fuckin functions." - CheemsAndFriends
+
+As you can see, even though this is trying to do it's best to work properly, it is very fragile, so it might break up sometimes in some versions, not to mention, it is kinda irregular and it will have breaking changes all the time. Hope you can understand and we apologize for the inconveniences.
 
 ## Usage
 Using FlxAnimate is really simple! First, you have to create a new instance of FlxAnimate, just like you would with an FlxSprite.
@@ -46,9 +71,6 @@ character.anim.addByAnimIndices(AnimationName, Indices ([0, 1, 2, 3...] etc.), F
 
 **WARNING:** Adding animations by indices works only with the exported timeline and the main animation, don't try with different symbols as it will not work.
 
-## TODO
-* (optional/important) Masks and filters.
-
 
 ## SpriteSheet
 It's basically the same thing you were doing when you were loading the frames, like Sparrow or JSON (Hash or Array).
@@ -62,6 +84,3 @@ I think you know how to load a spritesheet but just in case:
 ```
 
 and if you're using an image that is not in the same directory but in a whole another directory, ex: the document is in `data` and your image is in `images`, you should add another field describing the Path of that image.
-
-## Support
-You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems

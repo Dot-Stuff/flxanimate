@@ -15,12 +15,9 @@ class AnimationData
 		for (frame in frames)
 		{
 			var i = 0;
-			name = frame.N;
 			do
 			{
-				result.push({N: name, I: index, DU: 1, E: frame.E});
-				if (name != null)
-					name == null;
+				result.push({N: name, I: index, DU: 1, E: frame.E, C: frame.C, F: frame.F});
 				i++;
 				index++;
 			}
@@ -253,6 +250,16 @@ abstract Frame({}) from {}
 	 */
 	public var E(get, never):Array<Element>;
 
+	/**
+	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
+	 */
+	public var C(get, set):ColorEffects;
+
+	/**
+	 * Filter stuff, this is the reason why you can't add custom shaders, srry
+	 */
+	public var F(get, never):Filters;
+
 	inline function get_N():String
 	{
 		return AnimationData.setFieldBool(this, ["N", "name"]);
@@ -268,6 +275,19 @@ abstract Frame({}) from {}
 	inline function get_E():Array<Element>
 	{
 		return AnimationData.setFieldBool(this, ["E", "elements"]);
+	}
+	inline function get_C()
+	{
+		return AnimationData.setFieldBool(this, ["C", "color"]);
+	}
+	inline function set_C(value:ColorEffects)
+	{
+		return AnimationData.setFieldBool(this, ["C", "color"], value);
+	}
+
+	inline function get_F()
+	{
+		return AnimationData.setFieldBool(this, ["F", "filters"]);
 	}
 }
 /**
@@ -598,8 +618,6 @@ typedef BlurFilterS = {
 	var BLY:Float;
 	var Q:Int;
 }
-
-
 enum abstract LoopType(String) from String to String
 {
 	var loop = "LP";
