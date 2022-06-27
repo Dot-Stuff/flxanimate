@@ -100,7 +100,7 @@ class FlxAnim implements IFlxDestroyable
 		{
 			_matrix.identity();
 			if (Name == coolParse.AN.SN && coolParse.AN.STI != null)
-				_matrix.concat(FlxInstance.prepareMatrix(coolParse.AN.STI.SI.M3D));
+				_matrix.concat(curSymbol.prepareMatrix(coolParse.AN.STI.SI.M3D));
 			curFrame = 0;
 			curSymbol = curThing.symbol;
 			curFrame = (Reverse) ? Frame - length : Frame;
@@ -155,7 +155,7 @@ class FlxAnim implements IFlxDestroyable
 			loopType = STI.LP;
 			symbolType = STI.ST;
 			curFrame = STI.FF;
-			_matrix.concat(FlxInstance.prepareMatrix(STI.M3D));
+			_matrix.concat(curSymbol.prepareMatrix(STI.M3D));
 			
 			if (STI.C != null)
 			{

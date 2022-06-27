@@ -42,20 +42,21 @@ class FlxAnimate extends FlxSprite
 	public var showPivot:Bool = false;
 
 	/**
-	 * Creates a `FlxSpriteMap` at specified position.
+	 * Creates a `FlxAnimate` at a specified position from Adobe Animate texture atlas files.
 	 * 
-	 * @param X 		The initial X position of the texture sheet.
-	 * @param Y 		The initial Y position of the texture sheet.
-	 * @param Path
-	 * @param Framerate The initial framerate of the texture sheet.
+	 * @param X 		The initial X position of the sprite.
+	 * @param Y 		The initial Y position of the ssprite.
+	 * @param Path      The path to the Animate CC texture atlas files.
+	 * @param Settings  Optional settings for the animation (antialiasing, framerate, reversed, etc.).
 	 */
 	public function new(X:Float = 0, Y:Float = 0, Path:String, ?Settings:Settings)
 	{
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
 		{
-			FlxG.log.error('Animation file hasnt been found in Path $Path, Have you written the correct Path?');
+			FlxG.log.error('Animation file not found in specified path: "$path", have you written the correct path?');
 			return;
 		}
+
 		var jsontxt:AnimAtlas = atlasSetting(Path);
 		anim = new FlxAnim(jsontxt);
 		anim.setShit();
@@ -65,7 +66,7 @@ class FlxAnimate extends FlxSprite
 		jsontxt = null;
 	}
 
-	public override function draw()
+	public override function draw():Void
 	{
 		@:privateAccess
 		parseSymbol(anim.curSymbol, anim._matrix, anim.curFrame, anim.symbolType, anim.colorTransform);
@@ -284,15 +285,15 @@ class FlxAnimate extends FlxSprite
 	public override function updateAnimation(elapsed:Float) 
 	{
 		anim.update(elapsed);
-		if (FlxG.keys.justPressed.H)
-			AnimationData.filters.saturation = -100;
 	}
-	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end)
+
+	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end):Void
 	{
 		@:privateAccess
 		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
 	}
-	function setTheSettings(?Settings:Settings)
+
+	function setTheSettings(?Settings:Settings):Void
 	{
 		anim.framerate = anim.coolParse.MD.FRT;
 		@:privateAccess
@@ -321,6 +322,7 @@ class FlxAnimate extends FlxSprite
 				offset = Settings.Offset;
 		}
 	}
+
 	function atlasSetting(Path:String):AnimAtlas
 	{
 		var jsontxt:AnimAtlas = null;

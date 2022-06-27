@@ -184,4 +184,11 @@ class FlxSymbol
     {
         curFrame = frameControl(curFrame + elapsed, loopType);
     }
+    public function prepareMatrix(m3d:Array<Float>)
+	{
+		if (m3d == null || m3d == [])
+			m3d = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]; // default m3d?
+
+		return new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
+	}
 }

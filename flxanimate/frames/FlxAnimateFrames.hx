@@ -415,6 +415,7 @@ class FlxAnimateFrames
 
         Frames.addAtlasFrame(frameRect, sourceSize, offset, name, angle);
     }
+    
     static function starlingHelper(FrameName:String, FrameData:Dynamic, Frames:FlxAtlasFrames):Void
     {
         var rotated:Bool = FrameData.rotated;
@@ -437,6 +438,7 @@ class FlxAnimateFrames
 
         Frames.addAtlasFrame(frameRect, sourceSize, offset, name, angle);
     }
+
     static function textureAtlasHelper(SpriteMap:BitmapData, limb:AnimateSpriteData, curMeta:Meta)
     {
         var width = (limb.rotated) ? limb.h : limb.w;
