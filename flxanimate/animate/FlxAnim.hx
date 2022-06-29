@@ -251,7 +251,7 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
-		var symbol:FlxSymbol;
+		var symbol = null;
 		for (name in symbolDictionary.keys())
 		{
 			if (startsWith(name, SymbolName))
@@ -260,7 +260,7 @@ class FlxAnim implements IFlxDestroyable
 				break;
 			}
 		}
-		if (timeline != null)
+		if (symbol != null)
 			animsMap.set(Name, {symbol: new FlxSymbol(Name, symbol.timeline), X: X, Y: Y, frameRate: FrameRate, looped: Looped});
 		else
 			FlxG.log.error('No symbol was found with the name $SymbolName!');
