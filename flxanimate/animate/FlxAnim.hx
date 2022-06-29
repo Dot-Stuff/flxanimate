@@ -74,6 +74,8 @@ class FlxAnim implements IFlxDestroyable
 		_matrix = new FlxMatrix();
 		width = height = 0;
 		colorTransform = new ColorTransform();
+		buttonMap = new Map();
+		animsMap = new Map();
 	}
 
 	public var symbolDictionary:Map<String, FlxSymbol> = new Map<String, FlxSymbol>();
@@ -249,17 +251,17 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
-		var timeline:Timeline = null;
+		var symbol:FlxSymbol;
 		for (name in symbolDictionary.keys())
 		{
 			if (startsWith(name, SymbolName))
 			{
-				timeline = symbolDictionary.get(name);
+				symbol = symbolDictionary.get(name);
 				break;
 			}
 		}
 		if (timeline != null)
-			animsMap.set(Name, {symbol: new FlxSymbol(Name, timeline), X: X, Y: Y, frameRate: FrameRate, looped: Looped});
+			animsMap.set(Name, {symbol: new FlxSymbol(Name, symbol.timeline), X: X, Y: Y, frameRate: FrameRate, looped: Looped});
 		else
 			FlxG.log.error('No symbol was found with the name $SymbolName!');
 	}
