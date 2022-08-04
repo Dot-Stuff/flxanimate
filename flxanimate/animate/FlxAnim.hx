@@ -93,7 +93,7 @@ class FlxAnim implements IFlxDestroyable
 				_parent.colorTransform = FlxAnimate.colorEffect(STI.C);
 			}
 		}
-		_framerate = animationFile.MD.FRT;
+		framerate = _framerate = animationFile.MD.FRT;
 	}
 	public var symbolDictionary:Map<String, FlxSymbol>;
 	
@@ -105,7 +105,7 @@ class FlxAnim implements IFlxDestroyable
 		if ([nth, ""].indexOf(Name) == -1 && curThing == null)
 		{
 			var symbol = symbolDictionary.get(Name);
-			if (symbol != null) curThing = {symbol: symbol, looped: true, frameRate: coolParse.MD.FRT, X: 0, Y: 0};
+			if (symbol != null) curThing = {symbol: symbol, looped: true, frameRate: _framerate, X: 0, Y: 0};
 
 			if (curThing == null)
 			{
@@ -124,6 +124,7 @@ class FlxAnim implements IFlxDestroyable
 			curFrame = 0;
 			@:privateAccess
 			loopType = curThing.looped ? loop : playonce;
+			framerate = curThing.frameRate;
 		}
 		if (Force || finished || [nth, ""].indexOf(Name) == -1 && curThing.symbol != curSymbol)
 		{
@@ -133,6 +134,7 @@ class FlxAnim implements IFlxDestroyable
 		reversed = Reverse;
 		finished = false;
 		isPlaying = true;
+		
 	}
 
 	public function pause()

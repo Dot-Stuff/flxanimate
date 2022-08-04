@@ -344,8 +344,6 @@ class FlxAnimate extends FlxSprite
 
 	function setTheSettings(?Settings:Settings):Void
 	{
-		if (anim != null)
-			anim.framerate = anim.coolParse.MD.FRT;
 		@:privateAccess
 		if (true)
 		{
