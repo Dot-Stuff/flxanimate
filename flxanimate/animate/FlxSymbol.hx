@@ -2,8 +2,6 @@ package flxanimate.animate;
 
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
-import openfl.geom.ColorTransform;
-import flixel.math.FlxMatrix;
 
 class FlxSymbol
 {
@@ -18,32 +16,34 @@ class FlxSymbol
     var _labels:Array<String>;
     
     public var layers(default, null):Array<String>;
-    
+
+    @:allow(flxanimate.FlxAnimate)
     var _layers:Array<String>;
     
     public var curFrame:Int;
-
+    
+    var _tick:Float;
+    
     @:allow(flxanimate.animate.FlxAnim)
-    function new(name:String, timeline:Timeline, reverse:Bool = false)
+    function new(name:String, timeline:Timeline)
     {
         layers = [];
+        _layers = [];
         labels = [];
         _labels = [];
         curFrame = 0;
-        if (reverse)
-            timeline.L.reverse();
         for (layer in timeline.L)
 		{
-            layer = parseLayer(layer);
+            parseLayer(layer);
         }
-        _layers = layers;
-        length--;
         this.timeline = timeline;
+        this.name = name;
     }
 
     function parseLayer(layer:Layers)
     {
         layers.push(layer.LN);
+        _layers.push(layer.LN);
         for (fr in layer.FR)
         {
             if (fr.N != null)
@@ -51,53 +51,29 @@ class FlxSymbol
                 labels.set(fr.N, new FlxLabel(fr.N, fr.I));
                 _labels.push(fr.N);
             }
-            for (element in fr.E)
-            {
-                var ASI = element.ASI;
-                var SI = element.SI;
-                if (ASI != null)
-                {
-                    ASI.M3D = (ASI.M3D != null) ? (ASI.M3D is Array) ? ASI.M3D : [ASI.M3D.m00,ASI.M3D.m01,ASI.M3D.m02,ASI.M3D.m03,ASI.M3D.m10,ASI.M3D.m11,ASI.M3D.m12,ASI.M3D.m13,
-                        ASI.M3D.m20,ASI.M3D.m21,ASI.M3D.m22,ASI.M3D.m23,ASI.M3D.m30,ASI.M3D.m31,ASI.M3D.m32,ASI.M3D.m33] : [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-
-                    if (ASI.POS != null)
-                    {
-                        ASI.M3D[12] += ASI.POS.x;
-                        ASI.M3D[13] += ASI.POS.y;
-                    }
-                }
-                if (SI != null)
-                {
-                    SI.M3D = (SI.M3D is Array) ? SI.M3D : [SI.M3D.m00, SI.M3D.m01,SI.M3D.m02,SI.M3D.m03,SI.M3D.m10,SI.M3D.m11,SI.M3D.m12,SI.M3D.m13,SI.M3D.m20,SI.M3D.m21,SI.M3D.m22,
-                        SI.M3D.m23,SI.M3D.m30,SI.M3D.m31,SI.M3D.m32,SI.M3D.m33];
-
-                    if (SI.bitmap != null)
-                    {
-                        SI.M3D[12] += SI.bitmap.POS.x;
-                        SI.M3D[13] += SI.bitmap.POS.y;
-                    }
-                }
-            }
-            layer.FR = AnimationData.parseDurationFrames(layer.FR);
-            if (length < fr.I + fr.DU)
-                length = fr.I + fr.DU;
+            if (length < fr.I + fr.DU - 1)
+                length = fr.I + fr.DU - 1;
         }
-        return layer;
     }
     public function hideLayer(layer:String)
     {
-        if (!layers.contains(layer))
-            FlxG.log.error('There is no layer called "$layer"!');
-        layers.remove(layer);
+        if (_layers.indexOf(layer) == -1)
+            FlxG.log.error((layers.indexOf(layer) != -1) ? 'Layer "$layer" is already hidden!' :'There is no layer called "$layer"!');
+        _layers.remove(layer);
     }
     public function showLayer(layer:String)
     {
-        if (!_layers.contains(layer))
+        if (layers.indexOf(layer) == -1)
         {
             FlxG.log.error('There is no layer called "$layer"!');
             return;
         }
-        layers.push(layer);
+        if (_layers.indexOf(layer) != -1)
+        {
+            FlxG.log.error('Layer "$layer" is not hidden!');
+            return;
+        }
+        _layers.push(layer);
     }
     public function addCallbackTo(label:String, callback:()->Void)
     {
@@ -158,37 +134,62 @@ class FlxSymbol
         if (frame < 0)
 		{
 			if ([loop, "loop"].indexOf(loopType) != -1)
-				frame += (length > 0) ? length: frame;
+				frame += (length > 0) ? length - 1 : frame;
 			else
 			{
 				frame = 0;
 			}
 			
 		}
-		else if (frame > length)
+		else if (frame > length - 1)
 		{
 			if ([loop, "loop"].indexOf(loopType) != -1)
 			{
-				frame -= (length > 0) ? length : frame;
+				frame -= (length > 0) ? length - 1 : frame;
 			}
 			else
 			{
-				frame = length;
+				frame = length - 1;
 			}
 		}
 
         return frame;
     }
 
-    public function update(elapsed:Int, loopType:LoopType)
+    public function update(framerate:Float, reversed:Bool, loopType:LoopType)
     {
-        curFrame = frameControl(curFrame + elapsed, loopType);
+        _tick += FlxG.elapsed;
+        var delay = 1 / framerate;
+
+        while (_tick > delay)
+        {
+            curFrame = frameControl(curFrame + ((reversed) ? -1 : 1), loopType);
+            _tick -= delay;
+        }
     }
-    public function prepareMatrix(m3d:Array<Float>)
+    @:allow(flxanimate.FlxAnimate)
+    function prepareFrame(layer:Layers, frame:Int)
+    {
+        var i = 0;
+        var curFrame = layer.FR[i];
+        while ((curFrame.I + curFrame.DU - 1) < frame)
+        {
+            i++;
+            curFrame = layer.FR[i];
+            if (curFrame == null) return curFrame;
+        }
+        
+        return curFrame;
+    }
+    public static function prepareMatrix(m3d:OneOfTwo<Array<Float>, Matrix3D>, pos:TransformationPoint)
 	{
 		if (m3d == null || m3d == [])
-			m3d = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]; // default m3d?
+			m3d = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+        if (!(m3d is Array))
+            m3d = [for (i in Reflect.fields(m3d)) Reflect.field(m3d, i)];
 
-		return new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
+        if (pos == null)
+            pos = {x: 0, y: 0};
+		return new flixel.math.FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12] + pos.x, m3d[13] + pos.y);
 	}
 }

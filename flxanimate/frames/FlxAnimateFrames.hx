@@ -1,4 +1,5 @@
 package flxanimate.frames;
+import flixel.graphics.frames.FlxFramesCollection;
 import flxanimate.data.AnimationData.OneOfTwo;
 import openfl.geom.Rectangle;
 import flxanimate.data.SpriteMapData.Meta;
@@ -24,10 +25,17 @@ import haxe.xml.Fast as Access;
 #end
 import flixel.graphics.frames.FlxFrame;
 
-class FlxAnimateFrames
+class FlxAnimateFrames extends FlxAtlasFrames
 {
+    public function new()
+    {
+        super(null);
+        parents = [];
+    }
     static var data:AnimateAtlas = null;
     static var zip:Null<List<haxe.zip.Entry>>;
+
+    public var parents:Array<FlxGraphic>;
     /**
      * Parses the spritemaps into small sprites to use in the animation.
      * 
@@ -36,7 +44,8 @@ class FlxAnimateFrames
      */
     public static function fromTextureAtlas(Path:String):FlxAtlasFrames
     {
-        var frames:FlxAtlasFrames = new FlxAtlasFrames(null);
+        var frames:FlxAnimateFrames = new FlxAnimateFrames();
+        
         if (zip != null || haxe.io.Path.extension(Path) == "zip")
         {
             #if html5
@@ -45,7 +54,7 @@ class FlxAnimateFrames
             #end
             var imagemap:Map<String, Bytes> = new Map();
             var jsonMap:Map<String, AnimateAtlas> = new Map();
-            var thing = (zip != null) ? zip :  Zip.unzip(Zip.readZip(new BytesInput(Assets.getBytes(Path))));
+            var thing = (zip != null) ? zip :  Zip.unzip(Zip.readZip(Assets.getBytes(Path)));
 			for (list in thing)
 			{
                 if (haxe.io.Path.extension(list.fileName) == "json")
@@ -82,10 +91,18 @@ class FlxAnimateFrames
                 var curSpritemap = Assets.getBitmapData('$Path/${curJson.meta.image}');
                 if (curSpritemap != null)
                 {
-                    for (curSprite in curJson.ATLAS.SPRITES)
+                    var graphic = FlxG.bitmap.add(curSpritemap);
+                    var spritemapFrames = FlxAtlasFrames.findFrame(graphic);
+                    if (spritemapFrames == null)
                     {
-                        frames.pushFrame(textureAtlasHelper(curSpritemap,curSprite.SPRITE, curJson.meta));
+                        spritemapFrames = new FlxAnimateFrames();
+                        for (curSprite in curJson.ATLAS.SPRITES)
+                        {
+                            spritemapFrames.pushFrame(textureAtlasHelper(graphic.bitmap,curSprite.SPRITE, curJson.meta));
+                        }
                     }
+                    graphic.addFrameCollection(spritemapFrames);
+                    frames.concat(spritemapFrames);
                 }
                 else
                     FlxG.log.error('the image called "${curJson.meta.image}" does not exist in Path $Path, maybe you changed the image Path somewhere else?');
@@ -97,10 +114,18 @@ class FlxAnimateFrames
                 var curSpritemap = Assets.getBitmapData('$Path/${curJson.meta.image}');
                 if (curSpritemap != null)
                 {
-                    for (curSprite in curJson.ATLAS.SPRITES)
+                    var graphic = FlxG.bitmap.add(curSpritemap);
+                    var spritemapFrames = FlxAtlasFrames.findFrame(graphic);
+                    if (spritemapFrames == null)
                     {
-                        frames.pushFrame(textureAtlasHelper(curSpritemap,curSprite.SPRITE, curJson.meta));
+                        spritemapFrames = new FlxAnimateFrames();
+                        for (curSprite in curJson.ATLAS.SPRITES)
+                        {
+                            spritemapFrames.pushFrame(textureAtlasHelper(graphic.bitmap,curSprite.SPRITE, curJson.meta));
+                        }
                     }
+                    graphic.addFrameCollection(spritemapFrames);
+                    frames.concat(spritemapFrames);
                 }
                 else
                     FlxG.log.error('the image called "${curJson.meta.image}" does not exist in Path $Path, maybe you changed the image Path somewhere else?');
@@ -113,6 +138,16 @@ class FlxAnimateFrames
             return null;
         }
         return frames;
+    }
+    public function concat(frames:FlxFramesCollection)
+    {
+        if (parents.indexOf(frames.parent) != -1) return;
+        parents.push(frames.parent);
+        this.frames.concat(frames.frames);
+        for (key => frame in frames.framesHash.keyValueIterator())
+        {
+            framesHash.set(key, frame);
+        }
     }
     /**
      * Sparrow spritesheet format parser with support of both of the versions and making the image completely optional to you.
@@ -460,6 +495,7 @@ class FlxAnimateFrames
         curFrame.frame = new FlxRect(0,0, width, height);
         return curFrame;
     }
+    
     static function texturePackerHelper(FrameName:String, FrameData:Dynamic, Frames:FlxAtlasFrames):Void
 	{
 		var rotated:Bool = FrameData.rotated;

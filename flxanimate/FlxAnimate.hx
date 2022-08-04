@@ -1,5 +1,7 @@
 package flxanimate;
 
+import openfl.geom.Rectangle;
+import openfl.display.BitmapData;
 import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxRect;
 import flixel.graphics.frames.FlxFrame;
@@ -39,63 +41,82 @@ class FlxAnimate extends FlxSprite
 	public var audio:FlxSound;
 	#end
 	
+	public var rectangle:FlxRect;
+	
 	public var showPivot:Bool = false;
 
 	/**
-	 * Creates a `FlxAnimate` at a specified position from Adobe Animate texture atlas files.
-	 * 
+	 * # Description
+	 * `FlxAnimate` is a texture atlas parser from the drawing software *Adobe Animate* (once being *Adobe Flash*).
+	 * It tries to replicate how Adobe Animate works on Haxe so it would be considered (as *MrCheemsAndFriends* likes to call it,) a "*Flash--*", in other words, a replica of Animate's work
+	 * on the side of drawing, making symbols, etc.
+	 * ## WARNINGS
+	 * - This is the only way to use the sprites using the `FlxAnimateFrames` function, `fromTextureAtlas`.
+	 * - This does not convert to spritesheet, if you want to use spritesheets (not recommended), use Smokey555's repo, [Flixel-TextureAtlas](https://github.com/Smokey555/Flixel-TextureAtlas)
+	 * - This can be really fragile on some repos, mainly because even though the repo was made by two ppl collabing, [Dot-With] doesn't seem to be involucrated on `FlxAnimate` no more.
+	 *	 Making really difficult to give really big updates (such as Filters, or Masks) like some *dumass user who doesn't know shit about coding or anything at all.
+	 *
 	 * @param X 		The initial X position of the sprite.
-	 * @param Y 		The initial Y position of the ssprite.
-	 * @param Path      The path to the Animate CC texture atlas files.
+	 * @param Y 		The initial Y position of the sprite.
+	 * @param Path      The path to the texture atlas, **NOT** the path of the any of the files inside the texture atlas (`Animation.json`, `spritemap.json`, etc).
 	 * @param Settings  Optional settings for the animation (antialiasing, framerate, reversed, etc.).
+	 * @return a new `FlxAnimate` instance from a texture atlas of Adobe Animate
 	 */
-	public function new(X:Float = 0, Y:Float = 0, Path:String, ?Settings:Settings)
+	public function new(X:Float = 0, Y:Float = 0, ?Path:String, ?Settings:Settings)
+	{
+		super(X, Y);
+		anim = new FlxAnim(this);
+		if (Path != null)
+			loadAtlas(Path);
+		if (Settings != null)
+			setTheSettings(Settings);
+	}
+
+	public function loadAtlas(Path:String)
 	{
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
 		{
 			FlxG.log.error('Animation file not found in specified path: "$path", have you written the correct path?');
 			return;
 		}
-
-		var jsontxt:AnimAtlas = atlasSetting(Path);
-		anim = new FlxAnim(jsontxt);
-		anim.setShit();
-		setTheSettings(Settings);
-		super(X, Y);
+		anim._loadAtlas(atlasSetting(Path));
 		frames = FlxAnimateFrames.fromTextureAtlas(Path);
-		jsontxt = null;
 	}
-
 	public override function draw():Void
 	{
 		@:privateAccess
-		parseSymbol(anim.curSymbol, anim._matrix, anim.curFrame, anim.symbolType, anim.colorTransform);
+		parseSymbol(anim.curSymbol, _matrix, anim.curFrame, anim.symbolType, colorTransform, true);
 	}
-
-	function parseSymbol(symbol:FlxSymbol, m:FlxMatrix, FF:Int, symbolType:SymbolType, colorFilter:ColorTransform)
+	function parseSymbol(symbol:FlxSymbol, m:FlxMatrix, FF:Int, symbolType:SymbolType, colorFilter:ColorTransform, mainSymbol:Bool)
 	{
-		if ([button, "button"].indexOf(symbolType) != -1)
+		switch (symbolType)
 		{
-			setButtonFrames();
+			case button, "button": setButtonFrames(symbol);
+			case movieclip, "movieclip":
+			{
+				(anim.swfRender) ? symbol.update(anim.framerate, anim.reversed, loop) : if (symbol.curFrame != 0) symbol.curFrame = 0;
+			}
+			default:
 		}
 		var lbl:Null<String> = null;
-		for (layer in symbol.timeline.L)
+		for (i in 0...symbol.timeline.L.length)
 		{
-			if (!symbol.layers.contains(layer.LN)) continue;
-			
-			var selectedFrame = layer.FR[FF];
-			
+			var layer = symbol.timeline.L[symbol.timeline.L.length - 1 - i];
+			if (!symbol._layers.contains(layer.LN) && mainSymbol) continue;
+			var selectedFrame = symbol.prepareFrame(layer, ([SymbolType.graphic, "graphic"].indexOf(symbolType) != -1) ? FF : symbol.curFrame);
 			if (selectedFrame == null) continue;
 
 			if (selectedFrame.N != null)
 			{
 				symbol.labels.get(selectedFrame.N).fireCallbacks();
 			}
+			
 			for (element in selectedFrame.E)
 			{
 				var isSymbol = element.SI != null;
 				var m3d = (isSymbol) ? element.SI.M3D : element.ASI.M3D;
-				var matrix = new FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]);
+				var pos = (isSymbol) ? element.SI.bitmap.POS : element.ASI.POS;
+				var matrix = FlxSymbol.prepareMatrix(m3d, pos);
 				matrix.concat(m);
 				var colorF = new ColorTransform();
 				colorF.concat(colorEffect(selectedFrame.C));
@@ -104,15 +125,14 @@ class FlxAnimate extends FlxSprite
 				if (element.SI.bitmap == null && isSymbol)
 				{
 					var symbol = anim.symbolDictionary.get(element.SI.SN);
-					parseSymbol(symbol, matrix, symbol.frameControl(element.SI.FF,element.SI.LP), element.SI.ST, colorF);
+					parseSymbol(symbol, matrix, symbol.frameControl(element.SI.FF,element.SI.LP), element.SI.ST, colorF, false);
 					continue;
 				}
-
-				drawLimb(frames.getByName((isSymbol) ? element.SI.bitmap.N : element.ASI.N), matrix, colorF);
+				var limb = frames.getByName((isSymbol) ? element.SI.bitmap.N : element.ASI.N);
+				drawLimb(limb, matrix, colorF);
 			}
 		}
 	}
-
 	static function colorEffect(sInstance:ColorEffects)
 	{
 		var CT = new ColorTransform();
@@ -156,10 +176,11 @@ class FlxAnimate extends FlxSprite
 	}
 
 	var pressed:Bool = false;
-	function setButtonFrames()
+	function setButtonFrames(symbol:FlxSymbol)
 	{
 		var badPress:Bool = false;
 		var goodPress:Bool = false;
+		#if !mobile
 		if (FlxG.mouse.pressed && FlxG.mouse.overlaps(this))
 			goodPress = true;
 		if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(this) && !goodPress)
@@ -183,11 +204,11 @@ class FlxAnimate extends FlxSprite
 			}
 			if (FlxG.mouse.pressed)
 			{
-				anim.curFrame = 2;
+				symbol.frameControl(2, singleframe);
 			}
 			else
 			{
-				anim.curFrame = 1;
+				symbol.frameControl(1, singleframe);
 			}
 			if (FlxG.mouse.justReleased && pressed)
 			{
@@ -198,8 +219,11 @@ class FlxAnimate extends FlxSprite
 		}
 		else
 		{
-			anim.curFrame = 0;
+			symbol.frameControl(0, singleframe);
 		}
+		#else
+		FlxG.log.error("Button stuff isn't available for mobile!");
+		#end
 	}
 	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, colorTransform:ColorTransform)
 	{
@@ -211,13 +235,15 @@ class FlxAnimate extends FlxSprite
 				return;
 			getScreenPosition(_point, camera).subtractPoint(offset);
 
+			_matrix.scale(scale.x, scale.y);
+			
 			if (isPixelPerfectRender(camera))
 		    {
 			    _point.floor();
 		    }
+			
 			_matrix.translate(_point.x, _point.y);
-			camera.drawPixels(limb, null, _matrix, colorTransform, blend, antialiasing, AnimationData.filters.shader);
-
+			camera.drawPixels(limb, null, _matrix, colorTransform, blend, antialiasing/*, AnimationData.filters.shader*/);
 			#if FLX_DEBUG
 			FlxBasic.visibleCount++;
 			#end
@@ -233,10 +259,9 @@ class FlxAnimate extends FlxSprite
 		if (Camera == null)
 			Camera = FlxG.camera;
 
-
 		var minX:Float = x + m.tx - offset.x - scrollFactor.x * Camera.scroll.x;
 		var minY:Float = y + m.ty - offset.y - scrollFactor.y * Camera.scroll.y;
-
+		
 		var radiusX:Float =  limb.frame.width * Math.max(1, m.a);
 		var radiusY:Float = limb.frame.height * Math.max(1, m.d);
 		var radius:Float = Math.max(radiusX, radiusY);
@@ -249,15 +274,49 @@ class FlxAnimate extends FlxSprite
 
 		return Camera.containsPoint(_point, radius, radius);
 	}
+
+	function checkSize(limb:FlxFrame, m:FlxMatrix)
+	{
+		return (limb != null) ? {width: limb.sourceSize.x * (Math.abs(m.a) + Math.abs(m.c)), height: limb.sourceSize.y * (Math.abs(m.d) + Math.abs(m.b))} : {width: 0, height: 0};
+	}
+	var oldMatrix:FlxMatrix;
 	override function set_flipX(Value:Bool)
 	{
-		anim.xFlip = Value;
-		return super.set_flipX(Value);
+		if (oldMatrix == null)
+		{
+			oldMatrix = new FlxMatrix();
+			oldMatrix.concat(_matrix);
+		}
+		if (Value)
+		{
+			_matrix.a = -oldMatrix.a;
+			_matrix.c = -oldMatrix.c;
+		}
+		else
+		{
+			_matrix.a = oldMatrix.a;
+			_matrix.c = oldMatrix.c;
+		}
+		return Value;
 	}
 	override function set_flipY(Value:Bool)
 	{
-		anim.yFlip = Value;
-		return super.set_flipY(Value);
+		if (oldMatrix == null)
+		{
+			oldMatrix = new FlxMatrix();
+			oldMatrix.concat(_matrix);
+		}
+		if (Value)
+		{
+			_matrix.b = -oldMatrix.b;
+			_matrix.d = -oldMatrix.d;
+		}
+		else
+		{
+			_matrix.b = oldMatrix.b;
+			_matrix.d = oldMatrix.d;
+		}
+		return Value;
 	}
 
 	override function destroy()      
@@ -269,16 +328,6 @@ class FlxAnimate extends FlxSprite
 		if (audio != null)
 			audio.destroy();
 		#end
-		for (frame in frames.frames)
-		{
-			frame.parent = FlxDestroyUtil.destroy(frame.parent);
-			frame.destroy();
-		}
-		for (frame in frames.framesHash.iterator())
-		{
-			frame.parent = FlxDestroyUtil.destroy(frame.parent);
-			frame.destroy();
-		}
 		super.destroy();
 	}
 
@@ -295,9 +344,10 @@ class FlxAnimate extends FlxSprite
 
 	function setTheSettings(?Settings:Settings):Void
 	{
-		anim.framerate = anim.coolParse.MD.FRT;
+		if (anim != null)
+			anim.framerate = anim.coolParse.MD.FRT;
 		@:privateAccess
-		if (Settings != null)
+		if (true)
 		{
 			antialiasing = Settings.Antialiasing;
 			if (Settings.ButtonSettings != null)
@@ -328,7 +378,7 @@ class FlxAnimate extends FlxSprite
 		var jsontxt:AnimAtlas = null;
 		if (haxe.io.Path.extension(Path) == "zip")
 		{
-			var thing = Zip.readZip(new BytesInput(Assets.getBytes(Path)));
+			var thing = Zip.readZip(Assets.getBytes(Path));
 			
 			for (list in Zip.unzip(thing))
 			{

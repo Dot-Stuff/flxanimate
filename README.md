@@ -8,7 +8,9 @@ FlxAnimate is a repository made by [CheemsAndFriends](https://github.com/CheemsA
 You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
 
 ## TODO
-* (optional/important) Masks and filters.
+* Filters are a feature in early days of Flash that are commonly used to "spice up" the animation. Although the texture atlas does export these filters, they aren't supported. **IMPORTANT**
+* Masks are clipping masks. not really important in our plans but still in our plans to support.
+* Put a solution to the memory leakage 
 
 # Installation
 
@@ -16,7 +18,7 @@ there are two ways of downloading FlxAnimate:
 
 ## 1. By haxelib:
 
-normally, haxelib tries (but sometimes fails) to be the most stable version of it.
+Normally, haxelib tries (but sometimes fails) to be the most stable version of it.
 
 You can download it by typing:
 ```
@@ -40,7 +42,7 @@ on your terminal or command prompt.
 
 A Texture Atlas is one of the methods of exporting animations in Adobe Animate which it can only export a single symbol. In every texture atlas, no matter if it is 2018 or the latest one, there will be atleast 2 main types:
 - `Animation` - explains the timelines of the main animation plus the symbols that the main one uses.
-- `spritemap` - slices the limbs that are used in the animation, variable.
+- `spritemap` - slices the limbs that are used in the animation, it can variate from 1 to infinite really.
 
 "FlxAnimate is literally so fuckin fragile I don't wanna call it a final version unless it has all the fuckin functions." - CheemsAndFriends
 
@@ -52,9 +54,7 @@ Using FlxAnimate is really simple! First, you have to create a new instance of F
 ```haxe
 var character:FlxAnimate = new FlxAnimate(X, Y, PathToAtlas);
 ```
-**WARNING:** You need to set the path of the FOLDER!
-
-Thanks runkanrenchu (BSOD) for telling about it!
+**WARNING:** You will need to set the Path of the folder, not the Animation file nor the Spritemap file, just the folder.
 
 There is also a settings option when creating an FlxAnimate object used just in case if you wanted to initialise the variables in a JSON, and it's up to you if you wanted to use it.
 

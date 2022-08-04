@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import flixel.util.FlxStringUtil;
 import openfl.geom.ColorTransform;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.FlxG;
@@ -22,16 +23,17 @@ typedef ButtonSettings = {
 }
 class FlxAnim implements IFlxDestroyable
 {
-	public var xFlip(default, set):Bool;
-	public var yFlip(default, set):Bool;
 	public var coolParse(default, null):AnimAtlas;
 	public var length(get, never):Int;
 
 	public var curSymbol:FlxSymbol;
 	public var finished(default, null):Bool = false;
 	public var reversed:Bool = false;
+	/**
+		Checks if the movieclip should move or not. for having a similar experience to swfs
+	**/
+	public var swfRender:Bool;
 	
-	public var colorTransform:ColorTransform;
 	var buttonMap:Map<String, ButtonSettings> = new Map();
 	/**
 	 * When ever the animation is playing.
@@ -39,13 +41,10 @@ class FlxAnim implements IFlxDestroyable
 	public var isPlaying(default, null):Bool = false;
 	public var onComplete:()->Void;
 
-	public var width:Int;
-	public var height:Int;
-
-	var _matrix:FlxMatrix;
-
 	var frameTick:Float;
 	public var framerate(default, set):Float;
+
+	var _framerate:Float;
 
 	/**
 	 * Internal, used for each skip between frames.
@@ -63,56 +62,74 @@ class FlxAnim implements IFlxDestroyable
 
 	public var symbolType:SymbolType = "G";
 
-	/**
-	 * Add a new
-	 *
-	 * @param coolParsed 	The Animation.json file
-	 */
-	public function new(coolParsed:AnimAtlas)
-	{
-		coolParse = coolParsed;
-		_matrix = new FlxMatrix();
-		width = height = 0;
-		colorTransform = new ColorTransform();
-		buttonMap = new Map();
-		animsMap = new Map();
-	}
+	var _parent:FlxAnimate;
 
-	public var symbolDictionary:Map<String, FlxSymbol> = new Map<String, FlxSymbol>();
+	public function new(parent:FlxAnimate, ?coolParsed:AnimAtlas)
+	{
+		_parent = parent;
+		swfRender = false;
+		symbolDictionary = [];
+		if (coolParsed != null) _loadAtlas(coolParsed);
+	}
+	@:allow(flxanimate.FlxAnimate)
+	function _loadAtlas(animationFile:AnimAtlas)
+	{
+		symbolDictionary = [];
+		coolParse = animationFile;
+		setSymbols(animationFile);
+		if (animationFile.AN.STI != null)
+		{
+			var STI = animationFile.AN.STI.SI;
+			
+			symbolType = STI.ST;
+			loopType = ([graphic, "graphic"].indexOf(symbolType) != -1) ? STI.LP : loop;
+			curFrame = STI.FF;
+			@:privateAccess
+			_parent._matrix.concat(FlxSymbol.prepareMatrix(STI.M3D, STI.bitmap.POS));
+			
+			if (STI.C != null)
+			{
+				@:privateAccess
+				_parent.colorTransform = FlxAnimate.colorEffect(STI.C);
+			}
+		}
+		_framerate = animationFile.MD.FRT;
+	}
+	public var symbolDictionary:Map<String, FlxSymbol>;
 	
 	public function play(?Name:String, Force:Bool = false, Reverse:Bool = false, Frame:Int = 0)
 	{
 		pause();
+		var nth = #if html5 js.Lib.undefined #else null #end;
 		var curThing = animsMap.get(Name);
-		if ([null, ""].indexOf(Name) == -1 && curThing == null)
+		if ([nth, ""].indexOf(Name) == -1 && curThing == null)
 		{
-			FlxG.log.error('theres no animation called $Name!');
-			isPlaying = true;
-			return;
-		}
-		if ([null, ""].indexOf(Name) != -1)
-		{
-			reversed = Reverse;
-			finished = false;
-			isPlaying = true;
-			return;
+			var symbol = symbolDictionary.get(Name);
+			if (symbol != null) curThing = {symbol: symbol, looped: true, frameRate: coolParse.MD.FRT, X: 0, Y: 0};
+
+			if (curThing == null)
+			{
+				FlxG.log.error('there${"'"}s no animation called "$Name"!');
+				isPlaying = true;
+				return;
+			}
 		}
 		@:privateAccess
-		if ([null, ""].indexOf(Name) == -1)
+		if ([nth, ""].indexOf(Name) == -1)
 		{
-			_matrix.identity();
+			_parent._matrix.identity();
 			if (Name == coolParse.AN.SN && coolParse.AN.STI != null)
-				_matrix.concat(curSymbol.prepareMatrix(coolParse.AN.STI.SI.M3D));
+				_parent._matrix.concat(FlxSymbol.prepareMatrix(coolParse.AN.STI.SI.M3D, coolParse.AN.STI.SI.bitmap.POS));
+			_parent._matrix.concat(new FlxMatrix(1,0,0,1,curThing.X,curThing.Y));
 			curFrame = 0;
-			curSymbol = curThing.symbol;
-			curFrame = (Reverse) ? Frame - length : Frame;
 			@:privateAccess
 			loopType = curThing.looped ? loop : playonce;
 		}
-		if (Force || finished)
+		if (Force || finished || [nth, ""].indexOf(Name) == -1 && curThing.symbol != curSymbol)
 		{
 			curFrame = (Reverse) ? Frame - length : Frame;
 		}
+		if ([nth, ""].indexOf(Name) == -1) curSymbol = curThing.symbol;
 		reversed = Reverse;
 		finished = false;
 		isPlaying = true;
@@ -132,106 +149,32 @@ class FlxAnim implements IFlxDestroyable
 
 	function setSymbols(Anim:AnimAtlas)
 	{
-		if (Anim.AN.STI != null)
-		{
-			var SI = Anim.AN.STI.SI;
-			SI.M3D = (SI.M3D is Array) ? SI.M3D : [SI.M3D.m00, SI.M3D.m01,SI.M3D.m02,SI.M3D.m03,SI.M3D.m10,SI.M3D.m11,SI.M3D.m12,SI.M3D.m13,SI.M3D.m20,SI.M3D.m21,SI.M3D.m22,
-				SI.M3D.m23,SI.M3D.m30,SI.M3D.m31,SI.M3D.m32,SI.M3D.m33];
-		}
-		curSymbol = new FlxSymbol(Anim.AN.SN, Anim.AN.TL, true);
-		symbolDictionary.set(Anim.AN.SN, curSymbol);
 		if (coolParse.SD != null)
 		{
 			for (symbol in coolParse.SD.S)
 			{
-				symbolDictionary.set(symbol.SN, new FlxSymbol(symbol.SN, symbol.TL, true));
-			}
-		}	
-	}
-	public function setShit()
-	{
-		setSymbols(coolParse);
-		if (coolParse.AN.STI != null)
-		{
-			var STI = coolParse.AN.STI.SI;
-			loopType = STI.LP;
-			symbolType = STI.ST;
-			curFrame = STI.FF;
-			_matrix.concat(curSymbol.prepareMatrix(STI.M3D));
-			
-			if (STI.C != null)
-			{
-				@:privateAccess
-				colorTransform = FlxAnimate.colorEffect(STI.C);
+				symbolDictionary.set(symbol.SN, new FlxSymbol(symbol.SN, symbol.TL));
 			}
 		}
+		curSymbol = new FlxSymbol(Anim.AN.SN, Anim.AN.TL);
+		symbolDictionary.set(Anim.AN.SN, curSymbol);
 	}
-
+	
 	public function update(elapsed:Float)
 	{
 		curFrame = curSymbol.frameControl(curFrame, loopType);
 		if (!isPlaying || finished) return;
+		curSymbol.update(framerate,reversed, loopType);
+		if (FlxG.keys.pressed.F)
+			trace(loopType, curFrame > length - 1);
+		finished = [playonce, "playonce"].indexOf(loopType) != -1 && (reversed && curFrame == 0 || curFrame > length - 1);
 
-		frameTick += elapsed;
-		while (frameTick > frameDelay)
+		if (finished)
 		{
-			curSymbol.update((reversed) ? -1 : 1, loopType);
-			frameTick -= frameDelay;
+			if (onComplete != null)
+				onComplete();
+			pause();
 		}
-		finished = (reversed && curFrame == 0 || curFrame == length);
-
-		if ([playonce, "playonce"].indexOf(loopType) != -1)
-		{
-			if (finished)
-			{
-				if (onComplete != null)
-					onComplete();
-				pause();
-			}
-		}
-	}
-	var oldMatrix:FlxMatrix;
-	function set_xFlip(Value:Bool)
-	{
-		if (oldMatrix == null)
-		{
-			oldMatrix = new FlxMatrix();
-			oldMatrix.concat(_matrix);
-		}
-		if (Value)
-		{
-			_matrix.a = -oldMatrix.a;
-			_matrix.c = -oldMatrix.c;
-			_matrix.tx += width;
-		}
-		else
-		{
-			_matrix.a = oldMatrix.a;
-			_matrix.c = oldMatrix.c;
-			_matrix.tx = (_matrix.tx == oldMatrix.tx + width) ? oldMatrix.tx : _matrix.tx; 
-		}
-		return Value;
-	}
-	function set_yFlip(Value:Bool)
-	{
-		if (oldMatrix == null)
-		{
-			oldMatrix = new FlxMatrix();
-			oldMatrix.concat(_matrix);
-		}
-		if (Value)
-		{
-			_matrix.b = -oldMatrix.b;
-			_matrix.d = -oldMatrix.d;
-			_matrix.translate(0, height);
-		}
-		else
-		{
-			_matrix.b = oldMatrix.b;
-			_matrix.d = oldMatrix.d;
-			_matrix.ty = (_matrix.ty == oldMatrix.ty + height) ? oldMatrix.ty : _matrix.ty; 
-		}
-		return Value;
 	}
 	function get_curFrame()
 	{
@@ -249,8 +192,9 @@ class FlxAnim implements IFlxDestroyable
 	 * @param Y  the *y* axis of the animation.
 	 * @param FrameRate the framerate of the animation.
 	 */
-	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 30, Looped:Bool = true, X:Float = 0, Y:Float = 0)
+	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
+		FrameRate = (FrameRate == 0) ? _framerate : FrameRate;
 		var symbol = null;
 		for (name in symbolDictionary.keys())
 		{
@@ -278,12 +222,13 @@ class FlxAnim implements IFlxDestroyable
 	 * @param Indices The indices you're gonna be using for the animation, like `[0,1,2]`.
 	 * @param FrameRate the framerate of the animation.
 	 */
-	public function addByAnimIndices(Name:String, Indices:Array<Int>, FrameRate:Float = 30) 
+	public function addByAnimIndices(Name:String, Indices:Array<Int>, FrameRate:Float = 0) 
 	{
 		addBySymbolIndices(Name, coolParse.AN.SN, Indices, FrameRate, (coolParse.AN.STI != null) ? ["loop", "LP"].indexOf(coolParse.AN.STI.SI.LP) != -1 : false, 0,0);
 	}
-	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 30, Looped:Bool = true, X:Float = 0, Y:Float = 0) 
+	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0) 
 	{
+		FrameRate = (FrameRate == 0) ? _framerate : FrameRate;
 		var thing = symbolDictionary.get(SymbolName);
 		if (thing == null)
 		{
@@ -302,7 +247,6 @@ class FlxAnim implements IFlxDestroyable
 			layers.push({LN: layer.LN, FR: frames});
 		}
 
-
 		animsMap.set(Name, {symbol: new FlxSymbol(Name, {L: layers}), indices: Indices, X: X, Y: Y, frameRate: FrameRate, looped: false});
 	}
 
@@ -320,9 +264,10 @@ class FlxAnim implements IFlxDestroyable
 	 * @param Timeline The timeline which will have the symbol.
 	 * @param FrameRate The framerate it'll go, by default is 30.
 	 */
-	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 30, Looped:Bool = true)
+	public function addByCustomTimeline(Name:String, Timeline:Timeline, FrameRate:Float = 0, Looped:Bool = true)
 	{
-		animsMap.set(Name, {symbol: new FlxSymbol(Name, Timeline, true), X: 0, Y: 0, frameRate: FrameRate, looped: Looped});
+		FrameRate = (FrameRate == 0) ? _framerate : FrameRate;
+		animsMap.set(Name, {symbol: new FlxSymbol(Name, Timeline), X: 0, Y: 0, frameRate: FrameRate, looped: Looped});
 	}
 
 	public function get_length()
@@ -339,6 +284,13 @@ class FlxAnim implements IFlxDestroyable
 			FlxG.log.error('The frame label "$name" does not exist! maybe you misspelled it?');
 		}
 		return thingy;
+	}
+	public function toString()
+	{
+		return FlxStringUtil.getDebugString([
+			LabelValuePair.weak("symbolDictionary", symbolDictionary),
+			LabelValuePair.weak("framerate", framerate)
+		]);
 	}
 	/**
 	 * Redirects the frame into a frame with a frame label of that type.
@@ -386,9 +338,9 @@ class FlxAnim implements IFlxDestroyable
 	{
 		return animsMap.get(name);
 	}
+
 	public function destroy()
 	{
-		xFlip = yFlip = false;
 		coolParse = null;
 		curFrame = 0;
 		framerate = 0;

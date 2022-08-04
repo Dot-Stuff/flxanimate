@@ -1,5 +1,7 @@
 package flxanimate.zip;
 
+import haxe.io.Bytes;
+import haxe.io.BytesInput;
 import haxe.zip.Reader;
 import haxe.zip.Entry;
 #if lime
@@ -9,42 +11,38 @@ import lime._internal.format.Deflate;
 class Zip
 {
     var i:haxe.io.Input;
-
+    var reader:Reader;
     public function new(i)
     {
         this.i = i;
+        reader = new Reader(i);
     }
 
     function readZipDate()
     {
-       var thing = new Reader(i);
        @:privateAccess
-       return thing.readZipDate();
+       return reader.readZipDate();
     }
 
     function readExtraFields(length)
     {
-        var thing = new Reader(i);
        @:privateAccess
-       return thing.readExtraFields(length);
+       return reader.readExtraFields(length);
     }
 
     public function readEntryHeader():Entry
     {
-        var thing = new Reader(i);
-       @:privateAccess
-       return thing.readEntryHeader();
+       return reader.readEntryHeader();
     }
 
     public function read():List<Entry>
     {
-        var thing = new Reader(i);
-       return thing.read();
+       return reader.read();
     }
 
-    public static function readZip(i:haxe.io.Input)
+    public static function readZip(i:haxe.io.Bytes)
     {
-        var r = new Reader(i);
+        var r = new Reader(new BytesInput(i));
         return r.read();
     }
     public static function unzip(f:List<Entry>):List<Entry>

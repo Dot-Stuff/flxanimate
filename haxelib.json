@@ -4,8 +4,8 @@
     "license": "MIT",
     "tags": ["adobe","flash","animate","texture_sheet", "flixel"],
     "description": "Adobe Animate's texture atlases player for HaxeFlixel.",
-    "version": "2.0.0",
-    "releasenote": "Refreshing how the limbs are drawn and possibly fixing a few issues that were noticeable",
+    "version": "2.1.0",
+    "releasenote": "Bugfixes, less hardcoded parsing to reduce loading times and adding the swf render feature",
     "contributors": ["DotWith","MrCheemsAndFriends"],
     "dependencies": {}
 }

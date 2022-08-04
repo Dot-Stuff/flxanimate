@@ -1,5 +1,6 @@
 package flxanimate.data;
 
+
 @:noCompletion
 class AnimationData
 {
@@ -7,31 +8,13 @@ class AnimationData
 	public static var version:String;
 	public static var resolution:String;
 	@:noCompletion
-	public static function parseDurationFrames(frames:Array<Frame>):Array<Frame>
-	{
-		var result:Array<Frame> = [];
-		var index = 0;
-		var name:Null<String> = null;
-		for (frame in frames)
-		{
-			var i = 0;
-			do
-			{
-				result.push({N: name, I: index, DU: 1, E: frame.E, C: frame.C, F: frame.F});
-				i++;
-				index++;
-			}
-			while (i < frame.DU);
-		}
-		
-		return result;
-	}
-	@:noCompletion
 	public static function setFieldBool(abstracto:Dynamic, things:Array<String>, ?set:Dynamic):Dynamic
 	{
 		//TODO: The comment below this comment.
 		// GeoKureli told me that Reflect is shit, but I have literally no option but to use this.
 		// If I have another thing to use that works the same, should replace this lol
+		if (abstracto == null)
+			return Reflect.field({}, "");
 		for (thing in things)
 		{
 			if (set != null)
@@ -64,16 +47,16 @@ abstract AnimAtlas({}) from {}
 	 */
 	public var MD(get, never):MetaData;
 
-	inline function get_AN():Animation
+	function get_AN():Animation
 	{
 		return AnimationData.setFieldBool(this, ["AN", "ANIMATION"]);
 	}
 
-	inline function get_MD():MetaData
+	function get_MD():MetaData
 	{
 		return AnimationData.setFieldBool(this, ["MD", "metadata"]);
 	}
-	inline function get_SD()
+	function get_SD()
 	{
 		return AnimationData.setFieldBool(this, ["SD", "SYMBOL_DICTIONARY"]);
 	}
@@ -88,7 +71,7 @@ abstract SymbolDictionary({}) from {}
 	 */
 	public var S(get, never):Array<SymbolData>;
 
-	inline function get_S():Array<SymbolData>
+	function get_S():Array<SymbolData>
 	{
 		return AnimationData.setFieldBool(this, ["S", "Symbols"]);
 	}
@@ -115,19 +98,19 @@ abstract Animation({}) from {}
 	 */
 	public var STI(get, never):StageInstance;
 
-	inline function get_SN():String 
+	function get_SN():String 
 	{
 		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
-	inline function get_N():String
+	function get_N():String
 	{
 		return AnimationData.setFieldBool(this, ["N", "name"]);
 	}
-	inline function get_TL():Timeline
+	function get_TL():Timeline
 	{
 		return AnimationData.setFieldBool(this, ["TL", "TIMELINE"]);
 	}
-	inline function get_STI()
+	function get_STI()
 	{
 		return AnimationData.setFieldBool(this, ["STI", "StageInstance"]);
 	}
@@ -137,7 +120,7 @@ abstract StageInstance({})
 {
 	public var SI(get, never):SymbolInstance;
 
-	inline function get_SI():SymbolInstance
+	function get_SI():SymbolInstance
 	{
 		return AnimationData.setFieldBool(this, ["SI", "SYMBOL_Instance"]);
 	}
@@ -156,11 +139,11 @@ abstract SymbolData({}) from {}
 	 */
 	public var TL(get, never):Timeline;
 
-	inline function get_SN():String 
+	function get_SN():String 
 	{
 		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
-	inline function get_TL():Timeline
+	function get_TL():Timeline
 	{
 		return AnimationData.setFieldBool(this, ["TL", "TIMELINE"]);
 	}
@@ -175,11 +158,11 @@ abstract Timeline({}) from {}
 	 */
 	public var L(get, set):Array<Layers>;
 
-	inline function get_L():Array<Layers>
+	function get_L():Array<Layers>
 	{
 		return AnimationData.setFieldBool(this, ["L", "LAYERS"]);
 	}
-	inline function set_L(value:Array<Layers>)
+	function set_L(value:Array<Layers>)
 	{
 		return AnimationData.setFieldBool(this, ["L", "LAYERS"], value);
 	}
@@ -198,16 +181,16 @@ abstract Layers({}) from {}
 	 */
 	public var FR(get, set):Array<Frame>;
 
-	inline function get_LN():String
+	function get_LN():String
 	{
 		
 		return AnimationData.setFieldBool(this, ["LN", "Layer_name"]);
 	}
-	inline function get_FR():Array<Frame>
+	function get_FR():Array<Frame>
 	{
 		return AnimationData.setFieldBool(this, ["FR", "Frames"]);
 	}
-	inline function set_FR(value:Array<Frame>):Array<Frame>
+	function set_FR(value:Array<Frame>):Array<Frame>
 	{
 		return AnimationData.setFieldBool(this, ["FR", "Frames"], value);
 	}
@@ -223,7 +206,7 @@ abstract MetaData({}) from {}
 	 */
 	public var FRT(get, never):Float;
 	
-	inline function get_FRT()
+	function get_FRT()
 	{
 		return AnimationData.setFieldBool(this, ["FRT", "framerate"]);
 	}
@@ -260,32 +243,32 @@ abstract Frame({}) from {}
 	 */
 	public var F(get, never):Filters;
 
-	inline function get_N():String
+	function get_N():String
 	{
 		return AnimationData.setFieldBool(this, ["N", "name"]);
 	}
-	inline function get_I():Int
+	function get_I():Int
 	{
 		return AnimationData.setFieldBool(this, ["I", "index"]);
 	}
-	inline function get_DU():Int
+	function get_DU():Int
 	{
 		return AnimationData.setFieldBool(this, ["DU", "duration"]);
 	}
-	inline function get_E():Array<Element>
+	function get_E():Array<Element>
 	{
 		return AnimationData.setFieldBool(this, ["E", "elements"]);
 	}
-	inline function get_C()
+	function get_C()
 	{
 		return AnimationData.setFieldBool(this, ["C", "color"]);
 	}
-	inline function set_C(value:ColorEffects)
+	function set_C(value:ColorEffects)
 	{
 		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
 
-	inline function get_F()
+	function get_F()
 	{
 		return AnimationData.setFieldBool(this, ["F", "filters"]);
 	}
@@ -301,7 +284,7 @@ abstract Element(StageInstance)
 	 */
 	public var ASI(get, never):AtlasSymbolInstance;
 
-	inline function get_ASI():AtlasSymbolInstance
+	function get_ASI():AtlasSymbolInstance
 	{
 		return AnimationData.setFieldBool(this, ["ASI", "ATLAS_SPRITE_instance"]);
 	}
@@ -352,7 +335,7 @@ abstract SymbolInstance({}) from {}
 	/**
 	 * The Matrix of the Symbol, Be aware from Neo! He can be anywhere!!! :fearful:
 	 */
-	public var M3D(get, set):OneOfTwo<Array<Float>, Matrix3D>;
+	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
@@ -363,59 +346,55 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var F(get, never):Filters;
 
-	inline function get_SN()
+	function get_SN()
 	{
 		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 
-	inline function get_IN()
+	function get_IN()
 	{
 		return AnimationData.setFieldBool(this, ["IN", "Instance_Name"]);
 	}
 
-	inline function get_ST()
+	function get_ST()
 	{
 		return AnimationData.setFieldBool(this, ["ST", "symbolType"]);
 	}
 
-	inline function get_bitmap()
+	function get_bitmap()
 	{
 		return AnimationData.setFieldBool(this, ["BM", "bitmap"]);
 	}
-	inline function get_FF()
+	function get_FF()
 	{
 		return AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
 	}
 
-	inline function get_LP()
+	function get_LP()
 	{
 		return AnimationData.setFieldBool(this, ["LP", "loop"]);
 	}
 
-	inline function get_TRP()
+	function get_TRP()
 	{
 		return AnimationData.setFieldBool(this, ["TRP", "transformationPoint"]);
 	}
 
-	inline function get_M3D()
+	function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
 	}
-	inline function set_M3D(value:OneOfTwo<Array<Float>, Matrix3D>)
-	{
-		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"], value);
-	}
 
-	inline function get_C()
+	function get_C()
 	{
 		return AnimationData.setFieldBool(this, ["C", "color"]);
 	}
-	inline function set_C(value:ColorEffects)
+	function set_C(value:ColorEffects)
 	{
 		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
 
-	inline function get_F()
+	function get_F()
 	{
 		return AnimationData.setFieldBool(this, ["F", "filters"]);
 	}
@@ -450,51 +429,51 @@ abstract ColorEffects({}) from {}
 
 	public var BRT(get, never):Float;
 
-	inline function get_M()
+	function get_M()
 	{
 		return AnimationData.setFieldBool(this, ["M", "mode"]);
 	}
-	inline function get_TC()
+	function get_TC()
 	{
 		return AnimationData.setFieldBool(this, ["TC", "tintColor"]);
 	}
-	inline function get_TM()
+	function get_TM()
 	{
 		return AnimationData.setFieldBool(this, ["TM", "tintMultiplier"]);
 	}
-	inline function get_AM()
+	function get_AM()
 	{
 		return AnimationData.setFieldBool(this, ["AM", "alphaMultiplier"]);
 	}
-	inline function get_AO()
+	function get_AO()
 	{
 		return AnimationData.setFieldBool(this, ["AO", "AlphaOffset"]);
 	}
-	inline function get_RM()
+	function get_RM()
 	{
 		return AnimationData.setFieldBool(this, ["RM", "RedMultiplier"]);
 	}
-	inline function get_RO()
+	function get_RO()
 	{
 		return AnimationData.setFieldBool(this, ["RO", "redOffset"]);
 	}
-	inline function get_GM()
+	function get_GM()
 	{
 		return AnimationData.setFieldBool(this, ["GM", "greenMultiplier"]);
 	}
-	inline function get_GO()
+	function get_GO()
 	{
 		return AnimationData.setFieldBool(this, ["GO", "greenOffset"]);
 	}
-	inline function get_BM()
+	function get_BM()
 	{
 		return AnimationData.setFieldBool(this, ["BM", "blueMultiplier"]);
 	}
-	inline function get_BO()
+	function get_BO()
 	{
 		return AnimationData.setFieldBool(this, ["BO", "blueOffset"]);
 	}
-	inline function get_BRT()
+	function get_BRT()
 	{
 		return AnimationData.setFieldBool(this, ["BRT", "Brightness"]);
 	}
@@ -506,7 +485,7 @@ abstract Filters({})
 	 */
 	public var ACF(get, never):AdjustColorFilter;
 
-	inline function get_ACF()
+	function get_ACF()
 	{
 		return AnimationData.setFieldBool(this, ["ACF", "AdjustColorFilter"]);
 	}
@@ -519,19 +498,19 @@ abstract AdjustColorFilter({})
 	public var SAT(get, never):Float;
 	public var H(get, never):Float;
 
-	inline function get_BRT()
+	function get_BRT()
 	{
 		return AnimationData.setFieldBool(this, ["BRT", "brightness"]);
 	}
-	inline function get_CT()
+	function get_CT()
 	{
 		return AnimationData.setFieldBool(this, ["CT", "contrast"]);
 	}
-	inline function get_SAT()
+	function get_SAT()
 	{
 		return AnimationData.setFieldBool(this, ["SAT", "saturation"]);
 	}
-	inline function get_H()
+	function get_H()
 	{
 		return AnimationData.setFieldBool(this, ["H", "hue"]);
 	}
@@ -555,11 +534,11 @@ abstract Bitmap({}) from {}
 	 * Only used in earliest versions of texture atlas release. checks the position, nothing else lol
 	 */
 	public var POS(get, never):TransformationPoint;
-	inline function get_N()
+	function get_N()
 	{
 		return AnimationData.setFieldBool(this, ["N", "name"]);
 	}
-	inline function get_POS()
+	function get_POS()
 	{
 		return AnimationData.setFieldBool(this, ["POS", "Position"]);
 	}
@@ -573,15 +552,11 @@ abstract AtlasSymbolInstance(Bitmap) from {}
 	/**
 	 * The matrix of the Sprite, Neo should be here at any second!!!
 	 */
-	public var M3D(get, set):OneOfTwo<Array<Float>, Matrix3D>;
+	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
 
-	inline function get_M3D()
+	function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
-	}
-	inline function set_M3D(value:OneOfTwo<Array<Float>, Matrix3D>)
-	{
-		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"], value);
 	}
 }
 
