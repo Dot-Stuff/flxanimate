@@ -27,7 +27,7 @@ class PlayState extends FlxState
 	{
 		if (FlxG.keys.justPressed.SPACE)
 		{
-			if (!char.isPlaying)
+			if (!char.anim.isPlaying)
 				char.anim.play();
 			else
 				char.anim.pause();
