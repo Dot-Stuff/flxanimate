@@ -86,12 +86,13 @@ class FlxAnim implements IFlxDestroyable
 			curFrame = STI.FF;
 			@:privateAccess
 			_parent._matrix.concat(FlxSymbol.prepareMatrix(STI.M3D, STI.bitmap.POS));
-			
 			if (STI.C != null)
 			{
 				@:privateAccess
 				_parent.colorTransform = FlxAnimate.colorEffect(STI.C);
 			}
+			@:privateAccess
+			_parent.origin.set(STI.TRP.x, STI.TRP.y);
 		}
 		framerate = _framerate = animationFile.MD.FRT;
 	}
@@ -109,7 +110,7 @@ class FlxAnim implements IFlxDestroyable
 
 			if (curThing == null)
 			{
-				FlxG.log.error('there${"'"}s no animation called "$Name"!');
+				FlxG.log.error('there\'s no animation called "$Name"!');
 				isPlaying = true;
 				return;
 			}
@@ -126,7 +127,7 @@ class FlxAnim implements IFlxDestroyable
 			loopType = curThing.looped ? loop : playonce;
 			framerate = curThing.frameRate;
 		}
-		if (Force || finished || [nth, ""].indexOf(Name) == -1 && curThing.symbol != curSymbol)
+		if (Force || finished || [nth, ""].indexOf(Name) == -1 || curThing != null && curThing.symbol != curSymbol)
 		{
 			curFrame = (Reverse) ? Frame - length : Frame;
 		}
@@ -238,16 +239,26 @@ class FlxAnim implements IFlxDestroyable
 			return;
 		}
 		var layers:Array<Layers> = [];
-		for (layer in thing.timeline.L)
+		
+		var frames:Array<Frame> = [];
+		for (index in 0...Indices.length)
 		{
-			var frames:Array<Frame> = [];
-			for (i in Indices)
-			{
-				if (layer.FR[i] != null)
-					frames.push(layer.FR[i]);
+			var i = Indices[index];
+			
+			var element:Element = cast {
+				SI: {
+					SN: SymbolName,
+					TRP: {x: 0, y: 0},
+					IN: "",
+					ST: "G",
+					LP: (Looped) ? "LP" : "PO",
+					M3D: [1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,1.0],
+					FF: i,
+				}
 			}
-			layers.push({LN: layer.LN, FR: frames});
+			frames.push({I: index, DU: 1, E: [element]});
 		}
+		layers.push({LN: "Layer 1", FR: frames});
 
 		animsMap.set(Name, {symbol: new FlxSymbol(Name, {L: layers}), indices: Indices, X: X, Y: Y, frameRate: FrameRate, looped: false});
 	}
