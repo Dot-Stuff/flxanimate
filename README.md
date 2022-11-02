@@ -69,6 +69,16 @@ Adding animations from indices:
 character.anim.addByAnimIndices(AnimationName, Indices ([0, 1, 2, 3...] etc.), Framerate);
 ```
 
+After doing all of that play the animation as follows:
+```haxe
+character.anim.play(AnimationName);
+```
+
+To actually let the animation update go to the update function and do:
+```haxe
+character.updateAnimation(elapsedVar);
+```
+
 **WARNING:** Adding animations by indices works only with the exported timeline and the main animation, don't try with different symbols as it will not work.
 
 
