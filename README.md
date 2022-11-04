@@ -74,7 +74,7 @@ After doing all of that play the animation as follows:
 character.anim.play(AnimationName);
 ```
 
-To actually let the animation update go to the update function and do:
+To actually let the animation update go to the update function and do (OPTIONAL UNLESS IF THE ANIMATION DOESN'T PLAY FOR YOU):
 ```haxe
 character.updateAnimation(elapsedVar);
 ```
