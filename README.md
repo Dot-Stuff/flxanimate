@@ -1,4 +1,4 @@
-![](./logo.svg)
+![](./art/logoNew.svg)
 
 # FlxAnimate
 
