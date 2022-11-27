@@ -1,5 +1,7 @@
 package flxanimate;
 
+import flixel.util.FlxColor;
+import flixel.graphics.FlxGraphic;
 import openfl.geom.Rectangle;
 import openfl.display.BitmapData;
 import flixel.util.FlxDestroyUtil;
@@ -37,30 +39,28 @@ class FlxAnimate extends FlxSprite
 {
 	public var anim(default, null):FlxAnim;
 
-	#if FLX_SOUND_SYSTEM
-	public var audio:FlxSound;
-	#end
+	// #if FLX_SOUND_SYSTEM
+	// public var audio:FlxSound;
+	// #end
 	
-	public var rectangle:FlxRect;
+	// public var rectangle:FlxRect;
 	
-	public var showPivot:Bool = false;
+	public var showPivot:Bool = #if debug true #else false #end;
 
+	var _pivot:FlxFrame;
 	/**
 	 * # Description
 	 * `FlxAnimate` is a texture atlas parser from the drawing software *Adobe Animate* (once being *Adobe Flash*).
 	 * It tries to replicate how Adobe Animate works on Haxe so it would be considered (as *MrCheemsAndFriends* likes to call it,) a "*Flash--*", in other words, a replica of Animate's work
 	 * on the side of drawing, making symbols, etc.
 	 * ## WARNINGS
-	 * - This is the only way to use the sprites using the `FlxAnimateFrames` function, `fromTextureAtlas`.
-	 * - This does not convert to spritesheet, if you want to use spritesheets (not recommended), use Smokey555's repo, [Flixel-TextureAtlas](https://github.com/Smokey555/Flixel-TextureAtlas)
-	 * - This can be really fragile on some repos, mainly because even though the repo was made by two ppl collabing, [Dot-With] doesn't seem to be involucrated on `FlxAnimate` no more.
-	 *	 Making really difficult to give really big updates (such as Filters, or Masks) like some *dumass user who doesn't know shit about coding or anything at all.
+	 * - This does **NOT** convert the frames into a spritesheet
+	 * - Since this is some sort of beta, expect that there could be some inconveniences (bugs, crashes, etc).
 	 *
 	 * @param X 		The initial X position of the sprite.
 	 * @param Y 		The initial Y position of the sprite.
 	 * @param Path      The path to the texture atlas, **NOT** the path of the any of the files inside the texture atlas (`Animation.json`, `spritemap.json`, etc).
 	 * @param Settings  Optional settings for the animation (antialiasing, framerate, reversed, etc.).
-	 * @return a new `FlxAnimate` instance from a texture atlas of Adobe Animate
 	 */
 	public function new(X:Float = 0, Y:Float = 0, ?Path:String, ?Settings:Settings)
 	{
@@ -70,6 +70,11 @@ class FlxAnimate extends FlxSprite
 			loadAtlas(Path);
 		if (Settings != null)
 			setTheSettings(Settings);
+		@:privateAccess
+		_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
+		@:privateAccess
+		_pivot.frame = new FlxRect(0,0,_pivot.parent.width,_pivot.parent.height);
+		_pivot.name = "pivot";
 	}
 
 	public function loadAtlas(Path:String)
@@ -82,101 +87,81 @@ class FlxAnimate extends FlxSprite
 		anim._loadAtlas(atlasSetting(Path));
 		frames = FlxAnimateFrames.fromTextureAtlas(Path);
 	}
+	/**
+	 * the function `draw()` renders the symbol that `anim` has currently plus a pivot that you can toggle on or off.
+	 */
 	public override function draw():Void
 	{
-		@:privateAccess
-		parseSymbol(anim.curSymbol, _matrix, anim.curFrame, anim.symbolType, colorTransform, true);
+		parseElement(anim.curInstance, anim.curFrame, _matrix, colorTransform, true);
+		if (showPivot)
+			drawLimb(_pivot, _matrix);
 	}
-	function parseSymbol(symbol:FlxSymbol, m:FlxMatrix, FF:Int, symbolType:SymbolType, colorFilter:ColorTransform, mainSymbol:Bool)
+	/**
+	 * This basically renders an element of any kind, both limbs and symbols.
+	 * It should be considered as the main function that makes rendering a symbol possible.
+	 */
+	function parseElement(instance:FlxElement, curFrame:Int, m:FlxMatrix, colorFilter:ColorTransform, mainSymbol:Bool = false)
 	{
-		switch (symbolType)
+		var colorEffect = new ColorTransform();
+		var matrix = new FlxMatrix();
+
+		if (instance.symbol != null) colorEffect.concat(instance.symbol._colorEffect);
+		matrix.concat(instance.matrix);
+
+		colorEffect.concat(colorFilter);
+		matrix.concat(m);
+
+
+		if (instance.bitmap != null)
+		{	
+			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect);
+			return;
+		}
+		
+		var symbol = anim.symbolDictionary.get(instance.symbol.name);
+		var firstFrame:Int = instance.symbol.firstFrame + curFrame;
+		switch (instance.symbol.type)
 		{
-			case button, "button": setButtonFrames(symbol);
-			case movieclip, "movieclip":
-			{
-				(anim.swfRender) ? symbol.update(anim.framerate, anim.reversed, loop) : if (symbol.curFrame != 0) symbol.curFrame = 0;
-			}
+			case Button: firstFrame = setButtonFrames(firstFrame);
 			default:
 		}
-		var lbl:Null<String> = null;
-		for (i in 0...symbol.timeline.L.length)
-		{
-			var layer = symbol.timeline.L[symbol.timeline.L.length - 1 - i];
-			if (!symbol._layers.contains(layer.LN) && mainSymbol) continue;
-			var selectedFrame = symbol.prepareFrame(layer, ([SymbolType.graphic, "graphic"].indexOf(symbolType) != -1) ? FF : symbol.curFrame);
-			if (selectedFrame == null) continue;
 
-			if (selectedFrame.N != null)
+		firstFrame = switch (instance.symbol.loop)
+		{
+			case Loop: firstFrame % symbol.length;
+			case PlayOnce: cast FlxMath.bound(firstFrame, 0, symbol.length - 1);
+			default: firstFrame;
+		}
+		
+		var layers = symbol.timeline.getList();
+		for (i in 0...layers.length)
+		{
+			var layer = layers[layers.length - 1 - i];
+			
+			if (!layer.visible && mainSymbol) continue;
+			var frame = layer.get(firstFrame);
+			
+			if (frame == null) continue;
+
+			if (frame.callbacks != null)
 			{
-				symbol.labels.get(selectedFrame.N).fireCallbacks();
+				frame.fireCallbacks();
 			}
 			
-			for (element in selectedFrame.E)
+			for (element in frame._elements)
 			{
-				var isSymbol = element.SI != null;
-				var m3d = (isSymbol) ? element.SI.M3D : element.ASI.M3D;
-				var pos = (isSymbol) ? element.SI.bitmap.POS : element.ASI.POS;
-				var matrix = FlxSymbol.prepareMatrix(m3d, pos);
-				matrix.concat(m);
-				var colorF = new ColorTransform();
-				colorF.concat(colorEffect(selectedFrame.C));
-				colorF.concat(colorFilter);
-				colorF.concat(colorEffect(element.SI.C));
-				if (element.SI.bitmap == null && isSymbol)
+				var firstframe = 0;
+				if (element.symbol != null && element.symbol.loop != SingleFrame)
 				{
-					var symbol = anim.symbolDictionary.get(element.SI.SN);
-					parseSymbol(symbol, matrix, symbol.frameControl(element.SI.FF,element.SI.LP), element.SI.ST, colorF, false);
-					continue;
+					firstframe = firstFrame - frame.index;
 				}
-				var limb = frames.getByName((isSymbol) ? element.SI.bitmap.N : element.ASI.N);
-				drawLimb(limb, matrix, colorF);
+				parseElement(element, firstframe, matrix, frame._colorEffect);
 			}
 		}
-	}
-	static function colorEffect(sInstance:ColorEffects)
-	{
-		var CT = new ColorTransform();
-		if (sInstance == null) return CT;
-		switch (sInstance.M)
-		{
-			case Tint, "Tint":
-			{
-				var color = flixel.util.FlxColor.fromString(sInstance.TC);
-				var opacity = sInstance.TM;
-				CT.redMultiplier -= opacity;
-				CT.redOffset = Math.round(color.red * opacity);
-				CT.greenMultiplier -= opacity;
-				CT.greenOffset = Math.round(color.green * opacity);
-				CT.blueMultiplier -= opacity;
-				CT.blueOffset = Math.round(color.blue * opacity);
-			}
-			case Alpha, "Alpha":
-			{
-				CT.alphaMultiplier = sInstance.AM;
-			}
-			case Brightness, "Brightness":
-			{
-				CT.redMultiplier = CT.greenMultiplier = CT.blueMultiplier -= Math.abs(sInstance.BRT);
-				if (sInstance.BRT >= 0)
-					CT.redOffset = CT.greenOffset = CT.blueOffset = 255 * sInstance.BRT;
-			}
-			case Advanced, "Advanced":
-			{
-				CT.redMultiplier = sInstance.RM;
-				CT.redOffset = sInstance.RO;
-				CT.greenMultiplier = sInstance.GM;
-				CT.greenOffset = sInstance.GO;
-				CT.blueMultiplier = sInstance.BM;
-				CT.blueOffset = sInstance.BO;
-				CT.alphaMultiplier = sInstance.AM;
-				CT.alphaOffset = sInstance.AO;
-			}
-		}
-		return CT;
 	}
 
 	var pressed:Bool = false;
-	function setButtonFrames(symbol:FlxSymbol)
+	function setButtonFrames(frame:Int)
 	{
 		var badPress:Bool = false;
 		var goodPress:Bool = false;
@@ -202,14 +187,8 @@ class FlxAnimate extends FlxSprite
 					new ButtonEvent((event.Callbacks != null) ? event.Callbacks.OnClick : null #if FLX_SOUND_SYSTEM, event.Sound #end).fire();
 				pressed = true;
 			}
-			if (FlxG.mouse.pressed)
-			{
-				symbol.frameControl(2, singleframe);
-			}
-			else
-			{
-				symbol.frameControl(1, singleframe);
-			}
+			frame = (FlxG.mouse.pressed) ? 2 : 1;
+
 			if (FlxG.mouse.justReleased && pressed)
 			{
 				if (event != null)
@@ -219,31 +198,38 @@ class FlxAnimate extends FlxSprite
 		}
 		else
 		{
-			symbol.frameControl(0, singleframe);
+			frame = 0;
 		}
 		#else
 		FlxG.log.error("Button stuff isn't available for mobile!");
 		#end
+		return frame;
 	}
-	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, colorTransform:ColorTransform)
+	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform)
 	{
-		if (alpha == 0 || colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255 || limb == null || limb.type == EMPTY)
+		if (alpha == 0 || colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
 			return;
+		var matrix = new FlxMatrix();
+		matrix.concat(_matrix);
 		for (camera in cameras)
 		{
 			if (!camera.visible || !camera.exists || !limbOnScreen(limb, _matrix, camera))
 				return;
-			getScreenPosition(_point, camera).subtractPoint(offset);
-
-			_matrix.scale(scale.x, scale.y);
 			
+			getScreenPosition(_point, camera).subtractPoint(offset);
+			matrix.translate(-origin.x, -origin.y);
+			if (limb.name != "pivot")
+				matrix.scale(scale.x, scale.y);
+			else 
+				matrix.a = matrix.d = 0.7 / camera.zoom;
+			_point.addPoint(origin);
 			if (isPixelPerfectRender(camera))
 		    {
 			    _point.floor();
 		    }
 			
-			_matrix.translate(_point.x, _point.y);
-			camera.drawPixels(limb, null, _matrix, colorTransform, blend, antialiasing/*, AnimationData.filters.shader*/);
+			matrix.translate(_point.x, _point.y);
+			camera.drawPixels(limb, null, matrix, colorTransform, blend, antialiasing);
 			#if FLX_DEBUG
 			FlxBasic.visibleCount++;
 			#end
@@ -275,10 +261,13 @@ class FlxAnimate extends FlxSprite
 		return Camera.containsPoint(_point, radius, radius);
 	}
 
-	function checkSize(limb:FlxFrame, m:FlxMatrix)
-	{
-		return (limb != null) ? {width: limb.sourceSize.x * (Math.abs(m.a) + Math.abs(m.c)), height: limb.sourceSize.y * (Math.abs(m.d) + Math.abs(m.b))} : {width: 0, height: 0};
-	}
+	// function checkSize(limb:FlxFrame, m:FlxMatrix)
+	// {
+	// 	// var rect = new Rectangle(x,y,limb.frame.width,limb.frame.height);
+	// 	// @:privateAccess
+	// 	// rect.__transform(rect, m);
+	// 	return {width: rect.width, height: rect.height};
+	// }
 	var oldMatrix:FlxMatrix;
 	override function set_flipX(Value:Bool)
 	{
@@ -324,10 +313,10 @@ class FlxAnimate extends FlxSprite
 		if (anim != null)
 			anim.destroy();
 		anim = null;
-		#if FLX_SOUND_SYSTEM
-		if (audio != null)
-			audio.destroy();
-		#end
+		// #if FLX_SOUND_SYSTEM
+		// if (audio != null)
+		// 	audio.destroy();
+		// #end
 		super.destroy();
 	}
 
@@ -351,13 +340,13 @@ class FlxAnimate extends FlxSprite
 			if (Settings.ButtonSettings != null)
 			{
 				anim.buttonMap = Settings.ButtonSettings;
-				if ([button, "button"].indexOf(anim.symbolType) == -1)
-					anim.symbolType = button;
+				if (anim.symbolType != Button)
+					anim.symbolType = Button;
 			}
 			if (Settings.Reversed != null)
 				anim.reversed = Settings.Reversed;
 			if (Settings.FrameRate != null)
-				anim.framerate = (Settings.FrameRate > 0 ? anim.coolParse.MD.FRT : Settings.FrameRate);
+				anim.framerate = (Settings.FrameRate > 0) ? anim.metadata.frameRate : Settings.FrameRate;
 			if (Settings.OnComplete != null)
 				anim.onComplete = Settings.OnComplete;
 			if (Settings.ShowPivot != null)

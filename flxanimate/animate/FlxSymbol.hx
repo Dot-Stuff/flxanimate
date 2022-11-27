@@ -1,133 +1,138 @@
 package flxanimate.animate;
 
+import openfl.utils.Function;
+import haxe.extern.EitherType;
+import flixel.math.FlxMatrix;
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
 
 class FlxSymbol
 {
-    public var timeline(default, null):Timeline;
+    public var timeline(default, null):FlxTimeline;
 
-    public var length(default, null):Int;
+    public var length(get, null):Int;
 
     public var name(default, null):String;
-
+    @:noCompletion
+    @:deprecated()
     public var labels(default, null):Map<String, FlxLabel>;
-
-    var _labels:Array<String>;
     
-    public var layers(default, null):Array<String>;
-
-    @:allow(flxanimate.FlxAnimate)
-    var _layers:Array<String>;
+    public var layers(get, null):Array<String>;
     
     public var curFrame:Int;
     
     var _tick:Float;
     
     @:allow(flxanimate.animate.FlxAnim)
-    function new(name:String, timeline:Timeline)
+    function new(name:String, timeline:FlxTimeline)
     {
         layers = [];
-        _layers = [];
-        labels = [];
-        _labels = [];
         curFrame = 0;
-        for (layer in timeline.L)
-		{
-            parseLayer(layer);
-        }
         this.timeline = timeline;
         this.name = name;
     }
 
-    function parseLayer(layer:Layers)
-    {
-        layers.push(layer.LN);
-        _layers.push(layer.LN);
-        for (fr in layer.FR)
-        {
-            if (fr.N != null)
-            {
-                labels.set(fr.N, new FlxLabel(fr.N, fr.I));
-                _labels.push(fr.N);
-            }
-            if (length < fr.I + fr.DU - 1)
-                length = fr.I + fr.DU - 1;
-        }
-    }
     public function hideLayer(layer:String)
     {
-        if (_layers.indexOf(layer) == -1)
-            FlxG.log.error((layers.indexOf(layer) != -1) ? 'Layer "$layer" is already hidden!' :'There is no layer called "$layer"!');
-        _layers.remove(layer);
+        timeline.hide(layer);
     }
     public function showLayer(layer:String)
     {
-        if (layers.indexOf(layer) == -1)
-        {
-            FlxG.log.error('There is no layer called "$layer"!');
-            return;
-        }
-        if (_layers.indexOf(layer) != -1)
-        {
-            FlxG.log.error('Layer "$layer" is not hidden!');
-            return;
-        }
-        _layers.push(layer);
+        timeline.show(layer);
     }
-    public function addCallbackTo(label:String, callback:()->Void)
+    public function addCallbackTo(label:String, callback:Function, ?layer:EitherType<Int, String>)
     {
-        if (!labels.exists(label))
+        var label = getFrameLabel(label, layer);
+        if (label == null)
         {
-            FlxG.log.error('there is not label called "$label"!');
-            return;
+            return false;
         }
-        var label = labels.get(label);
         
         if (label.callbacks.indexOf(callback) != -1)
         {
             FlxG.log.error("this callback already exists!");
-            return;
+            return false;
         }
         label.callbacks.push(callback);
+        return true;
     }
-    public function removeCallbackFrom(label:String, callback:()->Void)
+    public function getCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
     {
-        if (!labels.exists(label))
+        var label = getFrameLabel(name, layer);
+        if (label == null)
         {
-            FlxG.log.error('there is not label called "$label"!');
-            return;
+            return null;
         }
-        var label = labels.get(label);
-        
+        var c:Function = label.callbacks[(callback is Int) ? callback : label.callbacks.indexOf(callback)];
+        return c;
+    }
+    public function removeCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
+    {
+        var label = getFrameLabel(name, layer);
+        if (label == null)
+        {
+            return false;
+        }
+        var callback = (callback is Int) ? label.callbacks[callback] : callback;
         if (label.callbacks.indexOf(callback) == -1)
         {
             FlxG.log.error("this callback doesn't exist!");
         }
         label.callbacks.remove(callback);
+        return true;
     }
-    public function removeAllCallbacksFrom(label:String)
+    public function removeAllCallbacksFrom(label:String, ?layer:EitherType<Int, String>)
     {
-        if (!labels.exists(label))
+        var label = getFrameLabel(label, layer);
+        if (label == null)
         {
-            FlxG.log.error('there is not label called "$label"!');
-            return;
+            return false;
         }
-        labels.get(label).removeCallbacks();
+        label.removeCallbacks();
+        return true;
     }
-    public function getNextToFrameLabel(label:String):FlxLabel
+    public function getNextToFrameLabel(label:String, ?layer:EitherType<Int, String>)
     {
-        var good:Bool = false;
-        for (_label in _labels)
+        if (layer == null) layer = 0;
+        var label = getFrameLabel(label, layer);
+        if (label == null) return null;
+
+        var layer = timeline.get(layer);
+        @:privateAccess
+        var j = layer._keyframes.indexOf(label);
+        @:privateAccess
+        while (j++ < layer._keyframes.length)
         {
-            if (good)
-                return labels.get(_label);
-            if (_label == label)
-                good = true;
+            @:privateAccess
+            if ([null, label.name].indexOf(layer._keyframes[j].name) == -1)
+                return layer._keyframes[j];
         }
-        
-        FlxG.log.error('"$label" doesnt exist! Maybe you misspelled it?');
+
         return null;
+    }
+    public function getFrameLabel(name:String, ?layer:EitherType<Int, String>)
+    {
+        var frame:FlxKeyFrame = null;
+        var layers = (layer == null) ? timeline.getList() : [timeline.get(layer)];
+        
+        for (layer in layers)
+        {
+            if (layer == null) continue;
+            
+            var fr = layer.get(name);
+            if (fr != null)
+            {
+                frame = fr;
+                break;
+            } 
+        }
+
+        if (frame == null)
+        {
+            FlxG.log.error('The frame label "$name" does not exist! maybe you misspelled it?');
+        }
+
+        return frame;
     }
     public function frameControl(frame:Int, loopType:LoopType)
     {
@@ -156,40 +161,25 @@ class FlxSymbol
         return frame;
     }
 
-    public function update(framerate:Float, reversed:Bool, loopType:LoopType)
+    public function update(framerate:Float, reversed:Bool)
     {
-        _tick += FlxG.elapsed;
-        var delay = 1 / framerate;
+        // _tick += FlxG.elapsed;
+        // var delay = 1 / framerate;
 
-        while (_tick > delay)
-        {
-            curFrame = frameControl(curFrame + ((reversed) ? -1 : 1), loopType);
-            _tick -= delay;
-        }
+        // while (_tick > delay)
+        // {
+        //     curFrame++;
+        //     _tick -= delay;
+        // }
     }
-    @:allow(flxanimate.FlxAnimate)
-    function prepareFrame(layer:Layers, frame:Int)
+
+    function get_length()
     {
-        var i = 0;
-        var curFrame = layer.FR[i];
-        while ((curFrame.I + curFrame.DU - 1) < frame)
-        {
-            i++;
-            curFrame = layer.FR[i];
-            if (curFrame == null) return curFrame;
-        }
-        
-        return curFrame;
+        return timeline.totalFrames;
     }
-    public static function prepareMatrix(m3d:OneOfTwo<Array<Float>, Matrix3D>, pos:TransformationPoint)
-	{
-		if (m3d == null || m3d == [])
-			m3d = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-        if (!(m3d is Array))
-            m3d = [for (i in Reflect.fields(m3d)) Reflect.field(m3d, i)];
-
-        if (pos == null)
-            pos = {x: 0, y: 0};
-		return new flixel.math.FlxMatrix(m3d[0], m3d[1], m3d[4], m3d[5], m3d[12] + pos.x, m3d[13] + pos.y);
-	}
+    function get_layers()
+    {
+        return timeline.getListNames();
+    }
+    public static function prepareMatrix(d:Dynamic, e:Dynamic) {return new FlxMatrix();}
 }

@@ -2,47 +2,66 @@ package flxanimate;
 
 import flixel.math.FlxMath;
 import flixel.system.FlxAssets.FlxShader;
-import openfl.utils._internal.ShaderMacro;
+
+enum Type
+{
+	DROPSHADOW;
+	BLUR;
+	GLOW;
+	BEVEL;
+	GRADIENTGLOW;
+	GRADIENTBEVEL;
+}
+
 class Filters
 {
 	public var shader(default, null):FilterShader;
 
-    public var hue(get, set):Float;
+	public var hue(get, set):Float;
 	public var saturation(get, set):Float;
 	public var lightness(get, set):Float;
 
 	public function new():Void
 	{
-			shader = new FilterShader();
-			shader.HSV.value = [];
-			hue = 0;
-			saturation = 0;
-			lightness = 0;
+		shader = new FilterShader();
+		shader.HSV.value = [];
+		// shader.HSV.value = [];
+		// @:privateAccess
+		// shader.__matrix;
+		
+		hue = 0;
+		saturation = 0;
+		lightness = 0;
 	}
 
 	function get_hue()
 	{
 		return shader.HSV.value[0];
 	}
+
 	function set_hue(hue:Float)
 	{
 		hue %= 360;
 		shader.HSV.value[0] = hue;
 		return hue;
 	}
+
 	function get_saturation()
 	{
 		return (shader.HSV.value[1] * 100) - 100;
 	}
+
 	function set_saturation(saturation:Float)
 	{
 		shader.HSV.value[1] = saturation / 100;
 		return saturation;
 	}
+
 	function get_lightness()
 	{
 		return (shader.HSV.value[2] * 100) - 100;
 	}
+
 	function set_lightness(lightness:Float)
 	{
 		shader.HSV.value[2] = lightness / 100;
@@ -54,7 +73,9 @@ class FilterShader extends FlxShader
 {
 	@:glFragmentSource("
 	#pragma header
+	uniform float u_time;
 	uniform vec3 HSV;
+	uniform mat4 matrices[99];
 
 	vec3 rgb2hsl(vec3 c)
 	{
@@ -78,6 +99,7 @@ class FilterShader extends FlxShader
 			if (max == g) H = 2.0 + (b-r)/(delta);
 			if (max == b) H = 4.0 + (r-g)/(delta);
 			H *= 60;
+			H = mod(H, 360);
 		}
 		if (H < 0) H += 360;
 		return vec3(H,S,L);
@@ -108,11 +130,13 @@ class FilterShader extends FlxShader
 		return rgb;
 	}
 
-	void main(){
+	void main()
+	{
 		vec4 textureColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
 		vec3 fragRGB = textureColor.rgb;
 		vec3 fragHSV = rgb2hsl(fragRGB);
-		fragHSV.x += HSV.x;
+		mat4 daMatrix;
+		fragHSV.r += u_time; // hue
 
 		fragRGB = hsl2rgb(fragHSV);
 		gl_FragColor = vec4(fragRGB, textureColor.w);
@@ -120,6 +144,7 @@ class FilterShader extends FlxShader
 	")
 	public function new()
 	{
+		@:privateAccess
 		super();
 	}
 }

@@ -141,12 +141,12 @@ class FlxAnimateFrames extends FlxAtlasFrames
     }
     public function concat(frames:FlxFramesCollection)
     {
-        if (parents.indexOf(frames.parent) != -1) return;
-        parents.push(frames.parent);
-        this.frames.concat(frames.frames);
-        for (key => frame in frames.framesHash.keyValueIterator())
+        if (parents.indexOf(frames.parent) == -1)
+            parents.push(frames.parent);
+        for (frame in frames.frames)
         {
-            framesHash.set(key, frame);
+            this.frames.push(frame);
+            framesHash.set(frame.name, frame);
         }
     }
     /**
@@ -486,12 +486,11 @@ class FlxAnimateFrames extends FlxAtlasFrames
             matrix.translate(0, height);
         }
         sprite.draw(SpriteMap, matrix);
-        var ImageSize:FlxPoint = FlxPoint.get(width / Std.parseInt(curMeta.resolution), height / Std.parseInt(curMeta.resolution));
-        
+    
         @:privateAccess
         var curFrame = new FlxFrame(FlxG.bitmap.add(sprite));
         curFrame.name = limb.name;
-        curFrame.sourceSize.set(ImageSize.x, ImageSize.y);
+        curFrame.sourceSize.set(width, height);
         curFrame.frame = new FlxRect(0,0, width, height);
         return curFrame;
     }
