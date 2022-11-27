@@ -131,8 +131,8 @@ class FlxSymbol
     }
     public function frameControl(frame:Int, loopType:LoopType)
     {
-	if ([singleframe, "singleframe"].indexOf(loopType) != -1)
-		return frame;
+        if ([singleframe, "singleframe"].indexOf(loopType) != -1)
+            return frame;
 	
         if (frame < 0)
 		{
