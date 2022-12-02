@@ -87,10 +87,10 @@ class FlxAnim implements IFlxDestroyable
 		
 		setSymbols(animationFile);
 
-		stageInstance = (animationFile.AN.STI != null) ? FlxElement.fromJSON(cast animationFile.AN.STI) : new FlxElement(animationFile.AN.SN, new SymbolParameters());
+		stageInstance = (animationFile.AN.STI != null) ? FlxElement.fromJSON(cast animationFile.AN.STI) : new FlxElement(new SymbolParameters(animationFile.AN.SN));
 
 		curInstance = stageInstance;
-		
+
 		curFrame = stageInstance.symbol.firstFrame;
 		
 		_parent.origin.copyFrom(stageInstance.symbol.transformationPoint);

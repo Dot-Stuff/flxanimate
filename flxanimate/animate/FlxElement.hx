@@ -68,6 +68,8 @@ class FlxElement
         
         var m3d = (symbol) ? element.SI.M3D : element.ASI.M3D;
         var m:Array<Float> = (m3d is Array) ? m3d : [for (field in Reflect.fields(m3d)) Reflect.field(m3d,field)];
+        if (!symbol)
+            m[0] = m[5] = 1;
         var pos = (symbol) ? element.SI.bitmap.POS : element.ASI.POS;
         if (pos == null)
             pos = {x: 0, y: 0};
