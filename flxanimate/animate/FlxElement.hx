@@ -67,14 +67,17 @@ class FlxElement
         }
         
         var m3d = (symbol) ? element.SI.M3D : element.ASI.M3D;
-        var m:Array<Float> = (m3d is Array) ? m3d : [for (field in Reflect.fields(m3d)) Reflect.field(m3d,field)];
+        var array = Reflect.fields(m3d);
+        if (!Std.isOfType(m3d, Array))
+            array.sort((a, b) -> Std.parseInt(a.substring(1)) - Std.parseInt(b.substring(1)));
+        var m:Array<Float> = (m3d is Array) ? m3d : [for (field in array) Reflect.field(m3d,field)];
 
-        if (!symbol && m.length == 0)
+        if (!symbol && m3d == null)
         {
             m[0] = m[5] = 1;
             m[1] = m[4] = m[12] = m[13] = 0;
         }
-        
+
         var pos = (symbol) ? element.SI.bitmap.POS : element.ASI.POS;
         if (pos == null)
             pos = {x: 0, y: 0};

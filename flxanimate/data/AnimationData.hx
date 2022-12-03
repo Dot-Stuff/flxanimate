@@ -39,7 +39,9 @@ class AnimationData
 		switch (effect.M)
 		{
 			case Tint, "Tint":
-				colorEffect = Tint(flixel.util.FlxColor.fromString(effect.TC), effect.TM);
+				var tc = "0x" + effect.TC.substring(1);
+				
+				colorEffect = Tint(Std.parseInt(tc), effect.TM);
 			case Alpha, "Alpha":
 				colorEffect = Alpha(effect.AM);
 			case Brightness, "Brightness":
@@ -76,11 +78,12 @@ class AnimationData
                     var opacity:Float = params[1];
 					
                     CT.redMultiplier -= opacity;
-                    CT.redOffset = color.red * opacity;
+                    CT.redOffset = Math.round(color.red * opacity);
                     CT.greenMultiplier -= opacity;
-                    CT.greenOffset = color.green * opacity;
+                    CT.greenOffset = Math.round(color.green * opacity);
                     CT.blueMultiplier -= opacity;
-                    CT.blueOffset = color.blue * opacity;
+                    CT.blueOffset = Math.round(color.blue * opacity);
+					
                 case "Alpha":
                     CT.alphaMultiplier = params[0];
                 case "Brightness":

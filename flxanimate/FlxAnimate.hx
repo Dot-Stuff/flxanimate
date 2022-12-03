@@ -155,7 +155,10 @@ class FlxAnimate extends FlxSprite
 				{
 					firstframe = firstFrame - frame.index;
 				}
-				parseElement(element, firstframe, matrix, frame._colorEffect);
+				var coloreffect = new ColorTransform();
+				coloreffect.concat(frame._colorEffect);
+				coloreffect.concat(colorEffect);
+				parseElement(element, firstframe, matrix, coloreffect);
 			}
 		}
 	}

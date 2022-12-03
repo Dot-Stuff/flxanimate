@@ -4,8 +4,8 @@
     "license": "MIT",
     "tags": ["adobe","flash","animate","texture_sheet", "flixel"],
     "description": "Adobe Animate's texture atlases player for HaxeFlixel.",
-    "version": "3.0.0",
-    "releasenote": "Rewriting of almost everything in FlxAnimate to allow modifications of symbols, layers, keyframes, etc in-game",
+    "version": "3.0.1",
+    "releasenote": "Bugfixes and polishing for rendering symbols.",
     "contributors": ["DotWith","MrCheemsAndFriends"],
     "dependencies": {}
 }
