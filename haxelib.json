@@ -4,8 +4,8 @@
     "license": "MIT",
     "tags": ["adobe","flash","animate","texture_sheet", "flixel"],
     "description": "Adobe Animate's texture atlases player for HaxeFlixel.",
-    "version": "3.0.1",
-    "releasenote": "Bugfixes and polishing for rendering symbols.",
+    "version": "3.0.2",
+    "releasenote": "Fix crash when calling the function destroy",
     "contributors": ["DotWith","MrCheemsAndFriends"],
     "dependencies": {}
 }
