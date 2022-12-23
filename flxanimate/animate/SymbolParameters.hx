@@ -37,23 +37,39 @@ class SymbolParameters
         transformationPoint = new FlxPoint();
         colorEffect = None;
     }
+
+    public function destroy()
+    {
+        instance = null;
+        type = null;
+        reverse = false;
+        firstFrame = 0;
+        name = null;
+        colorEffect = null;
+        transformationPoint = null;
+    }
+
     function set_type(type:SymbolT)
     {
-        loop = switch (type)
+        this.type = type;
+        loop = (type == null) ? null : Loop;
+
+        return type;
+    }
+
+    function set_loop(loop:Loop)
+    {
+        if (type == null) return this.loop = null;
+        this.loop = switch (type)
         {
             case MovieClip: Loop;
             case Button: SingleFrame;
-            default: loop; 
+            default: loop;
         }
-        return this.type = type;
-    }
-    function set_loop(loop:Loop)
-    {
-        if (type == Graphic)
-            this.loop = loop;
 
-        return this.loop;
+        return loop;
     }
+
     function get__colorEffect()
     {
         return AnimationData.parseColorEffect(colorEffect);

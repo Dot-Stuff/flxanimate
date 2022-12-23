@@ -38,6 +38,14 @@ class FlxElement
     {
         return '{matrix: $matrix, bitmap: $bitmap}';
     }
+    public function destroy()
+    {
+        _parent = null;
+        if (symbol != null)
+            symbol.destroy();
+        bitmap = null;
+        matrix = null;
+    }
     public static function fromJSON(element:Element)
     {
         var symbol = element.SI != null;

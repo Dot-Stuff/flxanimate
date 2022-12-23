@@ -35,8 +35,8 @@ class FlxAnim implements IFlxDestroyable
 	public var metadata:FlxMetaData;
 
 	public var curSymbol(get, null):FlxSymbol;
-	public var finished(default, null):Bool = false;
-	public var reversed:Bool = false;
+	public var finished(get, null):Bool;
+	public var reversed(get, set):Bool;
 	/**
 		Checks if the movieclip should move or not. for having a similar experience to swfs
 	**/
@@ -46,10 +46,9 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * When ever the animation is playing.
 	 */
-	public var isPlaying(default, null):Bool = false;
+	public var isPlaying(default, null):Bool;
 	public var onComplete:()->Void;
 
-	var frameTick:Float;
 	public var framerate(default, set):Float;
 
 	/**
@@ -77,6 +76,7 @@ class FlxAnim implements IFlxDestroyable
 		_tick = 0;
 		_parent = parent;
 		symbolDictionary = [];
+		isPlaying = false;
 		if (coolParsed != null) _loadAtlas(coolParsed);
 	}
 	@:allow(flxanimate.FlxAnimate)
@@ -129,7 +129,6 @@ class FlxAnim implements IFlxDestroyable
 		if (Force || finished)
 			curFrame = (Reverse) ? Frame - length : Frame;
 		reversed = Reverse;
-		finished = false;
 		isPlaying = true;
 	}
 
@@ -157,26 +156,26 @@ class FlxAnim implements IFlxDestroyable
 	
 	public function update(elapsed:Float)
 	{
-		// curFrame = curSymbol.frameControl(curFrame, loopType);
 		if (frameDelay == 0 || !isPlaying || finished) return;
-		
 
-		// if (curSymbol != null)
 		_tick += elapsed;
+
 		while (_tick > frameDelay)
         {
             (reversed) ? curFrame-- : curFrame++;
             _tick -= frameDelay;
         }
-		// curSymbol.update(framerate, reversed);
-		finished = loopType == PlayOnce && (reversed && curFrame == 0 || !reversed && curFrame >= length - 1);
-
+		
 		if (finished)
 		{
 			if (onComplete != null)
 				onComplete();
 			pause();
 		}
+	}
+	function get_finished()
+	{
+		return (loopType == PlayOnce) && (reversed && curFrame == 0 || !reversed && curFrame >= length - 1);
 	}
 	function get_curFrame()
 	{
@@ -356,6 +355,14 @@ class FlxAnim implements IFlxDestroyable
 	{
 		return curInstance.symbol.type = type;
 	}
+	function get_reversed()
+	{
+		return curInstance.symbol.reverse;
+	}
+	function set_reversed(value:Bool)
+	{
+		return curInstance.symbol.reverse = value;
+	}
 	public function getByName(name:String)
 	{
 		return animsMap.get(name);
@@ -395,12 +402,20 @@ class FlxAnim implements IFlxDestroyable
 
 	public function destroy()
 	{
+		isPlaying = false;
 		curFrame = 0;
 		framerate = 0;
-		frameTick = 0;
+		_tick = 0;
+		buttonMap = null;
 		animsMap = null;
-		loopType = null;
-		symbolType = null;
+		curInstance.destroy();
+		curInstance = null;
+		stageInstance.destroy();
+		stageInstance = null;
+		metadata.destroy();
+		metadata = null;
+		swfRender = false;
+		_parent = null;
 		symbolDictionary = null;
 	}
 }
@@ -419,5 +434,10 @@ class FlxMetaData
 	{
 		this.name = name;
 		this.frameRate = frameRate;
+	}
+	public function destroy()
+	{
+		name = null;
+		frameRate = 0;
 	}
 }
