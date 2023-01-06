@@ -2,6 +2,7 @@ package flxanimate.data;
 
 import flixel.util.FlxColor;
 import openfl.geom.ColorTransform;
+import openfl.filters.*;
 
 @:noCompletion
 class AnimationData
@@ -27,10 +28,9 @@ class AnimationData
 				return Reflect.field(abstracto, thing);
 			}
 		}
-
 		return Reflect.field(abstracto, "");
 	}
-	public static function fromColorJson(effect:ColorEffects)
+	public static function fromColorJson(effect:ColorEffects = null)
 	{
 		var colorEffect = None;
 
@@ -64,7 +64,14 @@ class AnimationData
 		}
 		return colorEffect;
 	}
-	public static function parseColorEffect(colorEffect:ColorEffect)
+	public static function fromFilterJson(filters:Filters = null) 
+	{
+		if (filters == null) return [];
+		var bitmapFilter:Array<BitmapFilter> = [];
+
+		return bitmapFilter;
+	}
+	public static function parseColorEffect(colorEffect:ColorEffect = None)
 	{
 		var CT = new ColorTransform();
         
@@ -119,6 +126,14 @@ enum SymbolT
 	Graphic;
 	MovieClip;
 	Button;
+}
+
+enum LayerType
+{
+	Normal;
+	Clipper;
+	Clipped(layer:String);
+	Folder;
 }
 
 abstract AnimAtlas({}) from {}
@@ -205,9 +220,16 @@ abstract Animation({}) from {}
 		return AnimationData.setFieldBool(this, ["STI", "StageInstance"]);
 	}
 }
-
+/**
+ * The main position how the symbol you exported was set, Acting almost identically as an `Element`, with the exception of not having an Atlas Sprite to call (not that I'm aware of).
+ * **WARNING:** This may depend on how you exported your texture atlas, Meaning that this can be `null`
+ */
 abstract StageInstance({}) 
 {
+	/**
+	 * The instance of the Element flagged as a `Symbol`.
+	 * **WARNING:** This can be `null`!
+	 */
 	public var SI(get, never):SymbolInstance;
 
 	function get_SI():SymbolInstance
@@ -267,14 +289,29 @@ abstract Layers({}) from {}
 	 */
 	public var LN(get, never):String;
 	/**
+	 * Type of layer. Usually it's just to announce that the layer is a mask.
+	 */
+	public var LT(get, never):String;
+	/**
+	 * To which layer it is clipped.
+	 */
+	public var Clpb(get, never):String;
+	/**
 	 * The frames that the layer has.
 	 */
 	public var FR(get, set):Array<Frame>;
 
 	function get_LN():String
 	{
-		
 		return AnimationData.setFieldBool(this, ["LN", "Layer_name"]);
+	}
+	function get_LT():String
+	{
+		return AnimationData.setFieldBool(this, ["LT", "Layer_type"]);
+	}
+	function get_Clpb():String
+	{
+		return AnimationData.setFieldBool(this, ["Clpb", "Clipped_by"]);
 	}
 	function get_FR():Array<Frame>
 	{
@@ -571,7 +608,11 @@ abstract ColorEffects({}) from {}
 abstract Filters({})
 {
 	/**
-	 * Adjusting the color filter... This is the filter which has small support, the rest doesn't have a shit
+	 * Adjust Color filter is basically Color Matrix Filter, but with the exception of some premade calculation to give the illusion of changing the wheel.
+	 * @see flxanimate.motion.AdjustColor
+	 * @see flxanimate.motion.ColorMatrix
+	 * @see flxanimate.motion.DynamicMatrix
+	 * @see openfl.filters.ColorMatrixFilter
 	 */
 	public var ACF(get, never):AdjustColorFilter;
 
@@ -580,12 +621,26 @@ abstract Filters({})
 		return AnimationData.setFieldBool(this, ["ACF", "AdjustColorFilter"]);
 	}
 }
-// The filters aren't looked much lol
+/**
+ * A full matrix calculation thing that seems to behave like a special HSV adjust.
+ */
 abstract AdjustColorFilter({})
 {
+	/**
+	 * The brightness value. Can be from -100 to 100
+	 */
 	public var BRT(get, never):Float;
+	/**
+	 * The value of contrast. Can be from -100 to 100
+	 */
 	public var CT(get, never):Float;
+	/**
+	 * The value of saturation. Can be from -100 to 100
+	 */
 	public var SAT(get, never):Float;
+	/**
+	 * The hue value. Can be from -180 to 180
+	 */
 	public var H(get, never):Float;
 
 	function get_BRT()
@@ -678,11 +733,6 @@ typedef TransformationPoint =
 	var y:Float;
 }
 
-typedef BlurFilterS = {
-	var BLX:Float;
-	var BLY:Float;
-	var Q:Int;
-}
 @:forward
 enum abstract LoopType(String) from String to String
 {
