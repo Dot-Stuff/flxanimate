@@ -62,7 +62,7 @@ class FlxLayer implements IFlxDestroyable
     public function get(frame:EitherType<String, Int>)
     {
         var index = 0;
-        if (frame is Int)
+        if ((frame is Int))
         {
             index = frame;
             if (index > length) return null;
@@ -70,7 +70,7 @@ class FlxLayer implements IFlxDestroyable
 
         for (keyframe in _keyframes)
         {
-            if (keyframe.index + keyframe.duration > index || frame is String && keyframe.name == frame)
+            if (keyframe.index + keyframe.duration > index || (frame is String) && keyframe.name == frame)
                 return keyframe;
         }
         return null;
@@ -110,7 +110,7 @@ class FlxLayer implements IFlxDestroyable
     }
     public function remove(frame:EitherType<Int, FlxKeyFrame>)
     {
-        if (frame is FlxKeyFrame)
+        if ((frame is FlxKeyFrame))
         {
             _keyframes.remove(frame);
             return frame;

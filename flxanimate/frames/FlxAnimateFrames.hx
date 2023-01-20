@@ -157,13 +157,13 @@ class FlxAnimateFrames extends FlxAtlasFrames
      */
     public static function fromSparrow(Path:FlxSparrow, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-        if (Path is String && !Assets.exists(Path))
+        if ((Path is String) && !Assets.exists(Path))
 			return null;
 
 		var data:Access = new Access((Path is String) ? Xml.parse(Assets.getText(Path)).firstElement() : Path.firstElement());
         if (Image == null)
         {
-            if (Path is String)
+            if ((Path is String))
             {
                 var splitDir = Path.split("/");
                 splitDir.pop();
@@ -222,12 +222,12 @@ class FlxAnimateFrames extends FlxAtlasFrames
      */
     public static function fromJson(Path:FlxJson, ?Image:FlxGraphicAsset):FlxAtlasFrames
     {
-        if (Path is String && !Assets.exists(Path))
+        if ((Path is String) && !Assets.exists(Path))
             return null;
         var data:JsonNormal = (Path is String) ? haxe.Json.parse(Assets.getText(Path)) : Path;
         if (Image == null)
         {
-            if (Path is String)
+            if ((Path is String))
             {
                 var splitDir = Path.split("/");
                 splitDir.pop();
@@ -289,12 +289,12 @@ class FlxAnimateFrames extends FlxAtlasFrames
      */
     public static function fromStarling(Path:FlxPropertyList, ?Image:FlxGraphicAsset):FlxAtlasFrames
     {
-        if (Path is String && !Assets.exists(Path))
+        if ((Path is String) && !Assets.exists(Path))
             return null;
         var data:Plist = (Path is String) ? PropertyList.parse(Assets.getText(Path)) : Path;
         if (Image == null)
         {
-            if (Path is String)
+            if ((Path is String))
             {
                 var splitDir = Path.split("/");
                 splitDir.pop();
@@ -346,7 +346,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
         {
             if (Image == null)
             {
-                if (Path is String)
+                if ((Path is String))
                 {
                     var splitDir = Path.split("/");
                     splitDir.pop();

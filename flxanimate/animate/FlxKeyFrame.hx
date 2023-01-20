@@ -48,7 +48,7 @@ class FlxKeyFrame
     }
     public function add(element:EitherType<FlxElement, Function>)
     {   
-        if (element is FlxElement)
+        if ((element is FlxElement))
         {
             var element:FlxElement = element;
             if (element == null)
@@ -83,7 +83,7 @@ class FlxKeyFrame
     {
         if (element == null) return null;
 
-        if (element is FlxElement)
+        if ((element is FlxElement))
         {
             if (element == null || !_elements.remove(element))
             {

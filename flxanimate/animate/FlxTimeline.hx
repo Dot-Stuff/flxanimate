@@ -27,7 +27,7 @@ class FlxTimeline
     }
     public function get(name:EitherType<String, Int>)
     {
-        if (name is Int) return _layers[name];
+        if ((name is Int)) return _layers[name];
 
         for (layer in _layers)
         {
@@ -75,7 +75,7 @@ class FlxTimeline
     public function add(?position:Int = 0, ?name:EitherType<String, FlxLayer>)
     {
         var layer:FlxLayer = null;
-        if (name is String || name == null)
+        if ((name is String) || name == null)
         {
             layer = new FlxLayer(name);
         }
@@ -91,7 +91,7 @@ class FlxTimeline
     public function remove(name:EitherType<String, FlxLayer>)
     {
         var layer:FlxLayer = null;
-        if (name is String || name == null)
+        if ((name is String) || name == null)
         {
             layer = get(name);
             if (layer == null)
