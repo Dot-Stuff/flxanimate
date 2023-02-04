@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import flxanimate.geom.FlxMatrix3D;
 import flixel.math.FlxMath;
 import haxe.extern.EitherType;
 import flxanimate.animate.SymbolParameters;
@@ -164,7 +165,11 @@ class FlxAnim implements IFlxDestroyable
         {
             (reversed) ? curFrame-- : curFrame++;
             _tick -= frameDelay;
+
+			@:privateAccess
+			curSymbol._shootCallback = true;
         }
+
 		
 		if (finished)
 		{
@@ -189,6 +194,7 @@ class FlxAnim implements IFlxDestroyable
 			case PlayOnce: cast FlxMath.bound(Value, 0, curSymbol.length - 1);
 			case _: Value;
 		}
+		
 		return curSymbol.curFrame;
 	}
 	/**
@@ -341,6 +347,11 @@ class FlxAnim implements IFlxDestroyable
 	public function removeAllCallbacksFrom(label:String)
 	{
 		return curSymbol.removeAllCallbacksFrom(label);
+	}
+
+	public function getFrameLabels(?layer:EitherType<Int, String>)
+	{
+		return curSymbol.getFrameLabels(layer);
 	}
 
 	function get_loopType()

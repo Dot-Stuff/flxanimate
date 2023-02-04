@@ -1,5 +1,10 @@
 package flxanimate;
 
+import flxanimate.geom.FlxMatrix3D;
+import openfl.filters.DropShadowFilter;
+import openfl.filters.GlowFilter;
+import openfl.Vector;
+import openfl.display.Sprite;
 import flixel.util.FlxColor;
 import flixel.graphics.FlxGraphic;
 import openfl.geom.Rectangle;
@@ -23,6 +28,7 @@ import flixel.math.FlxMatrix;
 import openfl.geom.ColorTransform;
 import flixel.math.FlxMath;
 import flixel.FlxBasic;
+import flxanimate.graphics.tile.FlxDrawSpriteQuadsItem;
 
 typedef Settings = {
 	?ButtonSettings:Map<String, flxanimate.animate.FlxAnim.ButtonSettings>,
@@ -48,11 +54,12 @@ class FlxAnimate extends FlxSprite
 	public var showPivot:Bool = #if debug true #else false #end;
 
 	var _pivot:FlxFrame;
+
+	var _sprite:Sprite;
+	
 	/**
 	 * # Description
-	 * `FlxAnimate` is a texture atlas parser from the drawing software *Adobe Animate* (once being *Adobe Flash*).
-	 * It tries to replicate how Adobe Animate works on Haxe so it would be considered (as *MrCheemsAndFriends* likes to call it,) a "*Flash--*", in other words, a replica of Animate's work
-	 * on the side of drawing, making symbols, etc.
+	 * The `FlxAnimate` class calculates in real time a texture atlas through
 	 * ## WARNINGS
 	 * - This does **NOT** convert the frames into a spritesheet
 	 * - Since this is some sort of beta, expect that there could be some inconveniences (bugs, crashes, etc).
@@ -65,6 +72,7 @@ class FlxAnimate extends FlxSprite
 	public function new(X:Float = 0, Y:Float = 0, ?Path:String, ?Settings:Settings)
 	{
 		super(X, Y);
+		_sprite = new Sprite();
 		anim = new FlxAnim(this);
 		if (Path != null)
 			loadAtlas(Path);
@@ -72,9 +80,10 @@ class FlxAnimate extends FlxSprite
 			setTheSettings(Settings);
 		@:privateAccess
 		_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
-		@:privateAccess
 		_pivot.frame = new FlxRect(0,0,_pivot.parent.width,_pivot.parent.height);
 		_pivot.name = "pivot";
+
+		camera.canvas.addChild(_sprite);
 	}
 
 	public function loadAtlas(Path:String)
@@ -92,33 +101,49 @@ class FlxAnimate extends FlxSprite
 	 */
 	public override function draw():Void
 	{
-		parseElement(anim.curInstance, anim.curFrame, _matrix, colorTransform, true);
+		_sprite.removeChildren();
+		_sprite.graphics.clear();
+		var matrix = new FlxMatrix();
+		matrix.concat(_matrix);
+		matrix.concat(anim.curInstance.matrix);
+		@:privateAccess
+		var cTransform = colorTransform.__clone();
+		cTransform.concat(anim.curInstance.symbol._colorEffect); 
+		
+		var point = getScreenPosition(_point, camera).subtractPoint(offset);
+		matrix.translate(point.x, point.y);
+		_sprite.transform.matrix = matrix;
+		_sprite.transform.colorTransform = cTransform;
+		parseElement(anim.curInstance, anim.curFrame, _sprite);
+		#if FLX_DEBUG
+		FlxBasic.visibleCount++;
+		#end
 		if (showPivot)
-			drawLimb(_pivot, new FlxMatrix(1,0,0,1, origin.x, origin.y));
+			drawLimb(_pivot, new FlxMatrix());
 	}
 	/**
 	 * This basically renders an element of any kind, both limbs and symbols.
 	 * It should be considered as the main function that makes rendering a symbol possible.
 	 */
-	function parseElement(instance:FlxElement, curFrame:Int, m:FlxMatrix, colorFilter:ColorTransform, mainSymbol:Bool = false)
+	function parseElement(instance:FlxElement, curFrame:Int, sprite:Sprite)
 	{
-		var colorEffect = new ColorTransform();
-		var matrix = new FlxMatrix();
-
-		if (instance.symbol != null) colorEffect.concat(instance.symbol._colorEffect);
-		matrix.concat(instance.matrix);
-
-		colorEffect.concat(colorFilter);
-		matrix.concat(m);
-
-
 		if (instance.bitmap != null)
-		{	
-			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect);
+		{
+			if (frames.getByName(instance.bitmap) != null)
+			{
+				drawQuads(sprite, instance);
+			}
 			return;
 		}
 		
 		var symbol = anim.symbolDictionary.get(instance.symbol.name);
+		@:privateAccess
+		var _spr = symbol.toSprite();
+		_spr.transform.matrix = instance.matrix;
+		_spr.transform.colorTransform = instance.symbol._colorEffect;
+		@:privateAccess
+		sprite.addChild(_spr);
+		
 		var firstFrame:Int = instance.symbol.firstFrame + curFrame;
 		switch (instance.symbol.type)
 		{
@@ -134,20 +159,34 @@ class FlxAnimate extends FlxSprite
 		}
 		
 		var layers = symbol.timeline.getList();
+		var mask:String = "";
 		for (i in 0...layers.length)
 		{
 			var layer = layers[layers.length - 1 - i];
-			
-			if (!layer.visible && mainSymbol) continue;
+
+			@:privateAccess
+			var spr:Sprite = cast _spr.getChildByName(layer.name);
+			spr.visible = (!layer.visible && sprite == _sprite) ? false : true;
+
+			if (layer.type.getName() == "Clipped")
+			{
+				@:privateAccess
+				spr.mask = _spr.getChildByName(layer.type.getParameters()[0]);
+			}
+			else
+				spr.mask = null;
+
+
 			var frame = layer.get(firstFrame);
-			
 			if (frame == null) continue;
 
-			if (frame.callbacks != null)
+			if (frame.callbacks != null && firstFrame == frame.index && symbol._shootCallback)
 			{
 				frame.fireCallbacks();
 			}
-			
+
+			spr.transform.colorTransform = frame._colorEffect;
+
 			for (element in frame.getList())
 			{
 				var firstframe = 0;
@@ -155,14 +194,70 @@ class FlxAnimate extends FlxSprite
 				{
 					firstframe = firstFrame - frame.index;
 				}
-				var coloreffect = new ColorTransform();
-				coloreffect.concat(frame._colorEffect);
-				coloreffect.concat(colorEffect);
-				parseElement(element, firstframe, matrix, coloreffect);
+				parseElement(element, firstframe, spr);
 			}
 		}
 	}
 
+	function drawQuads(sprite:Sprite, instance:FlxElement)
+	{
+		var bitmap = frames.getByName(instance.bitmap);
+		var shader = (shader == null) ? bitmap.parent.shader : shader;
+		shader.bitmap.input = bitmap.parent.bitmap;
+		var matrix = instance.matrix;
+		shader.alpha.value = [1];
+		shader.bitmap.filter = (antialiasing) ? LINEAR : NEAREST;
+
+		sprite.graphics.clear();
+		sprite.graphics.beginShaderFill(shader);
+		var matrix = new Vector([matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty]);
+		sprite.graphics.drawQuads(new Vector([bitmap.frame.x, bitmap.frame.y, bitmap.frame.width, bitmap.frame.height]), null, matrix);
+		sprite.graphics.endFill();
+	}
+	function startSpriteBatch(camera:FlxCamera, sprite:Sprite)
+	{
+		var currentDrawItem = null, headTiles = null, storageTilesHead = null, itemToReturn:FlxDrawSpriteQuadsItem = null;
+		@:privateAccess
+		if (true)
+		{
+			currentDrawItem = camera._currentDrawItem;
+			headTiles = camera._headTiles;
+			storageTilesHead = FlxCamera._storageTilesHead;
+		}
+		if (currentDrawItem != null 
+			&& (headTiles is FlxDrawSpriteQuadsItem) 
+			&& cast (headTiles, FlxDrawSpriteQuadsItem).sprite == sprite
+			&& cast (headTiles, FlxDrawSpriteQuadsItem)._camera == camera)
+		{
+			return;
+		}
+
+		if (storageTilesHead != null && (storageTilesHead is FlxDrawSpriteQuadsItem))
+		{
+			itemToReturn = cast storageTilesHead;
+			var newHead = storageTilesHead.nextTyped;
+			itemToReturn.reset();
+			storageTilesHead = newHead;
+		}
+		else			
+			itemToReturn = new FlxDrawSpriteQuadsItem();
+
+		itemToReturn.sprite = sprite;
+
+		itemToReturn.nextTyped = headTiles;
+		headTiles = itemToReturn;
+		@:privateAccess
+		if (camera._headOfDrawStack == null)
+		{
+			camera._headOfDrawStack = itemToReturn;
+		}
+		if (currentDrawItem != null)
+		{
+			currentDrawItem.next = itemToReturn;
+		}
+
+		currentDrawItem = itemToReturn;
+	}
 	var pressed:Bool = false;
 	function setButtonFrames(frame:Int)
 	{
@@ -208,7 +303,7 @@ class FlxAnimate extends FlxSprite
 		#end
 		return frame;
 	}
-	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform)
+	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform = null, ?mask:FlxFrame = null)
 	{
 		if (alpha == 0 || colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
 			return;
@@ -230,12 +325,9 @@ class FlxAnimate extends FlxSprite
 		    {
 			    _point.floor();
 		    }
-			
+
 			matrix.translate(_point.x, _point.y);
 			camera.drawPixels(limb, null, matrix, colorTransform, blend, antialiasing);
-			#if FLX_DEBUG
-			FlxBasic.visibleCount++;
-			#end
 		}
 
 		#if FLX_DEBUG
@@ -260,10 +352,16 @@ class FlxAnimate extends FlxSprite
 		radius *= 2;
 
 		_point.set(minX, minY);
-
 		return Camera.containsPoint(_point, radius, radius);
 	}
-
+	override public function update(elapsed:Float)
+	{
+		super.update(elapsed);
+		if (FlxG.keys.pressed.B)
+		{
+			_sprite.filters = [new openfl.filters.BlurFilter(4, 4, 1)];
+		}
+	}
 	// function checkSize(limb:FlxFrame, m:FlxMatrix)
 	// {
 	// 	// var rect = new Rectangle(x,y,limb.frame.width,limb.frame.height);
@@ -316,6 +414,7 @@ class FlxAnimate extends FlxSprite
 		if (anim != null)
 			anim.destroy();
 		anim = null;
+		_sprite = null;
 		// #if FLX_SOUND_SYSTEM
 		// if (audio != null)
 		// 	audio.destroy();

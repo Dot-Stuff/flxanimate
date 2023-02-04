@@ -1,5 +1,7 @@
 package flxanimate.animate;
 
+import openfl.display.Sprite;
+import openfl.filters.BitmapFilter;
 import openfl.utils.Function;
 import haxe.extern.EitherType;
 import flixel.FlxG;
@@ -10,7 +12,7 @@ import flxanimate.animate.FlxLayer;
 
 class FlxKeyFrame
 {
-    public var name(default, null):Null<String>;
+    public var name(default, set):Null<String>;
     @:allow(flxanimate.animate.FlxSymbol)
     @:allow(flxanimate.FlxAnimate)
     var callbacks(default, null):Array<Function>;
@@ -24,7 +26,12 @@ class FlxKeyFrame
     @:allow(flxanimate.FlxAnimate)
     var _colorEffect(get, null):ColorTransform;
 
-    public function new(index:Int, ?duration:Int = 1, ?elements:Array<FlxElement>, ?colorEffect:ColorEffect, ?name:String)
+    @:allow(flxanimate.FlxAnimate)
+    var _sprite:Sprite;
+
+    public var filters:Array<BitmapFilter>;
+
+    public function new(index:Int, ?duration:Int = 1, ?elements:Array<FlxElement> = null, ?colorEffect:ColorEffect = None, ?name:String = null)
     {
         this.index = index;
         this.duration = duration;
@@ -32,6 +39,9 @@ class FlxKeyFrame
         this.name = name;
         _elements = (elements == null) ? [] : elements;
         this.colorEffect = colorEffect;
+        _sprite = new Sprite();
+        _sprite.filters = filters;
+        callbacks = [];
     }
     
     function set_duration(duration:Int)
@@ -119,7 +129,20 @@ class FlxKeyFrame
         return keyframe;
     }
 
-    public function destroy() {}
+    public function destroy() 
+    {
+        name = null;
+        index = 0;
+        duration = 0;
+        callbacks = null;
+        _parent = null;
+        colorEffect = null;
+        for (element in _elements)
+        {
+            element.destroy();
+        }
+        _sprite = null;
+    }
 
     public function toString()
     {
@@ -139,18 +162,31 @@ class FlxKeyFrame
         }
         return index;
     }
+    function set_name(name:String)
+    {
+        if (_parent != null)
+        {
+            _parent._labels.remove(this.name);
+            _parent._labels.set(name, this);
+        }
+        return this.name = name;
+    }
     public static function fromJSON(frame:Frame)
     {
         if (frame == null) return null;
-        var elements:Array<FlxElement> = [];
+
+        var keyframe = new FlxKeyFrame(frame.I, frame.DU, frame.N);
+        keyframe.colorEffect = AnimationData.fromColorJson(frame.C);
+
         if (frame.E != null)
         {
             for (element in frame.E)
             {
-                elements.push(FlxElement.fromJSON(element));
+                keyframe.add(FlxElement.fromJSON(element));
             }
         }
+        keyframe.filters = AnimationData.fromFilterJson(frame.F);
 
-        return new FlxKeyFrame(frame.I, frame.DU, elements, AnimationData.fromColorJson(frame.C), frame.N);
+        return keyframe;
     }
 }

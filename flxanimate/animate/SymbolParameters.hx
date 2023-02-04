@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import openfl.filters.BitmapFilter;
 import flixel.math.FlxPoint;
 import openfl.geom.ColorTransform;
 import flxanimate.data.AnimationData;
@@ -26,6 +27,9 @@ class SymbolParameters
     
     public var transformationPoint:FlxPoint;
 
+    public var filters(get, set):Array<BitmapFilter>;
+
+    var _filters:Array<BitmapFilter>;
 
     public function new(?name = null, ?instance:String = "", ?type:SymbolT = Graphic, ?loop:Loop = Loop)
     {
@@ -36,6 +40,7 @@ class SymbolParameters
         firstFrame = 0;
         transformationPoint = new FlxPoint();
         colorEffect = None;
+        _filters = [];
     }
 
     public function destroy()
@@ -53,6 +58,7 @@ class SymbolParameters
     {
         this.type = type;
         loop = (type == null) ? null : Loop;
+        _filters = (type == Graphic) ? null : _filters;
 
         return type;
     }
@@ -73,5 +79,13 @@ class SymbolParameters
     function get__colorEffect()
     {
         return AnimationData.parseColorEffect(colorEffect);
+    }
+    function get_filters()
+    {
+        return (type == Graphic) ? null : _filters;
+    }
+    function set_filters(filters:Array<BitmapFilter>)
+    {
+        return _filters = (type == Graphic) ? null : filters;
     }
 }

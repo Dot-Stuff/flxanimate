@@ -1,5 +1,6 @@
 package flxanimate.data;
 
+import flixel.util.FlxDirection;
 import flixel.util.FlxColor;
 import openfl.geom.ColorTransform;
 import openfl.filters.*;
@@ -7,7 +8,6 @@ import openfl.filters.*;
 @:noCompletion
 class AnimationData
 {
-	public static var filters = new flxanimate.Filters();
 	@:noCompletion
 	public static function setFieldBool(abstracto:Dynamic, things:Array<String>, ?set:Dynamic):Dynamic
 	{
@@ -66,8 +66,26 @@ class AnimationData
 	}
 	public static function fromFilterJson(filters:Filters = null) 
 	{
-		if (filters == null) return [];
+		if (filters == null) return null;
+		
 		var bitmapFilter:Array<BitmapFilter> = [];
+
+		for (filter in Reflect.fields(filters))
+		{
+			switch (filter)
+			{
+				case "GF":
+				{
+					var glow:GlowFilter = Reflect.field(filters, filter);
+					bitmapFilter.push(new openfl.filters.GlowFilter(FlxColor.fromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK));
+				}
+				case "BLF":
+				{
+					var blur:BlurFilter = Reflect.field(filters, filter);
+					bitmapFilter.push(new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q));
+				}
+			}
+		}
 
 		return bitmapFilter;
 	}
@@ -608,7 +626,8 @@ abstract ColorEffects({}) from {}
 abstract Filters({})
 {
 	/**
-	 * Adjust Color filter is basically Color Matrix Filter, but with the exception of some premade calculation to give the illusion of changing the wheel.
+	 * Adjust Color filter is a workaround to give some color adjustment, including hue-rotation, saturation, brightness and contrast.
+	 * After calculating every required adjustment, it gets the matrix and then the filter is applied as a `ColorMatrixFilter`.
 	 * @see flxanimate.motion.AdjustColor
 	 * @see flxanimate.motion.ColorMatrix
 	 * @see flxanimate.motion.DynamicMatrix
@@ -616,9 +635,15 @@ abstract Filters({})
 	 */
 	public var ACF(get, never):AdjustColorFilter;
 
+	public var GF(get, never):GlowFilter;
+
 	function get_ACF()
 	{
 		return AnimationData.setFieldBool(this, ["ACF", "AdjustColorFilter"]);
+	}
+	function get_GF()
+	{
+		return AnimationData.setFieldBool(this, ["GF"]);
 	}
 }
 /**
@@ -658,6 +683,69 @@ abstract AdjustColorFilter({})
 	function get_H()
 	{
 		return AnimationData.setFieldBool(this, ["H", "hue"]);
+	}
+}
+/**
+ * This blur filter gives instructions of how the blur should be applied onto the symbol/frame.
+ */
+abstract BlurFilter({})
+{
+	/**
+	 * The amount of blur horizontally.
+	 */
+	public var BLX(get, never):Float;
+	/**
+	 * The amount of blur vertically.
+	 */
+	public var BLY(get, never):Float;
+	/**
+	 * The number of passes the filter has.
+	 * When the quality is set to three, it should approximate to a Gaussian Blur.
+	 * Obviously you can go beyond three, but it'll take more time to render.
+	 */
+	public var Q(get, never):Int;
+
+	function get_BLX()
+	{
+		return AnimationData.setFieldBool(this, ["BLX", "blurX"]);
+	}
+	function get_BLY()
+	{
+		return AnimationData.setFieldBool(this, ["BLY", "blurY"]);
+	}
+	function get_Q()
+	{
+		return AnimationData.setFieldBool(this, ["Q", "quality"]);
+	}
+}
+@:forward
+abstract GlowFilter(BlurFilter) 
+{
+	public var C(get, never):String;
+	public var A(get, never):Float;
+	public var STR(get, never):Float;
+	public var KK(get, never):Bool;
+	public var IN(get, never):Bool;
+
+	function get_C()
+	{
+		return AnimationData.setFieldBool(this, ["C"]);
+	}
+	function get_A()
+	{
+		return AnimationData.setFieldBool(this, ["A"]);
+	}
+	function get_STR()
+	{
+		return AnimationData.setFieldBool(this, ["STR"]);
+	}
+	function get_KK()
+	{
+		return AnimationData.setFieldBool(this, ["KK"]);
+	}
+	function get_IN()
+	{
+		return AnimationData.setFieldBool(this, ["IN"]);
 	}
 }
 

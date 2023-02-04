@@ -1,26 +1,6 @@
-// Thought things could change, but the only thing changing is my self-esteem.
-// Why am I still alive? am I even being useful?
-// Who cares? I am just me, smiling and laughing with people as long as they don't notice my dissappearing, who would care?
-// I am judged, with a bat swinging around my head. Fortunately, I have brain damage because of it.
-// Who cares? I am just vibing, just "sad" one day and then happy again.
-// Who cares? I just gonna go through the window and fly away.
-// Why am I even holding myself from it? am I in love?
-// She doesn't even care about me, does she?
-// I don't wanna even know, since dead people don't have to think anymore, am I right?
-// Who cares? Just a few stabs, a rope or falling could end my suffering.
-// All those looks, all those insults, my mere presence would benefit if it disappeared.
-// But I am stupid to still be alive, working for a project that nobody cares.
-// But I am stupid to think I would be relevant to anyone, Even though they tell me I am not.
-// But I somehow try to believe as hard as I can to her, am I in love?
-// Everywhere is grey, what happened to me?
-// Am I broken? Can I reverse it?
-// Or am I just unfixable?
-// Who cares? I am just a stranger, with bad behaviour to many people and someone to be mocked at.
-// I wish to go back where I could be careless, back when I almost died.
-// Maybe I should've died there.
-
 package flxanimate.animate;
 
+import flxanimate.data.AnimationData.LayerType;
 import flixel.math.FlxMath;
 import haxe.extern.EitherType;
 import flxanimate.data.AnimationData.Frame;
@@ -34,7 +14,10 @@ class FlxLayer implements IFlxDestroyable
     
     public var name(default, null):String;
     
-
+    @:allow(flxanimate.animate.FlxKeyFrame)
+    var _labels:Map<String, FlxKeyFrame>;
+    
+    public var type:LayerType;
     var _keyframes(default, null):Array<FlxKeyFrame>;
 
     public var visible:Bool;
@@ -44,8 +27,10 @@ class FlxLayer implements IFlxDestroyable
     public function new(?name:String, ?keyframes:Array<FlxKeyFrame>)
     {
         this.name = name;
+        type = Normal;
         _keyframes = (keyframes != null) ? keyframes : [];
         visible = true;
+        _labels = [];
     }
 
     public function hide()
@@ -62,7 +47,13 @@ class FlxLayer implements IFlxDestroyable
     public function get(frame:EitherType<String, Int>)
     {
         var index = 0;
-        if (frame is Int)
+        if (frame is String)
+        {
+            if (!_labels.exists(frame)) return null;
+            
+            return _labels.get(frame);
+        }
+        else
         {
             index = frame;
             if (index > length) return null;
@@ -70,7 +61,7 @@ class FlxLayer implements IFlxDestroyable
 
         for (keyframe in _keyframes)
         {
-            if (keyframe.index + keyframe.duration > index || frame is String && keyframe.name == frame)
+            if (keyframe.index + keyframe.duration > index)
                 return keyframe;
         }
         return null;
@@ -80,6 +71,8 @@ class FlxLayer implements IFlxDestroyable
     {
         if (keyFrame == null) return null;
         var index = keyFrame.index;
+        if (keyFrame.name != null)
+            _labels.set(keyFrame.name, keyFrame);
 
         var keyframe = get(cast FlxMath.bound(index, 0, length - 1));
         if (length == 0)
@@ -153,6 +146,10 @@ class FlxLayer implements IFlxDestroyable
         if (layer == null) return null;
         var frames = [];
         var l = new FlxLayer(layer.LN);
+        if (layer.LT != null || layer.Clpb != null)
+        {
+            l.type = (layer.LT != null) ? Clipper : Clipped(layer.Clpb); 
+        }
         if (layer.FR != null)
         {
             for (frame in layer.FR)
