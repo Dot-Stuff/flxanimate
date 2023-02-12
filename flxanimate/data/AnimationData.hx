@@ -1,13 +1,15 @@
 package flxanimate.data;
 
+
+import flixel.util.FlxDirection;
 import flixel.util.FlxColor;
 import openfl.geom.ColorTransform;
 import openfl.filters.*;
 
+
 @:noCompletion
 class AnimationData
 {
-	public static var filters = new flxanimate.Filters();
 	@:noCompletion
 	public static function setFieldBool(abstracto:Dynamic, things:Array<String>, ?set:Dynamic):Dynamic
 	{
@@ -33,6 +35,7 @@ class AnimationData
 	public static function fromColorJson(effect:ColorEffects = null)
 	{
 		var colorEffect = None;
+
 
 		if (effect == null) return colorEffect;
 		
@@ -66,8 +69,28 @@ class AnimationData
 	}
 	public static function fromFilterJson(filters:Filters = null) 
 	{
-		if (filters == null) return [];
+		if (filters == null) return null;
+		
 		var bitmapFilter:Array<BitmapFilter> = [];
+
+
+		for (filter in Reflect.fields(filters))
+		{
+			switch (filter)
+			{
+				case "GF":
+				{
+					var glow:GlowFilter = Reflect.field(filters, filter);
+					bitmapFilter.push(new openfl.filters.GlowFilter(FlxColor.fromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK));
+				}
+				case "BLF":
+				{
+					var blur:BlurFilter = Reflect.field(filters, filter);
+					bitmapFilter.push(new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q));
+				}
+			}
+		}
+
 
 		return bitmapFilter;
 	}
@@ -95,6 +118,7 @@ class AnimationData
                     CT.alphaMultiplier = params[0];
                 case "Brightness":
 
+
                     CT.redMultiplier = CT.greenMultiplier = CT.blueMultiplier -= Math.abs(params[0]);
                     if (params[0] >= 0)
                         CT.redOffset = CT.greenOffset = CT.blueOffset = 255 * params[0];
@@ -103,9 +127,11 @@ class AnimationData
             }
         }
 
+
 		return CT;
 	}
 }
+
 
 enum ColorEffect
 {
@@ -128,6 +154,7 @@ enum SymbolT
 	Button;
 }
 
+
 enum LayerType
 {
 	Normal;
@@ -135,6 +162,7 @@ enum LayerType
 	Clipped(layer:String);
 	Folder;
 }
+
 
 abstract AnimAtlas({}) from {}
 {
@@ -151,10 +179,12 @@ abstract AnimAtlas({}) from {}
 	 */
 	public var MD(get, never):MetaData;
 
+
 	function get_AN():Animation
 	{
 		return AnimationData.setFieldBool(this, ["AN", "ANIMATION"]);
 	}
+
 
 	function get_MD():MetaData
 	{
@@ -174,6 +204,7 @@ abstract SymbolDictionary({}) from {}
 	 * The list of symbols.
 	 */
 	public var S(get, never):Array<SymbolData>;
+
 
 	function get_S():Array<SymbolData>
 	{
@@ -202,6 +233,7 @@ abstract Animation({}) from {}
 	 * Can be included or not depending if you export the atlas on stage or on the symbol dictionary.
 	 */
 	public var STI(get, never):StageInstance;
+
 
 	function get_SN():String 
 	{
@@ -232,6 +264,7 @@ abstract StageInstance({})
 	 */
 	public var SI(get, never):SymbolInstance;
 
+
 	function get_SI():SymbolInstance
 	{
 		return AnimationData.setFieldBool(this, ["SI", "SYMBOL_Instance"]);
@@ -251,6 +284,7 @@ abstract SymbolData({}) from {}
 	 */
 	public var TL(get, never):Timeline;
 
+
 	function get_SN():String 
 	{
 		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
@@ -269,6 +303,7 @@ abstract Timeline({}) from {}
 	 * The layers that are in the timeline
 	 */
 	public var L(get, set):Array<Layers>;
+
 
 	function get_L():Array<Layers>
 	{
@@ -300,6 +335,7 @@ abstract Layers({}) from {}
 	 * The frames that the layer has.
 	 */
 	public var FR(get, set):Array<Frame>;
+
 
 	function get_LN():String
 	{
@@ -360,15 +396,18 @@ abstract Frame({}) from {}
 	 */
 	public var E(get, never):Array<Element>;
 
+
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
 	public var C(get, set):ColorEffects;
 
+
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
 	 */
 	public var F(get, never):Filters;
+
 
 	function get_N():String
 	{
@@ -395,6 +434,7 @@ abstract Frame({}) from {}
 		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
 
+
 	function get_F()
 	{
 		return AnimationData.setFieldBool(this, ["F", "filters"]);
@@ -411,6 +451,7 @@ abstract Element(StageInstance)
 	 */
 	public var ASI(get, never):AtlasSymbolInstance;
 
+
 	function get_ASI():AtlasSymbolInstance
 	{
 		return AnimationData.setFieldBool(this, ["ASI", "ATLAS_SPRITE_instance"]);
@@ -426,6 +467,7 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var SN(get, never):String;
 
+
 	/**
 	 * the name instance of the Symbol.
 	 */
@@ -439,10 +481,12 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var ST(get, never):SymbolType;
 
+
 	/**
 	 * bitmap Settings, Used in 2018 and 2019
 	 */
 	public var bitmap(get, never):Bitmap;
+
 
 	/**
 	 * this sets on which frame it's the symbol, Graphic only
@@ -468,25 +512,30 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var C(get, set):ColorEffects;
 
+
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
 	 */
 	public var F(get, never):Filters;
+
 
 	function get_SN()
 	{
 		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 
+
 	function get_IN()
 	{
 		return AnimationData.setFieldBool(this, ["IN", "Instance_Name"]);
 	}
 
+
 	function get_ST()
 	{
 		return AnimationData.setFieldBool(this, ["ST", "symbolType"]);
 	}
+
 
 	function get_bitmap()
 	{
@@ -497,20 +546,24 @@ abstract SymbolInstance({}) from {}
 		return AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
 	}
 
+
 	function get_LP()
 	{
 		return AnimationData.setFieldBool(this, ["LP", "loop"]);
 	}
+
 
 	function get_TRP()
 	{
 		return AnimationData.setFieldBool(this, ["TRP", "transformationPoint"]);
 	}
 
+
 	function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
 	}
+
 
 	function get_C()
 	{
@@ -520,6 +573,7 @@ abstract SymbolInstance({}) from {}
 	{
 		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
+
 
 	function get_F()
 	{
@@ -541,8 +595,10 @@ abstract ColorEffects({}) from {}
 	 */
 	public var TM(get, never):Float;
 
+
 	public var AM(get, never):Float;
 	public var AO(get, never):Int;
+
 
 	// Red Multiplier and Offset
 	public var RM(get, never):Float;
@@ -554,7 +610,9 @@ abstract ColorEffects({}) from {}
 	public var BM(get, never):Float;
 	public var BO(get, never):Int;
 
+
 	public var BRT(get, never):Float;
+
 
 	function get_M()
 	{
@@ -608,7 +666,8 @@ abstract ColorEffects({}) from {}
 abstract Filters({})
 {
 	/**
-	 * Adjust Color filter is basically Color Matrix Filter, but with the exception of some premade calculation to give the illusion of changing the wheel.
+	 * Adjust Color filter is a workaround to give some color adjustment, including hue-rotation, saturation, brightness and contrast.
+	 * After calculating every required adjustment, it gets the matrix and then the filter is applied as a `ColorMatrixFilter`.
 	 * @see flxanimate.motion.AdjustColor
 	 * @see flxanimate.motion.ColorMatrix
 	 * @see flxanimate.motion.DynamicMatrix
@@ -616,9 +675,17 @@ abstract Filters({})
 	 */
 	public var ACF(get, never):AdjustColorFilter;
 
+
+	public var GF(get, never):GlowFilter;
+
+
 	function get_ACF()
 	{
 		return AnimationData.setFieldBool(this, ["ACF", "AdjustColorFilter"]);
+	}
+	function get_GF()
+	{
+		return AnimationData.setFieldBool(this, ["GF"]);
 	}
 }
 /**
@@ -643,6 +710,7 @@ abstract AdjustColorFilter({})
 	 */
 	public var H(get, never):Float;
 
+
 	function get_BRT()
 	{
 		return AnimationData.setFieldBool(this, ["BRT", "brightness"]);
@@ -660,6 +728,72 @@ abstract AdjustColorFilter({})
 		return AnimationData.setFieldBool(this, ["H", "hue"]);
 	}
 }
+/**
+ * This blur filter gives instructions of how the blur should be applied onto the symbol/frame.
+ */
+abstract BlurFilter({})
+{
+	/**
+	 * The amount of blur horizontally.
+	 */
+	public var BLX(get, never):Float;
+	/**
+	 * The amount of blur vertically.
+	 */
+	public var BLY(get, never):Float;
+	/**
+	 * The number of passes the filter has.
+	 * When the quality is set to three, it should approximate to a Gaussian Blur.
+	 * Obviously you can go beyond three, but it'll take more time to render.
+	 */
+	public var Q(get, never):Int;
+
+
+	function get_BLX()
+	{
+		return AnimationData.setFieldBool(this, ["BLX", "blurX"]);
+	}
+	function get_BLY()
+	{
+		return AnimationData.setFieldBool(this, ["BLY", "blurY"]);
+	}
+	function get_Q()
+	{
+		return AnimationData.setFieldBool(this, ["Q", "quality"]);
+	}
+}
+@:forward
+abstract GlowFilter(BlurFilter) 
+{
+	public var C(get, never):String;
+	public var A(get, never):Float;
+	public var STR(get, never):Float;
+	public var KK(get, never):Bool;
+	public var IN(get, never):Bool;
+
+
+	function get_C()
+	{
+		return AnimationData.setFieldBool(this, ["C"]);
+	}
+	function get_A()
+	{
+		return AnimationData.setFieldBool(this, ["A"]);
+	}
+	function get_STR()
+	{
+		return AnimationData.setFieldBool(this, ["STR"]);
+	}
+	function get_KK()
+	{
+		return AnimationData.setFieldBool(this, ["KK"]);
+	}
+	function get_IN()
+	{
+		return AnimationData.setFieldBool(this, ["IN"]);
+	}
+}
+
 
 enum abstract ColorMode(String) from String to String
 {
@@ -674,6 +808,7 @@ abstract Bitmap({}) from {}
 	 * The name of the drawing, basically determines which one of the sprites on spritemap should be used.
 	 */
 	public var N(get, never):String;
+
 
 	/**
 	 * Only used in earliest versions of texture atlas release. checks the position, nothing else lol
@@ -699,11 +834,13 @@ abstract AtlasSymbolInstance(Bitmap) from {}
 	 */
 	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
 
+
 	function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
 	}
 }
+
 
 typedef Matrix3D = 
 {
@@ -733,6 +870,7 @@ typedef TransformationPoint =
 	var y:Float;
 }
 
+
 @:forward
 enum abstract LoopType(String) from String to String
 {
@@ -740,6 +878,7 @@ enum abstract LoopType(String) from String to String
 	var playonce = "PO";
 	var singleframe = "SF";
 }
+
 
 enum abstract SymbolType(String) from String to String
 {

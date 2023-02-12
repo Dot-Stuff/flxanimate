@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+
 import flixel.math.FlxMath;
 import haxe.extern.EitherType;
 import flxanimate.animate.SymbolParameters;
@@ -12,6 +13,7 @@ import flxanimate.data.AnimationData;
 #if FLX_SOUND_SYSTEM
 import flixel.system.FlxSound;
 #end
+
 
 typedef SymbolStuff = {var instance:FlxElement; var frameRate:Float;};
 typedef ClickStuff = {
@@ -28,11 +30,15 @@ class FlxAnim implements IFlxDestroyable
 {
 	public var length(get, never):Int;
 
+
 	public var stageInstance:FlxElement;
+
 
 	public var curInstance:FlxElement;
 
+
 	public var metadata:FlxMetaData;
+
 
 	public var curSymbol(get, null):FlxSymbol;
 	public var finished(get, null):Bool;
@@ -49,14 +55,18 @@ class FlxAnim implements IFlxDestroyable
 	public var isPlaying(default, null):Bool;
 	public var onComplete:()->Void;
 
+
 	public var framerate(default, set):Float;
+
 
 	/**
 	 * Internal, used for each skip between frames.
 	 */
 	var frameDelay:Float;
 
+
 	public var curFrame(get, set):Int;
+
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
 	
@@ -65,11 +75,15 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	var loopType(get, null):Loop;
 
+
 	public var symbolType(get, set):SymbolT;
+
 
 	var _parent:FlxAnimate;
 
+
 	var _tick:Float;
+
 
 	public function new(parent:FlxAnimate, ?coolParsed:AnimAtlas)
 	{
@@ -87,9 +101,12 @@ class FlxAnim implements IFlxDestroyable
 		
 		setSymbols(animationFile);
 
+
 		stageInstance = (animationFile.AN.STI != null) ? FlxElement.fromJSON(cast animationFile.AN.STI) : new FlxElement(new SymbolParameters(animationFile.AN.SN));
 
+
 		curInstance = stageInstance;
+
 
 		curFrame = stageInstance.symbol.firstFrame;
 		
@@ -111,6 +128,7 @@ class FlxAnim implements IFlxDestroyable
 				var symbol = symbolDictionary.get(Name);
 				if (symbol != null) curThing = {instance: (symbol.name == curSymbol.name) ? curInstance : new FlxElement(new SymbolParameters(Name)), frameRate: metadata.frameRate};
 
+
 				if (curThing == null)
 				{
 					FlxG.log.error('there\'s no animation called "$Name"!');
@@ -124,6 +142,7 @@ class FlxAnim implements IFlxDestroyable
 			if (curInstance != curThing.instance)
 				curFrame = (Reverse) ? Frame - length : Frame;
 
+
 			curInstance = curThing.instance;
 		}
 		if (Force || finished)
@@ -131,6 +150,7 @@ class FlxAnim implements IFlxDestroyable
 		reversed = Reverse;
 		isPlaying = true;
 	}
+
 
 	public function pause()
 	{
@@ -158,13 +178,21 @@ class FlxAnim implements IFlxDestroyable
 	{
 		if (frameDelay == 0 || !isPlaying || finished) return;
 
+
 		_tick += elapsed;
+
 
 		while (_tick > frameDelay)
         {
             (reversed) ? curFrame-- : curFrame++;
             _tick -= frameDelay;
+
+
+			@:privateAccess
+			curSymbol._shootCallback = true;
         }
+
+
 		
 		if (finished)
 		{
@@ -189,6 +217,7 @@ class FlxAnim implements IFlxDestroyable
 			case PlayOnce: cast FlxMath.bound(Value, 0, curSymbol.length - 1);
 			case _: Value;
 		}
+		
 		return curSymbol.curFrame;
 	}
 	/**
@@ -248,6 +277,7 @@ class FlxAnim implements IFlxDestroyable
 			var i = Indices[index];
 			var keyframe = new FlxKeyFrame(index);
 
+
 			var params = new SymbolParameters(SymbolName, params.symbol.loop);
 			params.firstFrame = i;
 			keyframe.add(new FlxElement(params));
@@ -258,8 +288,10 @@ class FlxAnim implements IFlxDestroyable
 		
 		symbolDictionary.set(Name, symbol);
 
+
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
+
 
 	function set_framerate(value:Float):Float
 	{
@@ -282,10 +314,12 @@ class FlxAnim implements IFlxDestroyable
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
 
+
 	public function get_length()
 	{
 		return curSymbol.length;
 	}
+
 
 	public function getFrameLabel(name:String, ?layer:EitherType<Int, String>)
 	{
@@ -306,10 +340,13 @@ class FlxAnim implements IFlxDestroyable
 	{
 		pause();
 
+
 		var label = getFrameLabel(name);
+
 
 		if (label != null)
 			curFrame = label.index;
+
 
 		play();
 	}
@@ -333,15 +370,24 @@ class FlxAnim implements IFlxDestroyable
 		return curSymbol.addCallbackTo(label, callback);
 	}
 
+
 	public function removeCallbackFrom(label:String, callback:()->Void)
 	{
 		return curSymbol.removeCallbackFrom(label, callback);
 	}
 
+
 	public function removeAllCallbacksFrom(label:String)
 	{
 		return curSymbol.removeAllCallbacksFrom(label);
 	}
+
+
+	public function getFrameLabels(?layer:EitherType<Int, String>)
+	{
+		return curSymbol.getFrameLabels(layer);
+	}
+
 
 	function get_loopType()
 	{
@@ -368,9 +414,11 @@ class FlxAnim implements IFlxDestroyable
 		return animsMap.get(name);
 	}
 
+
 	public function getByInstance(instance:String, ?frame:Int = null, ?layer:EitherType<String, Int>)
 	{
 		if (frame == null) frame = curFrame;
+
 
 		var symbol:FlxSymbol = null;
 		
@@ -379,6 +427,7 @@ class FlxAnim implements IFlxDestroyable
 		for (layer in layers)
 		{
 			if (layer == null) continue;
+
 
 			for (element in layer.get(frame).getList())
 			{
@@ -395,10 +444,12 @@ class FlxAnim implements IFlxDestroyable
 		return symbol;
 	}
 
+
 	function get_curSymbol()
 	{
 		return symbolDictionary.get(curInstance.symbol.name);
 	}
+
 
 	public function destroy()
 	{
