@@ -12,9 +12,13 @@ import flxanimate.data.AnimationData;
 class FlxSymbol
 {
     public var timeline(default, null):FlxTimeline;
-
+    /**
+     * The amount of frames the symbol has.
+     */
     public var length(get, null):Int;
-
+    /**
+     * The name of the symbol.
+     */
     public var name(default, null):String;
     @:noCompletion
     @:deprecated("")
@@ -53,14 +57,28 @@ class FlxSymbol
         }
         return sprite;
     }
+    /**
+     * Hides a layer from the timeline.
+     * @param layer The name of the layer.
+     */
     public function hideLayer(layer:String)
     {
         timeline.hide(layer);
     }
+    /**
+     * Shows a layer from the timeline.
+     * @param layer The name of the layer.
+     */
     public function showLayer(layer:String)
     {
         timeline.show(layer);
     }
+    /**
+     * Adds a callback to a specific frame label.
+     * @param label 
+     * @param callback 
+     * @param layer 
+     */
     public function addCallbackTo(label:String, callback:Function, ?layer:EitherType<Int, String>)
     {
         var label = getFrameLabel(label, layer);
@@ -87,6 +105,12 @@ class FlxSymbol
         var c:Function = label.callbacks[(callback is Int) ? callback : label.callbacks.indexOf(callback)];
         return c;
     }
+    /**
+     * [Description]
+     * @param label 
+     * @param callback 
+     * @param layer 
+     */
     public function removeCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
     {
         var label = getFrameLabel(name, layer);
@@ -221,6 +245,10 @@ class FlxSymbol
         }
         return null;
     }
+    /**
+     * Gets a list of frames that have a label of any kind.
+     * @param layer A specific layer to get the list. if set to `null`, it'll get a list from every layer.
+     */
     public function getFrameLabels(?layer:EitherType<Int, String> = null)
     {
         var array = [];
@@ -253,7 +281,7 @@ class FlxSymbol
         return array;
     }
     /**
-     * Gets an element with a name
+     * Gets a symbol element via the symbol's name or the instance's name inside a frame.
      * @param name this can be either the name of the symbol or the instance.
      * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
      * @param layer Which layer it should take as a reference. if set to `null`, it'll take every layer available.
@@ -307,6 +335,11 @@ class FlxSymbol
         }
         return null;
     }
+    /**
+     * Gets the element's position inside a frame.
+     * @param element The element in question.
+     * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
+     */
     public function getElementIndex(element:FlxElement, ?frame:Int = null)
     {
         if (frame == null)
@@ -329,6 +362,12 @@ class FlxSymbol
         }
         return -1;
     }
+    /**
+     * Swaps an element with another one.
+     * @param oldElement The element you wanna replace
+     * @param newElement The new element that's gonna replace the old one
+     * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
+     */
     public function swapElements(oldElement:FlxElement, newElement:FlxElement, ?frame:Int = null)
     {
         if (frame == null)

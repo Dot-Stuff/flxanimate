@@ -4,27 +4,52 @@ import flxanimate.data.AnimationData.SymbolData;
 import flixel.FlxG;
 import flxanimate.data.AnimationData.Timeline;
 
-
 class FlxTimeline
 {
-    
     @:allow(flxanimate.FlxAnimate)
     var _layers:Array<FlxLayer>;
-
+    /**
+     * The total of layers the timeline has.
+     */
     public var length(get, null):Int;
+    /**
+     * The total length of frames that the timeline has.
+     */
     public var totalFrames(get, null):Int;
+    /**
+     * @param layers the amount of layers the timeline is set. 
+     */
     public function new(?layers:Array<FlxLayer>)
     {
         _layers = (layers != null) ? layers : [];
     }
+    /**
+     * Gets a list layers' names that the timeline has.
+     * 
+     * **WARNING**: Do not confuse `getListNames()` with `getList`!
+     * @return an `Array` of `String`
+     */
     public function getListNames()
     {
         return [for (layer in _layers) layer.name];
     }
+    /**
+     * Gets a list of layers that the timeline has.
+     * 
+     * **WARNING**: Do not confuse `getListNames()` with `getList`!
+     * @return an `Array` of `FlxLayer`
+     */
     public function getList()
     {
         return _layers;
     }
+    /**
+     * Gets a layer.
+     * 
+     * **WARNING**: it can return `null`!
+     * @param name Either the name of the layer or the position of it.
+     * @return Either a `FlxLayer` instance or `null`.
+     */
     public function get(name:EitherType<String, Int>)
     {
         if (name is Int) return _layers[name];
@@ -36,6 +61,10 @@ class FlxTimeline
 
         return null;
     }
+    /**
+     * Gets and sets the layer visibility to `false`.
+     * @param name The layer in question. Can be either a `String` or an `Int`.
+     */
     public function hide(name:EitherType<String, Int>)
     {
         var layer = get(name);
@@ -52,7 +81,10 @@ class FlxTimeline
         }
         layer.hide();
     }
-
+    /**
+     * Gets and sets the layer visibility to `true`.
+     * @param name The layer in question. Can be either a `String` or an `Int`.
+     */
     public function show(name:EitherType<String, Int>)
     {
         var layer = get(name);
@@ -71,8 +103,12 @@ class FlxTimeline
 
         layer.show();
     }
-
-    public function add(?position:Int = 0, ?name:EitherType<String, FlxLayer>)
+    /**
+     * Inserts a new layer from a position,
+     * @param position if it's ignored, it'll be set to `0`.
+     * @param name The layer you want to add. it can be either a `String` or a `FlxLayer`.
+     */
+    public function add(?position:Int = 0, name:EitherType<String, FlxLayer>)
     {
         var layer:FlxLayer = null;
         if (name is String || name == null)
@@ -87,17 +123,16 @@ class FlxTimeline
         _layers.insert(position, layer);
         return layer;
     }
-
+    /**
+     * Removes a layer from the list.
+     * @param name The layer in question. Can be either a `String` or a `FlxLayer`.
+     */
     public function remove(name:EitherType<String, FlxLayer>)
     {
         var layer:FlxLayer = null;
         if (name is String || name == null)
         {
             layer = get(name);
-            if (layer == null)
-            {
-                FlxG.log.error('There\'s no layer called "$name"!');
-            }
         }
         else if (_layers.indexOf(name) != -1)
         {
@@ -106,6 +141,7 @@ class FlxTimeline
         if (layer == null)
         {
             FlxG.log.error('There\'s no layer called "$name"!');
+            return null;
         }
         layer._parent = null;
         _layers.remove(layer);
@@ -127,7 +163,11 @@ class FlxTimeline
         }
         return _length;
     }
-
+    /**
+     * Creates a `FlxTimeline` instance from the Animation file.
+     * @param timeline The animation file's timeline.
+     * @return a new `FlxTimeline` instance. 
+     */
     public static function fromJSON(timeline:Timeline)
     {
         if (timeline == null || timeline.L == null) return null;
