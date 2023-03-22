@@ -1,6 +1,6 @@
 package flxanimate.animate;
 
-
+import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxMath;
 import haxe.extern.EitherType;
 import flxanimate.animate.SymbolParameters;
@@ -47,7 +47,7 @@ class FlxAnim implements IFlxDestroyable
 		Checks if the movieclip should move or not. for having a similar experience to swfs
 	**/
 	public var swfRender:Bool = false;
-	
+
 	var buttonMap:Map<String, ButtonSettings> = new Map();
 	/**
 	 * When ever the animation is playing.
@@ -69,7 +69,7 @@ class FlxAnim implements IFlxDestroyable
 
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
-	
+
 	/**
 	 * Internal, the parsed loop type
 	 */
@@ -98,7 +98,7 @@ class FlxAnim implements IFlxDestroyable
 	{
 		symbolDictionary = [];
 		stageInstance = null;
-		
+
 		setSymbols(animationFile);
 
 
@@ -109,16 +109,17 @@ class FlxAnim implements IFlxDestroyable
 
 
 		curFrame = stageInstance.symbol.firstFrame;
-		
+
 		_parent.origin.copyFrom(stageInstance.symbol.transformationPoint);
 		metadata = new FlxMetaData(animationFile.AN.N, animationFile.MD.FRT);
 		framerate = metadata.frameRate;
 	}
 	public var symbolDictionary:Map<String, FlxSymbol>;
-	
+
 	public function play(?Name:String = "", ?Force:Bool = false, ?Reverse:Bool = false, ?Frame:Int = 0)
 	{
 		pause();
+		var isNewAnim = false;
 		@:privateAccess
 		if ([null, ""].indexOf(Name) == -1)
 		{
@@ -136,17 +137,18 @@ class FlxAnim implements IFlxDestroyable
 					return;
 				}
 			}
-			
-			framerate = (curThing.frameRate == 0) ? metadata.frameRate : curThing.frameRate;
-			
-			if (curInstance != curThing.instance)
-				curFrame = (Reverse) ? Frame - length : Frame;
 
+			framerate = (curThing.frameRate == 0) ? metadata.frameRate : curThing.frameRate;
+
+			if (curInstance != curThing.instance)
+				isNewAnim = true;
 
 			curInstance = curThing.instance;
 		}
-		if (Force || finished)
+		if (Force || finished || isNewAnim) {
 			curFrame = (Reverse) ? Frame - length : Frame;
+			_tick = 0;
+		}
 		reversed = Reverse;
 		isPlaying = true;
 	}
@@ -161,7 +163,7 @@ class FlxAnim implements IFlxDestroyable
 		pause();
 		curFrame = 0;
 	}
-	
+
 	function setSymbols(Anim:AnimAtlas)
 	{
 		symbolDictionary.set(Anim.AN.SN, new FlxSymbol(Anim.AN.SN, FlxTimeline.fromJSON(Anim.AN.TL)));
@@ -173,7 +175,7 @@ class FlxAnim implements IFlxDestroyable
 			}
 		}
 	}
-	
+
 	public function update(elapsed:Float)
 	{
 		if (frameDelay == 0 || !isPlaying || finished) return;
@@ -183,17 +185,17 @@ class FlxAnim implements IFlxDestroyable
 
 
 		while (_tick > frameDelay)
-        {
-            (reversed) ? curFrame-- : curFrame++;
-            _tick -= frameDelay;
+		{
+			(reversed) ? curFrame-- : curFrame++;
+			_tick -= frameDelay;
 
 
 			@:privateAccess
 			curSymbol._shootCallback = true;
-        }
+		}
 
 
-		
+
 		if (finished)
 		{
 			if (onComplete != null)
@@ -217,7 +219,7 @@ class FlxAnim implements IFlxDestroyable
 			case PlayOnce: cast FlxMath.bound(Value, 0, curSymbol.length - 1);
 			case _: Value;
 		}
-		
+
 		return curSymbol.curFrame;
 	}
 	/**
@@ -261,7 +263,7 @@ class FlxAnim implements IFlxDestroyable
 	{
 		addBySymbolIndices(Name, stageInstance.symbol.name, Indices, FrameRate, stageInstance.symbol.loop == Loop, 0,0);
 	}
-	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0) 
+	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
 		if (!symbolDictionary.exists(SymbolName))
 		{
@@ -271,7 +273,7 @@ class FlxAnim implements IFlxDestroyable
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce), new FlxMatrix(1,0,0,1,X,Y));
 		var timeline = new FlxTimeline();
 		timeline.add("Layer 1");
-		
+
 		for (index in 0...Indices.length)
 		{
 			var i = Indices[index];
@@ -285,7 +287,7 @@ class FlxAnim implements IFlxDestroyable
 		}
 		var symbol = new FlxSymbol(Name, timeline);
 		params.symbol.name = symbol.name;
-		
+
 		symbolDictionary.set(Name, symbol);
 
 
@@ -301,7 +303,7 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * This adds a new animation by adding a custom timeline, obviously taking as a reference the timeline syntax!
 	 * **WARNING**: I, *CheemsAndFriends*, do **NOT** recommend this unless you're using an extern json file to do this!
-	 * if you wanna make a custom symbol to play around and is separated from the texture atlas, go ahead! but if you wanna just make a new symbol, 
+	 * if you wanna make a custom symbol to play around and is separated from the texture atlas, go ahead! but if you wanna just make a new symbol,
 	 * just do it in Flash directly
 	 * @param Name The name of the new Symbol.
 	 * @param Timeline The timeline which will have the symbol.
@@ -363,7 +365,7 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * Links a callback into a label.
 	 * @param label the name of the label.
-	 * @param callback the callback you're going to add 
+	 * @param callback the callback you're going to add
 	 */
 	public function addCallbackTo(label:String, callback:()->Void)
 	{
@@ -389,29 +391,33 @@ class FlxAnim implements IFlxDestroyable
 	}
 
 
-	function get_loopType()
+	inline function get_loopType()
 	{
 		return curInstance.symbol.loop;
 	}
-	function get_symbolType()
+	inline function get_symbolType()
 	{
 		return curInstance.symbol.type;
 	}
-	function set_symbolType(type:SymbolT)
+	inline function set_symbolType(type:SymbolT)
 	{
 		return curInstance.symbol.type = type;
 	}
-	function get_reversed()
+	inline function get_reversed()
 	{
 		return curInstance.symbol.reverse;
 	}
-	function set_reversed(value:Bool)
+	inline function set_reversed(value:Bool)
 	{
 		return curInstance.symbol.reverse = value;
 	}
-	public function getByName(name:String)
+	inline public function getByName(name:String)
 	{
 		return animsMap.get(name);
+	}
+	inline public function existsByName(name:String)
+	{
+		return animsMap.exists(name);
 	}
 
 
@@ -421,9 +427,9 @@ class FlxAnim implements IFlxDestroyable
 
 
 		var symbol:FlxSymbol = null;
-		
+
 		var layers = (layer == null) ? curSymbol.timeline.getList() : [curSymbol.timeline.get(layer)];
-		
+
 		for (layer in layers)
 		{
 			if (layer == null) continue;
@@ -459,12 +465,9 @@ class FlxAnim implements IFlxDestroyable
 		_tick = 0;
 		buttonMap = null;
 		animsMap = null;
-		curInstance.destroy();
-		curInstance = null;
-		stageInstance.destroy();
-		stageInstance = null;
-		metadata.destroy();
-		metadata = null;
+		curInstance = FlxDestroyUtil.destroy(curInstance);
+		stageInstance = FlxDestroyUtil.destroy(stageInstance);
+		metadata = FlxDestroyUtil.destroy(metadata);
 		swfRender = false;
 		_parent = null;
 		symbolDictionary = null;
@@ -473,15 +476,15 @@ class FlxAnim implements IFlxDestroyable
 /**
  * This class shows what framerate the animation was initially set.
  */
-class FlxMetaData
+class FlxMetaData implements IFlxDestroyable
 {
 	public var name:String;
 	/**
 	 * The frame rate the animation was exported in the texture atlas in the beginning.
 	 */
 	public var frameRate:Float;
-	
-	public function new(name:String, frameRate:Float) 
+
+	public function new(name:String, frameRate:Float)
 	{
 		this.name = name;
 		this.frameRate = frameRate;

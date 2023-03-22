@@ -34,7 +34,7 @@ class SymbolParameters
         this.type = type;
         this.loop = loop;
         firstFrame = 0;
-        transformationPoint = new FlxPoint();
+        transformationPoint = FlxPoint.get();
         colorEffect = None;
     }
 
@@ -46,7 +46,7 @@ class SymbolParameters
         firstFrame = 0;
         name = null;
         colorEffect = null;
-        transformationPoint = null;
+        transformationPoint = FlxDestroyUtil.put(transformationPoint);
     }
 
     function set_type(type:SymbolT)
