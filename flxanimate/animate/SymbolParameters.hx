@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxPoint;
 import openfl.geom.ColorTransform;
 import flxanimate.data.AnimationData;

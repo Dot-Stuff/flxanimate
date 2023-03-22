@@ -45,7 +45,7 @@ class FlxAnimate extends FlxSprite
 	
 	// public var rectangle:FlxRect;
 	
-	public var showPivot:Bool = false;
+	public var showPivot(default, set):Bool = false;
 
 	var _pivot:FlxFrame;
 	/**
