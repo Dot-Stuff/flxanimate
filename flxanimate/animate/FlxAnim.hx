@@ -194,11 +194,13 @@ class FlxAnim implements IFlxDestroyable
 
 
 		
-		if (finished)
+		if (finished || curFrame == curSymbol.length - 1)
 		{
 			if (onComplete != null)
 				onComplete();
-			pause();
+			
+			if (loopType == PlayOnce)
+				pause();
 		}
 	}
 	function get_finished()
