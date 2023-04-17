@@ -194,7 +194,7 @@ class FlxAnim implements IFlxDestroyable
 
 
 		
-		if (finished || curFrame == curSymbol.length - 1)
+		if (finished || curFrame == (reversed ? 0 : curSymbol.length - 1))
 		{
 			if (onComplete != null)
 				onComplete();
