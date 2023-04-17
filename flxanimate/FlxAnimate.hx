@@ -45,7 +45,7 @@ class FlxAnimate extends FlxSprite
 	
 	// public var rectangle:FlxRect;
 	
-	public var showPivot:Bool = #if debug true #else false #end;
+	public var showPivot(default, set):Bool = false;
 
 	var _pivot:FlxFrame;
 	/**
@@ -70,11 +70,16 @@ class FlxAnimate extends FlxSprite
 			loadAtlas(Path);
 		if (Settings != null)
 			setTheSettings(Settings);
-		@:privateAccess
-		_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
-		@:privateAccess
-		_pivot.frame = new FlxRect(0,0,_pivot.parent.width,_pivot.parent.height);
-		_pivot.name = "pivot";
+	}
+
+	function set_showPivot(v:Bool) {
+		if(v && _pivot == null) {
+			@:privateAccess
+			_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
+			_pivot.frame = new FlxRect(0, 0, _pivot.parent.width, _pivot.parent.height);
+			_pivot.name = "pivot";
+		}
+		return showPivot = v;
 	}
 
 	public function loadAtlas(Path:String)
@@ -92,6 +97,8 @@ class FlxAnimate extends FlxSprite
 	 */
 	public override function draw():Void
 	{
+		if(alpha <= 0) return;
+
 		parseElement(anim.curInstance, anim.curFrame, _matrix, colorTransform, true);
 		if (showPivot)
 			drawLimb(_pivot, new FlxMatrix(1,0,0,1, origin.x, origin.y));
@@ -208,41 +215,47 @@ class FlxAnimate extends FlxSprite
 		#end
 		return frame;
 	}
+
+	static var rMatrix = new FlxMatrix();
+
 	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform)
 	{
 		if (alpha == 0 || colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
 			return;
+
 		for (camera in cameras)
 		{
-			var matrix = new FlxMatrix();
-			matrix.concat(_matrix);
+			rMatrix.identity();
+			rMatrix.concat(_matrix);
 			if (!camera.visible || !camera.exists || !limbOnScreen(limb, _matrix, camera))
 				return;
-			
+
 			getScreenPosition(_point, camera).subtractPoint(offset);
-			matrix.translate(-origin.x, -origin.y);
+			rMatrix.translate(-origin.x, -origin.y);
 			if (limb.name != "pivot")
-				matrix.scale(scale.x, scale.y);
-			else 
-				matrix.a = matrix.d = 0.7 / camera.zoom;
+				rMatrix.scale(scale.x, scale.y);
+			else
+				rMatrix.a = rMatrix.d = 0.7 / camera.zoom;
+
 			_point.addPoint(origin);
 			if (isPixelPerfectRender(camera))
-		    {
-			    _point.floor();
-		    }
-			
-			matrix.translate(_point.x, _point.y);
-			camera.drawPixels(limb, null, matrix, colorTransform, blend, antialiasing);
+			{
+				_point.floor();
+			}
+
+			rMatrix.translate(_point.x, _point.y);
+			camera.drawPixels(limb, null, rMatrix, colorTransform, blend, antialiasing);
 			#if FLX_DEBUG
 			FlxBasic.visibleCount++;
 			#end
 		}
-
-		#if FLX_DEBUG
-		if (FlxG.debugger.drawDebug)
-			drawDebug();
-		#end
+		// doesnt work, needs to be remade
+		//#if FLX_DEBUG 
+		//if (FlxG.debugger.drawDebug)
+		//	drawDebug();
+		//#end
 	}
+
 	function limbOnScreen(limb:FlxFrame, m:FlxMatrix, ?Camera:FlxCamera)
 	{
 		if (Camera == null)
