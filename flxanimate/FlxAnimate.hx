@@ -347,7 +347,7 @@ class FlxAnimate extends FlxSprite
 		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
 	}
 
-	function setTheSettings(?Settings:Settings):Void
+	public function setTheSettings(?Settings:Settings):Void
 	{
 		@:privateAccess
 		if (true)
