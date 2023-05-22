@@ -5,7 +5,7 @@
 FlxAnimate is a repository made by [CheemsAndFriends](https://github.com/CheemsAndFriends) and [DotWith](https://github.com/DotWith) made for playing all spritesheet formats and the mysterious but interesting export called `Texture Atlas`
 
 ## Support
-You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `Miss Muffin#8930` And send an issue of what's it's giving you problems
+You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `CheemsNFriends#8930` And send an issue of what's it's giving you problems
 
 ## TODO
 * Filters are a feature in early days of Flash that are commonly used to "spice up" the animation. Although the texture atlas does export these filters, they aren't supported. **IMPORTANT**
