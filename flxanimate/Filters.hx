@@ -28,7 +28,7 @@ class Filters
 		// shader.HSV.value = [];
 		// @:privateAccess
 		// shader.__matrix;
-		
+
 		hue = 0;
 		saturation = 0;
 		lightness = 0;

@@ -10,18 +10,22 @@ class FlxElement implements IFlxDestroyable
 {
 	@:allow(flxanimate.animate.FlxKeyFrame)
 	var _parent:FlxKeyFrame;
+
 	/**
 	 * All the other parameters that are exclusive to the symbol (instance, type, symbol name, etc.)
 	 */
 	public var symbol(default, null):SymbolParameters;
+
 	/**
 	 * The name of the frame itself.
 	 */
-	public var bitmap(default,null):String;
+	public var bitmap(default, null):String;
+
 	/**
 	 * The matrix that the symbol or bitmap has.
 	 */
 	public var matrix(default, null):FlxMatrix;
+
 	/**
 	 * Creates a new `FlxElement` instance.
 	 * @param name the name of the element. `WARNING:` this name is dynamic, in other words, this name can used for the limb or the symbol!
@@ -39,10 +43,12 @@ class FlxElement implements IFlxDestroyable
 	{
 		return '{matrix: $matrix, bitmap: $bitmap}';
 	}
+
 	public function destroy()
 	{
 		_parent = null;
-		if (symbol != null) {
+		if (symbol != null)
+		{
 			symbol.destroy();
 			symbol = null;
 		}
@@ -53,7 +59,7 @@ class FlxElement implements IFlxDestroyable
 	static var m:Array<Float>;
 	static var params:SymbolParameters;
 
-	static var matrixNames = ["m00","m01","m10","m11","m30","m31"];
+	static var matrixNames = ["m00", "m01", "m10", "m11", "m30", "m31"];
 
 	public static function fromJSON(element:Element)
 	{
@@ -80,16 +86,21 @@ class FlxElement implements IFlxDestroyable
 			params.colorEffect = AnimationData.fromColorJson(element.SI.C);
 			params.name = element.SI.SN;
 			params.transformationPoint.set(element.SI.TRP.x, element.SI.TRP.y);
-		} else {
+		}
+		else
+		{
 			params = null;
 		}
 
 		var m3d = (symbol) ? element.SI.M3D : element.ASI.M3D;
 
-		m = if((m3d is Array)) {
+		m = if ((m3d is Array))
+		{
 			[m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]];
-		} else {
-			[for (field in matrixNames) Reflect.field(m3d,field)];
+		}
+		else
+		{
+			[for (field in matrixNames) Reflect.field(m3d, field)];
 		}
 
 		if (!symbol && m3d == null)
@@ -101,10 +112,6 @@ class FlxElement implements IFlxDestroyable
 		var pos = (symbol) ? element.SI.bitmap.POS : element.ASI.POS;
 		if (pos == null)
 			pos = {x: 0, y: 0};
-		return new FlxElement(
-			(symbol) ? element.SI.bitmap.N : element.ASI.N,
-			params,
-			new FlxMatrix(m[0], m[1], m[2], m[3], m[4] + pos.x, m[5] + pos.y)
-		);
+		return new FlxElement((symbol) ? element.SI.bitmap.N : element.ASI.N, params, new FlxMatrix(m[0], m[1], m[2], m[3], m[4] + pos.x, m[5] + pos.y));
 	}
 }
