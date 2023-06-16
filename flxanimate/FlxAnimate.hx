@@ -24,7 +24,8 @@ import openfl.geom.ColorTransform;
 import flixel.math.FlxMath;
 import flixel.FlxBasic;
 
-typedef Settings = {
+typedef Settings =
+{
 	?ButtonSettings:Map<String, flxanimate.animate.FlxAnim.ButtonSettings>,
 	?FrameRate:Float,
 	?Reversed:Bool,
@@ -42,12 +43,11 @@ class FlxAnimate extends FlxSprite
 	// #if FLX_SOUND_SYSTEM
 	// public var audio:FlxSound;
 	// #end
-	
 	// public var rectangle:FlxRect;
-	
 	public var showPivot(default, set):Bool = false;
 
 	var _pivot:FlxFrame;
+
 	/**
 	 * # Description
 	 * `FlxAnimate` is a texture atlas parser from the drawing software *Adobe Animate* (once being *Adobe Flash*).
@@ -72,8 +72,10 @@ class FlxAnimate extends FlxSprite
 			setTheSettings(Settings);
 	}
 
-	function set_showPivot(v:Bool) {
-		if(v && _pivot == null) {
+	function set_showPivot(v:Bool)
+	{
+		if (v && _pivot == null)
+		{
 			@:privateAccess
 			_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
 			_pivot.frame = new FlxRect(0, 0, _pivot.parent.width, _pivot.parent.height);
@@ -92,17 +94,20 @@ class FlxAnimate extends FlxSprite
 		anim._loadAtlas(atlasSetting(Path));
 		frames = FlxAnimateFrames.fromTextureAtlas(Path);
 	}
+
 	/**
 	 * the function `draw()` renders the symbol that `anim` has currently plus a pivot that you can toggle on or off.
 	 */
 	public override function draw():Void
 	{
-		if(alpha <= 0) return;
+		if (alpha <= 0)
+			return;
 
 		parseElement(anim.curInstance, anim.curFrame, _matrix, colorTransform, true);
 		if (showPivot)
-			drawLimb(_pivot, new FlxMatrix(1,0,0,1, origin.x, origin.y));
+			drawLimb(_pivot, new FlxMatrix(1, 0, 0, 1, origin.x, origin.y));
 	}
+
 	/**
 	 * This basically renders an element of any kind, both limbs and symbols.
 	 * It should be considered as the main function that makes rendering a symbol possible.
@@ -112,24 +117,25 @@ class FlxAnimate extends FlxSprite
 		var colorEffect = new ColorTransform();
 		var matrix = new FlxMatrix();
 
-		if (instance.symbol != null) colorEffect.concat(instance.symbol._colorEffect);
+		if (instance.symbol != null)
+			colorEffect.concat(instance.symbol._colorEffect);
 		matrix.concat(instance.matrix);
 
 		colorEffect.concat(colorFilter);
 		matrix.concat(m);
 
-
 		if (instance.bitmap != null)
-		{	
+		{
 			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect);
 			return;
 		}
-		
+
 		var symbol = anim.symbolDictionary.get(instance.symbol.name);
 		var firstFrame:Int = instance.symbol.firstFrame + curFrame;
 		switch (instance.symbol.type)
 		{
-			case Button: firstFrame = setButtonFrames(firstFrame);
+			case Button:
+				firstFrame = setButtonFrames(firstFrame);
 			default:
 		}
 
@@ -139,22 +145,24 @@ class FlxAnimate extends FlxSprite
 			case PlayOnce: cast FlxMath.bound(firstFrame, 0, symbol.length - 1);
 			default: firstFrame;
 		}
-		
+
 		var layers = symbol.timeline.getList();
 		for (i in 0...layers.length)
 		{
 			var layer = layers[layers.length - 1 - i];
-			
-			if (!layer.visible && mainSymbol) continue;
+
+			if (!layer.visible && mainSymbol)
+				continue;
 			var frame = layer.get(firstFrame);
-			
-			if (frame == null) continue;
+
+			if (frame == null)
+				continue;
 
 			if (frame.callbacks != null)
 			{
 				frame.fireCallbacks();
 			}
-			
+
 			for (element in frame.getList())
 			{
 				var firstframe = 0;
@@ -171,6 +179,7 @@ class FlxAnimate extends FlxSprite
 	}
 
 	var pressed:Bool = false;
+
 	function setButtonFrames(frame:Int)
 	{
 		var badPress:Bool = false;
@@ -220,7 +229,11 @@ class FlxAnimate extends FlxSprite
 
 	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform)
 	{
-		if (alpha == 0 || colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
+		if (alpha == 0
+			|| colorTransform != null
+			&& (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255)
+			|| limb == null
+			|| limb.type == EMPTY)
 			return;
 
 		for (camera in cameras)
@@ -250,10 +263,10 @@ class FlxAnimate extends FlxSprite
 			#end
 		}
 		// doesnt work, needs to be remade
-		//#if FLX_DEBUG 
-		//if (FlxG.debugger.drawDebug)
+		// #if FLX_DEBUG
+		// if (FlxG.debugger.drawDebug)
 		//	drawDebug();
-		//#end
+		// #end
 	}
 
 	function limbOnScreen(limb:FlxFrame, m:FlxMatrix, ?Camera:FlxCamera)
@@ -263,8 +276,8 @@ class FlxAnimate extends FlxSprite
 
 		var minX:Float = x + m.tx - offset.x - scrollFactor.x * Camera.scroll.x;
 		var minY:Float = y + m.ty - offset.y - scrollFactor.y * Camera.scroll.y;
-		
-		var radiusX:Float =  limb.frame.width * Math.max(1, m.a);
+
+		var radiusX:Float = limb.frame.width * Math.max(1, m.a);
 		var radiusY:Float = limb.frame.height * Math.max(1, m.d);
 		var radius:Float = Math.max(radiusX, radiusY);
 		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
@@ -285,6 +298,7 @@ class FlxAnimate extends FlxSprite
 	// 	return {width: rect.width, height: rect.height};
 	// }
 	var oldMatrix:FlxMatrix;
+
 	override function set_flipX(Value:Bool)
 	{
 		if (oldMatrix == null)
@@ -304,6 +318,7 @@ class FlxAnimate extends FlxSprite
 		}
 		return Value;
 	}
+
 	override function set_flipY(Value:Bool)
 	{
 		if (oldMatrix == null)
@@ -324,8 +339,8 @@ class FlxAnimate extends FlxSprite
 		return Value;
 	}
 
-	override function destroy()      
-	{                                                                
+	override function destroy()
+	{
 		if (anim != null)
 			anim.destroy();
 		anim = null;
@@ -336,15 +351,15 @@ class FlxAnimate extends FlxSprite
 		super.destroy();
 	}
 
-	public override function updateAnimation(elapsed:Float) 
+	public override function updateAnimation(elapsed:Float)
 	{
 		anim.update(elapsed);
 	}
 
-	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM , sound:FlxSound #end):Void
+	public function setButtonPack(button:String, callbacks:ClickStuff #if FLX_SOUND_SYSTEM, sound:FlxSound #end):Void
 	{
 		@:privateAccess
-		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
+		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound: sound #end});
 	}
 
 	public function setTheSettings(?Settings:Settings):Void
@@ -382,7 +397,7 @@ class FlxAnimate extends FlxSprite
 		if (haxe.io.Path.extension(Path) == "zip")
 		{
 			var thing = Zip.readZip(Assets.getBytes(Path));
-			
+
 			for (list in Zip.unzip(thing))
 			{
 				if (list.fileName.indexOf("Animation.json") != -1)
