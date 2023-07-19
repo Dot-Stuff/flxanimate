@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="./logo.svg" width="300" alt="FlxAnimate's logo, constituting of the HaxeFlixel logo sliced into pieces and then 4 arrows pointing where the parts should be to create a result."/> 
+    <img src="./logo.svg" width="500" alt="FlxAnimate's logo, constituting of the HaxeFlixel logo sliced into pieces and then 4 arrows pointing where the parts should be to create a result."/> 
 </p>
 
 # FlxAnimate
