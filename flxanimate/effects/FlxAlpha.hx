@@ -1,0 +1,23 @@
+package flxanimate.effects;
+
+class FlxAlpha extends FlxColorEffect 
+{
+    public var alpha(default, set):Float;
+    
+    public function new(alpha:Float)
+    {
+        super();
+        this.alpha = alpha;
+    }
+
+    override function process() 
+    {
+        c_Transform.alphaMultiplier = alpha;
+    }
+    function set_alpha(value:Float)
+    {
+        if (alpha != value) renderDirty = true;
+
+        return alpha = value;
+    }
+}

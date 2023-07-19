@@ -1,5 +1,8 @@
 package flxanimate.animate;
 
+import flxanimate.effects.FlxColorEffect;
+import flixel.math.FlxMatrix;
+import flixel.graphics.frames.FlxFrame;
 import openfl.display.Sprite;
 import openfl.filters.BitmapFilter;
 import openfl.utils.Function;
@@ -13,25 +16,35 @@ import flxanimate.animate.FlxLayer;
 class FlxKeyFrame
 {
     public var name(default, set):Null<String>;
+
+    @:allow(flxanimate.FlxAnimate)
+    var _filterFrame:FlxFrame;
+    
+    @:allow(flxanimate.FlxAnimate)
+    var _bitmapMatrix:FlxMatrix;
+
     @:allow(flxanimate.animate.FlxSymbol)
     @:allow(flxanimate.FlxAnimate)
     var callbacks(default, null):Array<Function>;
     @:allow(flxanimate.animate.FlxLayer)
     var _parent:FlxLayer;
+
     public var index(default, set):Int;
     public var duration(default, set):Int;
-    public var colorEffect:ColorEffect;
+    public var colorEffect(default, set):FlxColorEffect;
+
     @:allow(flxanimate.FlxAnimate)
     var _elements(default, null):Array<FlxElement>;
-    @:allow(flxanimate.FlxAnimate)
-    var _colorEffect(get, null):ColorTransform;
 
     @:allow(flxanimate.FlxAnimate)
-    var _sprite:Sprite;
+    var _renderDirty:Bool = false;
 
-    public var filters:Array<BitmapFilter>;
+    @:allow(flxanimate.FlxAnimate)
+    var _ff:Int = -1;
 
-    public function new(index:Int, ?duration:Int = 1, ?elements:Array<FlxElement> = null, ?colorEffect:ColorEffect = None, ?name:String = null)
+    public var filters(default, set):Array<BitmapFilter>;
+
+    public function new(index:Int, ?duration:Int = 1, ?elements:Array<FlxElement> = null, ?colorEffect:FlxColorEffect = null, ?name:String = null)
     {
         this.index = index;
         this.duration = duration;
@@ -39,9 +52,8 @@ class FlxKeyFrame
         this.name = name;
         _elements = (elements == null) ? [] : elements;
         this.colorEffect = colorEffect;
-        _sprite = new Sprite();
-        _sprite.filters = filters;
         callbacks = [];
+        _bitmapMatrix = new FlxMatrix();
     }
     
     function set_duration(duration:Int)
@@ -55,6 +67,39 @@ class FlxKeyFrame
                 frame.index -= difference;
         }
         return duration;
+    }
+    function set_filters(value:Array<BitmapFilter>)
+    {
+        _renderDirty = true;
+
+        return filters = value;
+    }
+
+    public function update(frame:Int)
+    {
+
+        if (filters == null || filters.length == 0 || _renderDirty) return;
+
+        for (filter in filters)
+        {
+            @:privateAccess
+            if (filter.__renderDirty)
+            {
+                _renderDirty = true;
+                return;
+            }
+        }
+
+        for (element in _elements)
+        {
+            if (element.symbol == null) continue;
+            
+            if (element.symbol._renderDirty || element.symbol._layerDirty)
+            {
+                _renderDirty = true;
+                return;
+            }
+        }
     }
     public function add(element:EitherType<FlxElement, Function>)
     {   
@@ -113,9 +158,11 @@ class FlxKeyFrame
     }
     public function fireCallbacks()
     {
-        for (callback in callbacks)
-        {
-            callback();
+        var i = 0;
+        while (i < callbacks.length)
+        { 
+            callbacks[i]();
+            i++;
         }
     }
     public function removeCallbacks()
@@ -141,17 +188,24 @@ class FlxKeyFrame
         {
             element.destroy();
         }
-        _sprite = null;
     }
 
     public function toString()
     {
         return '{index: $index, duration: $duration}';
     }
-    function get__colorEffect()
+    function set_colorEffect(value:EitherType<ColorEffect, FlxColorEffect>)
     {
-        return AnimationData.parseColorEffect(colorEffect);
+        if (value == null)
+            value = None;
+        if (value is ColorEffect)
+            colorEffect = AnimationData.parseColorEffect(value);
+        else
+            colorEffect = value;
+
+        return colorEffect;
     }
+    
     function set_index(i:Int)
     {
         index = i;

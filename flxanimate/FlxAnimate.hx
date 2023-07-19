@@ -1,9 +1,8 @@
 package flxanimate;
 
+import flxanimate.display.FlxAnimateFilterRenderer;
+import openfl.filters.BitmapFilter;
 import flxanimate.geom.FlxMatrix3D;
-import openfl.filters.DropShadowFilter;
-import openfl.filters.GlowFilter;
-import openfl.Vector;
 import openfl.display.Sprite;
 import flixel.util.FlxColor;
 import flixel.graphics.FlxGraphic;
@@ -28,7 +27,6 @@ import flixel.math.FlxMatrix;
 import openfl.geom.ColorTransform;
 import flixel.math.FlxMath;
 import flixel.FlxBasic;
-import flxanimate.graphics.tile.FlxDrawSpriteQuadsItem;
 
 typedef Settings = {
 	?ButtonSettings:Map<String, flxanimate.animate.FlxAnim.ButtonSettings>,
@@ -41,6 +39,8 @@ typedef Settings = {
 	?Offset:FlxPoint,
 }
 
+@:access(openfl.geom.ColorTransform)
+@:access(openfl.geom.Rectangle)
 class FlxAnimate extends FlxSprite
 {
 	public var anim(default, null):FlxAnim;
@@ -49,11 +49,18 @@ class FlxAnimate extends FlxSprite
 	// public var audio:FlxSound;
 	// #end
 	
-	// public var rectangle:FlxRect;
+	var rect:Rectangle;
+
+	var _symbols:Array<FlxSymbol>;
 	
 	public var showPivot:Bool = #if debug true #else false #end;
 
 	var _pivot:FlxFrame;
+
+	var renderer:FlxAnimateFilterRenderer = new FlxAnimateFilterRenderer();
+
+	var filterCamera:FlxCamera;
+
 
 	var _sprite:Sprite;
 	
@@ -82,8 +89,8 @@ class FlxAnimate extends FlxSprite
 		_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
 		_pivot.frame = new FlxRect(0,0,_pivot.parent.width,_pivot.parent.height);
 		_pivot.name = "pivot";
-
 		camera.canvas.addChild(_sprite);
+		rect = Rectangle.__pool.get();
 	}
 
 	public function loadAtlas(Path:String)
@@ -96,53 +103,100 @@ class FlxAnimate extends FlxSprite
 		anim._loadAtlas(atlasSetting(Path));
 		frames = FlxAnimateFrames.fromTextureAtlas(Path);
 	}
+
 	/**
 	 * the function `draw()` renders the symbol that `anim` has currently plus a pivot that you can toggle on or off.
 	 */
 	public override function draw():Void
 	{
-		_sprite.removeChildren();
-		_sprite.graphics.clear();
-		var matrix = new FlxMatrix();
-		matrix.concat(_matrix);
-		matrix.concat(anim.curInstance.matrix);
-		@:privateAccess
-		var cTransform = colorTransform.__clone();
-		cTransform.concat(anim.curInstance.symbol._colorEffect); 
+		_matrix.identity();
+		if (flipX)
+		{
+			_matrix.a *= -1;
+			_matrix.tx += width;
+		}
+		if (flipY)
+		{
+			_matrix.d *= -1;
+			_matrix.ty += height;
+		}
+		frameWidth = 0;
+		frameHeight = 0;
+		width = 0;
+		height = 0;
+		_flashRect.setEmpty();
 		
-		var point = getScreenPosition(_point, camera).subtractPoint(offset);
-		matrix.translate(point.x, point.y);
-		_sprite.transform.matrix = matrix;
-		_sprite.transform.colorTransform = cTransform;
-		parseElement(anim.curInstance, anim.curFrame, _sprite);
-		#if FLX_DEBUG
-		FlxBasic.visibleCount++;
-		#end
+		parseElement(anim.curInstance, anim.curFrame, _matrix, colorTransform, true, cameras);
+
+		width = _flashRect.width;
+		height = _flashRect.height;
+		frameWidth = Std.int(width);
+		frameHeight = Std.int(height);
+
 		if (showPivot)
-			drawLimb(_pivot, new FlxMatrix());
+			drawLimb(_pivot, new FlxMatrix(1, 0, 0, 1, origin.x, origin.y));
 	}
-	/**
-	 * This basically renders an element of any kind, both limbs and symbols.
-	 * It should be considered as the main function that makes rendering a symbol possible.
-	 */
-	function parseElement(instance:FlxElement, curFrame:Int, sprite:Sprite)
+
+	function parseElement(instance:FlxElement, curFrame:Int, m:FlxMatrix, colorFilter:ColorTransform, mainSymbol:Bool = false, ?filterInstance:{?instance:FlxElement} = null, ?cameras:Array<FlxCamera> = null)
 	{
+		var filterin = filterInstance != null;
+		if (cameras == null)
+			cameras = this.cameras;
+
+		var matrix = new FlxMatrix();
+
+		matrix.concat(instance.matrix);
+		matrix.concat(m);
+
+
+		var colorEffect = new ColorTransform();
+		colorEffect.__copyFrom(colorFilter);
+
+		var symbol = (instance.symbol != null) ? anim.symbolDictionary.get(instance.symbol.name) : null;
+
+		if (instance.symbol != null)
+		{
+			if (instance.symbol.colorEffect != null)
+				colorEffect.concat(instance.symbol.colorEffect.__create());
+			
+			if (instance.symbol.cacheAsBitmap)
+			{
+				if (instance.symbol._renderDirty)
+				{
+					instance.symbol._renderDirty = false;
+					if (filterCamera == null)
+						filterCamera = new FlxCamera(0,0,0,0,1);
+					
+					
+					instance.symbol._cacheBitmapMatrix.copyFrom(instance.symbol.cacheAsBitmapMatrix);
+
+					parseElement(instance, curFrame, instance.symbol._cacheBitmapMatrix, new ColorTransform(), mainSymbol, {instance: instance}, [filterCamera]);
+					
+					
+					if (instance.symbol._filterBitmap == null)
+						instance.symbol._filterBitmap = FlxGraphic.fromRectangle(1,1, 0, true).imageFrame.frame;
+
+					@:privateAccess
+					renderFilter(filterCamera, instance.symbol.filters, instance.symbol._filterBitmap, instance.symbol._cacheBitmapMatrix, renderer);
+					instance.symbol._renderDirty = false;
+	
+				}
+				if ((!filterin || filterin && filterInstance.instance != instance) && instance.symbol._filterBitmap != null)
+				{
+					matrix.identity();
+					matrix.concat(instance.symbol._cacheBitmapMatrix);
+					matrix.concat(m);
+					drawLimb(instance.symbol._filterBitmap, matrix, colorEffect, filterin, cameras);
+					return;
+				}
+			}
+		}
+
 		if (instance.bitmap != null)
 		{
-			if (frames.getByName(instance.bitmap) != null)
-			{
-				drawQuads(sprite, instance);
-			}
+			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect, filterin, cameras);
 			return;
 		}
-		
-		var symbol = anim.symbolDictionary.get(instance.symbol.name);
-		@:privateAccess
-		var _spr = symbol.toSprite();
-		_spr.transform.matrix = instance.matrix;
-		_spr.transform.colorTransform = instance.symbol._colorEffect;
-		@:privateAccess
-		sprite.addChild(_spr);
 		
 		var firstFrame:Int = instance.symbol.firstFrame + curFrame;
 		switch (instance.symbol.type)
@@ -159,104 +213,209 @@ class FlxAnimate extends FlxSprite
 		}
 		
 		var layers = symbol.timeline.getList();
-		var mask:String = "";
 		for (i in 0...layers.length)
 		{
 			var layer = layers[layers.length - 1 - i];
+			
+			if (!layer.visible && !filterin && mainSymbol) continue;
 
-			@:privateAccess
-			var spr:Sprite = cast _spr.getChildByName(layer.name);
-			spr.visible = (!layer.visible && sprite == _sprite) ? false : true;
-
-			if (layer.type.getName() == "Clipped")
-			{
-				@:privateAccess
-				spr.mask = _spr.getChildByName(layer.type.getParameters()[0]);
-			}
-			else
-				spr.mask = null;
-
-
-			var frame = layer.get(firstFrame);
+			layer._setCurFrame(firstFrame);
+			var frame = layer._currFrame;
+			
 			if (frame == null) continue;
+			
+			frame.update(firstFrame);
 
-			if (frame.callbacks != null && firstFrame == frame.index && symbol._shootCallback)
+			var toBitmap = frame.filters != null;
+
+			if (toBitmap)
 			{
-				frame.fireCallbacks();
+				if (!frame._renderDirty && frame._filterFrame != null)
+				{
+					var mat = new FlxMatrix();
+					mat.concat(frame._bitmapMatrix);
+					mat.concat(instance.matrix);
+					mat.concat(m);
+					drawLimb(frame._filterFrame, mat, null, filterin, cameras);
+					continue;
+				}
+				else
+				{
+					frame._filterFrame = FlxGraphic.fromRectangle(1,1, 0, true).imageFrame.frame;
+					if (layer._filterCamera == null)
+						layer._filterCamera = new FlxCamera();
+				}
 			}
-
-			spr.transform.colorTransform = frame._colorEffect;
-
 			for (element in frame.getList())
 			{
 				var firstframe = 0;
-				if (element.symbol != null && element.symbol.loop != SingleFrame)
+				if (element.symbol != null && element.symbol.type == Graphic && element.symbol.loop != SingleFrame)
 				{
 					firstframe = firstFrame - frame.index;
 				}
-				parseElement(element, firstframe, spr);
+				
+				var coloreffect = new ColorTransform();
+				coloreffect.__copyFrom(colorEffect);
+				if (frame.colorEffect != null)
+					coloreffect.concat(frame.colorEffect.__create());
+				parseElement(element, firstframe, (toBitmap) ? new FlxMatrix() : matrix, coloreffect, false, (toBitmap) ? {instance: null} : filterInstance, (toBitmap) ? [layer._filterCamera] : cameras);
+
+				if (toBitmap && element.symbol != null && element.symbol._layerDirty)
+					element.symbol._layerDirty = false;
+			}
+			
+			if (toBitmap)
+			{
+				frame._bitmapMatrix.identity();
+
+				renderFilter(layer._filterCamera, frame.filters, frame._filterFrame, frame._bitmapMatrix, renderer);
+				frame._renderDirty = false;
+
+				var mat = new FlxMatrix();
+				mat.concat(frame._bitmapMatrix);
+				mat.concat(instance.matrix);
+				mat.concat(m);
+
+				drawLimb(frame._filterFrame, mat, null, filterin, cameras);
 			}
 		}
 	}
+	/**
+		function parseElement(instance:FlxElement, curFrame:Int, sprite:Sprite)
+		{
+			if (instance.bitmap != null)
+			{
+				if (frames.getByName(instance.bitmap) != null)
+				{
+					drawQuads(sprite, instance);
+				}
+				return;
+			}
+			
+			var symbol = anim.symbolDictionary.get(instance.symbol.name);
 
-	function drawQuads(sprite:Sprite, instance:FlxElement)
-	{
-		var bitmap = frames.getByName(instance.bitmap);
-		var shader = (shader == null) ? bitmap.parent.shader : shader;
-		shader.bitmap.input = bitmap.parent.bitmap;
-		var matrix = instance.matrix;
-		shader.alpha.value = [1];
-		shader.bitmap.filter = (antialiasing) ? LINEAR : NEAREST;
+			if (symbol == null)
+				return;
 
-		sprite.graphics.clear();
-		sprite.graphics.beginShaderFill(shader);
-		var matrix = new Vector([matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty]);
-		sprite.graphics.drawQuads(new Vector([bitmap.frame.x, bitmap.frame.y, bitmap.frame.width, bitmap.frame.height]), null, matrix);
-		sprite.graphics.endFill();
+			if (_symbols.indexOf(symbol) == -1)
+			{
+				symbol.activeCount = 0;
+				_symbols.push(symbol);
+			}
+
+			@:privateAccess
+			var _spr = symbol.toSprite();
+			_spr.transform.matrix = instance.matrix;
+			_spr.transform.colorTransform = instance.symbol._colorEffect;
+			_spr.filters = instance.symbol.filters;
+			@:privateAccess
+			// _spr.__filters = instance.symbol.filters;
+			@:privateAccess
+			sprite.addChild(_spr);
+			
+			var firstFrame:Int = instance.symbol.firstFrame + curFrame;
+			switch (instance.symbol.type)
+			{
+				case Button: firstFrame = setButtonFrames(firstFrame);
+				default:
+			}
+
+			firstFrame = switch (instance.symbol.loop)
+			{
+				case Loop: firstFrame % symbol.length;
+				case PlayOnce: cast FlxMath.bound(firstFrame, 0, symbol.length - 1);
+				default: firstFrame;
+			}
+			
+			var layers = symbol.timeline.getList();
+			
+			for (i in 0...layers.length)
+			{
+				var layer = layers[layers.length - 1 - i];
+
+				var spr:Sprite = cast _spr.getChildByName(layer.name);
+				spr.visible = (!layer.visible && sprite == _sprite) ? false : true;
+
+
+				var frame = layer.get(firstFrame);
+				if (frame == null) continue;
+
+				spr.transform.colorTransform = frame._colorEffect;
+				
+				
+				for (element in frame.getList())
+				{
+					var firstframe = 0;
+					
+					if (element.symbol != null && (element.symbol.type == MovieClip && anim.swfRender || element.symbol.type == Graphic && element.symbol.loop != SingleFrame))
+					{
+						firstframe = firstFrame - frame.index;
+					}
+					parseElement(element, firstframe, spr);
+				}
+			}
+		}
+	*/
+	function renderFilter(filterCamera:FlxCamera, filters:Array<BitmapFilter>, filter:FlxFrame,  _cacheBitmapMatrix:FlxMatrix, renderer:FlxAnimateFilterRenderer)
+	{	
+		@:privateAccess
+		filterCamera.render();
+		
+		var gfx = renderer.graphicstoBitmapData(filterCamera.canvas.graphics);
+		
+		
+		if (gfx == null) return;
+
+		@:privateAccess
+		var bounds = gfx.rect.clone();
+
+		if (bounds == null) return;
+		
+		var b = new Rectangle();
+
+		@:privateAccess
+		filterCamera.canvas.__getBounds(b, _cacheBitmapMatrix);
+
+		if (filters != null && filters.length > 0)
+			gfx = applyFilter(renderer, gfx, filters, bounds);
+		
+		
+		_cacheBitmapMatrix.translate((b.x + bounds.x) - (gfx.width - bounds.width) * 0.5, (b.y + bounds.y) - (gfx.height - bounds.height) * 0.5);
+
+		@:privateAccess
+		filterCamera.clearDrawStack();
+		filterCamera.canvas.graphics.clear();
+		filter.parent.bitmap.dispose();
+		filter.parent.bitmap = gfx;
+		filter.frame.setSize(gfx.width, gfx.height);
 	}
-	function startSpriteBatch(camera:FlxCamera, sprite:Sprite)
+
+	function applyFilter(renderer:FlxAnimateFilterRenderer, image:BitmapData, filters:Array<BitmapFilter>, rect:Rectangle)
 	{
-		var currentDrawItem = null, headTiles = null, storageTilesHead = null, itemToReturn:FlxDrawSpriteQuadsItem = null;
+
 		@:privateAccess
-		if (true)
-		{
-			currentDrawItem = camera._currentDrawItem;
-			headTiles = camera._headTiles;
-			storageTilesHead = FlxCamera._storageTilesHead;
-		}
-		if (currentDrawItem != null 
-			&& (headTiles is FlxDrawSpriteQuadsItem) 
-			&& cast (headTiles, FlxDrawSpriteQuadsItem).sprite == sprite
-			&& cast (headTiles, FlxDrawSpriteQuadsItem)._camera == camera)
-		{
-			return;
-		}
+		var extension = Rectangle.__pool.get();
 
-		if (storageTilesHead != null && (storageTilesHead is FlxDrawSpriteQuadsItem))
+		for (filter in filters)
 		{
-			itemToReturn = cast storageTilesHead;
-			var newHead = storageTilesHead.nextTyped;
-			itemToReturn.reset();
-			storageTilesHead = newHead;
+			@:privateAccess
+			extension.__expand(-filter.__leftExtension,
+				-filter.__topExtension, filter.__leftExtension
+				+ filter.__rightExtension,
+				filter.__topExtension
+				+ filter.__bottomExtension);
 		}
-		else			
-			itemToReturn = new FlxDrawSpriteQuadsItem();
+		rect.width += extension.width;
+		rect.height += extension.height;
+		rect.x += extension.x;
+		rect.y += extension.y;
 
-		itemToReturn.sprite = sprite;
-
-		itemToReturn.nextTyped = headTiles;
-		headTiles = itemToReturn;
 		@:privateAccess
-		if (camera._headOfDrawStack == null)
-		{
-			camera._headOfDrawStack = itemToReturn;
-		}
-		if (currentDrawItem != null)
-		{
-			currentDrawItem.next = itemToReturn;
-		}
+		Rectangle.__pool.release(extension);
 
-		currentDrawItem = itemToReturn;
+		
+
+		return renderer.applyFilter(image, filters, rect);
 	}
 	var pressed:Bool = false;
 	function setButtonFrames(frame:Int)
@@ -303,30 +462,51 @@ class FlxAnimate extends FlxSprite
 		#end
 		return frame;
 	}
-	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform = null, ?mask:FlxFrame = null)
+	var _mat:FlxMatrix = new FlxMatrix();
+	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform = null, filterin:Bool = false, cameras:Array<FlxCamera> = null)
 	{
-		if (alpha == 0 || colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
+		if (cameras == null || alpha == 0 || colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
 			return;
-		var matrix = new FlxMatrix();
-		matrix.concat(_matrix);
+
 		for (camera in cameras)
 		{
-			if (!camera.visible || !camera.exists || !limbOnScreen(limb, _matrix, camera))
+			limb.prepareMatrix(_mat);
+			var matrix = _mat;
+			matrix.concat(_matrix);
+			if (!camera.visible || !camera.exists)
 				return;
 			
-			getScreenPosition(_point, camera).subtractPoint(offset);
-			matrix.translate(-origin.x, -origin.y);
-			if (limb.name != "pivot")
-				matrix.scale(scale.x, scale.y);
-			else 
-				matrix.a = matrix.d = 0.7 / camera.zoom;
-			_point.addPoint(origin);
-			if (isPixelPerfectRender(camera))
-		    {
-			    _point.floor();
-		    }
+			if (!filterin)
+			{
 
-			matrix.translate(_point.x, _point.y);
+				getScreenPosition(_point, camera).subtractPoint(offset);
+				matrix.translate(-origin.x, -origin.y);
+				if (limb.name != "pivot")
+				{
+					matrix.scale(scale.x, scale.y);
+					
+					if (bakedRotationAngle <= 0)
+					{
+						updateTrig();
+			
+						if (angle != 0)
+							matrix.rotateWithTrig(_cosAngle, _sinAngle);
+					}
+				}
+				else 
+					matrix.a = matrix.d = 0.7 / camera.zoom;
+
+				_point.addPoint(origin);
+				if (isPixelPerfectRender(camera))
+				{
+					_point.floor();
+				}
+
+				matrix.translate(_point.x, _point.y);
+
+				if (!limbOnScreen(limb, matrix, camera))
+					return;
+			}
 			camera.drawPixels(limb, null, matrix, colorTransform, blend, antialiasing);
 		}
 
@@ -334,79 +514,28 @@ class FlxAnimate extends FlxSprite
 		if (FlxG.debugger.drawDebug)
 			drawDebug();
 		#end
+		#if FLX_DEBUG
+		FlxBasic.visibleCount++;
+		#end
 	}
-	function limbOnScreen(limb:FlxFrame, m:FlxMatrix, ?Camera:FlxCamera)
+	
+	function limbOnScreen(limb:FlxFrame, m:FlxMatrix, ?Camera:FlxCamera = null)
 	{
 		if (Camera == null)
 			Camera = FlxG.camera;
 
-		var minX:Float = x + m.tx - offset.x - scrollFactor.x * Camera.scroll.x;
-		var minY:Float = y + m.ty - offset.y - scrollFactor.y * Camera.scroll.y;
-		
-		var radiusX:Float =  limb.frame.width * Math.max(1, m.a);
-		var radiusY:Float = limb.frame.height * Math.max(1, m.d);
-		var radius:Float = Math.max(radiusX, radiusY);
-		radius *= FlxMath.SQUARE_ROOT_OF_TWO;
-		minY -= radius;
-		minX -= radius;
-		radius *= 2;
+		limb.frame.copyToFlash(rect);
 
-		_point.set(minX, minY);
-		return Camera.containsPoint(_point, radius, radius);
-	}
-	override public function update(elapsed:Float)
-	{
-		super.update(elapsed);
-		if (FlxG.keys.pressed.B)
-		{
-			_sprite.filters = [new openfl.filters.BlurFilter(4, 4, 1)];
-		}
-	}
-	// function checkSize(limb:FlxFrame, m:FlxMatrix)
-	// {
-	// 	// var rect = new Rectangle(x,y,limb.frame.width,limb.frame.height);
-	// 	// @:privateAccess
-	// 	// rect.__transform(rect, m);
-	// 	return {width: rect.width, height: rect.height};
-	// }
-	var oldMatrix:FlxMatrix;
-	override function set_flipX(Value:Bool)
-	{
-		if (oldMatrix == null)
-		{
-			oldMatrix = new FlxMatrix();
-			oldMatrix.concat(_matrix);
-		}
-		if (Value)
-		{
-			_matrix.a = -oldMatrix.a;
-			_matrix.c = -oldMatrix.c;
-		}
-		else
-		{
-			_matrix.a = oldMatrix.a;
-			_matrix.c = oldMatrix.c;
-		}
-		return Value;
-	}
-	override function set_flipY(Value:Bool)
-	{
-		if (oldMatrix == null)
-		{
-			oldMatrix = new FlxMatrix();
-			oldMatrix.concat(_matrix);
-		}
-		if (Value)
-		{
-			_matrix.b = -oldMatrix.b;
-			_matrix.d = -oldMatrix.d;
-		}
-		else
-		{
-			_matrix.b = oldMatrix.b;
-			_matrix.d = oldMatrix.d;
-		}
-		return Value;
+		rect.x = 0;
+		rect.y = 0;
+
+		rect.__transform(rect, m);
+
+		_point.copyFromFlash(rect.topLeft);
+
+		_flashRect = _flashRect.union(rect);
+		
+		return Camera.containsPoint(_point, rect.width, rect.height);
 	}
 
 	override function destroy()      
@@ -414,7 +543,7 @@ class FlxAnimate extends FlxSprite
 		if (anim != null)
 			anim.destroy();
 		anim = null;
-		_sprite = null;
+		
 		// #if FLX_SOUND_SYSTEM
 		// if (audio != null)
 		// 	audio.destroy();
@@ -433,7 +562,7 @@ class FlxAnimate extends FlxSprite
 		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
 	}
 
-	function setTheSettings(?Settings:Settings):Void
+	public function setTheSettings(?Settings:Settings):Void
 	{
 		@:privateAccess
 		if (true)

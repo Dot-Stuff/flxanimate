@@ -4,8 +4,8 @@
     "license": "MIT",
     "tags": ["adobe","flash","animate","texture_sheet", "flixel"],
     "description": "Adobe Animate's texture atlases player for HaxeFlixel.",
-    "version": "3.0.3",
-    "releasenote": "Fix crashing error when using custom animations on HTML5.",
+    "version": "4.0.0",
+    "releasenote": "Revamp several issues, and introducing filters on HaxeFlixel.",
     "contributors": ["DotWith","MrCheemsAndFriends"],
     "dependencies": {}
 }

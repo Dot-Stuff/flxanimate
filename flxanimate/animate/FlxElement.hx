@@ -1,5 +1,7 @@
 package flxanimate.animate;
 
+import flxanimate.display.FlxAnimateFilterRenderer;
+import openfl.display.BitmapData;
 import openfl.Vector;
 import flxanimate.geom.FlxMatrix3D;
 import flixel.math.FlxPoint;
@@ -8,7 +10,7 @@ import flixel.math.FlxMatrix;
 import openfl.geom.ColorTransform;
 
 class FlxElement 
-{
+{    
     @:allow(flxanimate.animate.FlxKeyFrame)
     var _parent:FlxKeyFrame;
     /**
@@ -16,13 +18,13 @@ class FlxElement
      */
     public var symbol(default, null):SymbolParameters;
     /**
-     * The name of the frame itself.
+     * The name of the bitmap itself.
      */
-    public var bitmap(default,null):String;
+    public var bitmap(default, set):String;
     /**
      * The matrix that the symbol or bitmap has.
      */
-    public var matrix(default, null):FlxMatrix;
+    public var matrix(default, set):FlxMatrix;
     /**
      * Creates a new `FlxElement` instance.
      * @param name the name of the element. `WARNING:` this name is dynamic, in other words, this name can used for the limb or the symbol!
@@ -33,6 +35,8 @@ class FlxElement
     {
         this.bitmap = bitmap;
         this.symbol = symbol;
+        if (symbol != null)
+            symbol._parent = this;
         this.matrix = (matrix == null) ? new FlxMatrix() : matrix;
     }
 
@@ -48,6 +52,21 @@ class FlxElement
         bitmap = null;
         matrix = null;
     }
+
+    function set_bitmap(value:String)
+    {
+        if (value != bitmap && symbol != null && symbol.cacheAsBitmap)
+            symbol._renderDirty = true;
+
+        return bitmap = value;
+    }
+    function set_matrix(value:FlxMatrix)
+    {
+        (value == null) ? matrix.identity() : matrix = value;
+
+        return value;
+    }
+
     public static function fromJSON(element:Element)
     {
         var symbol = element.SI != null;

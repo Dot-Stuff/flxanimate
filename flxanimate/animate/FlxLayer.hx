@@ -1,5 +1,11 @@
 package flxanimate.animate;
 
+import flixel.FlxObject;
+import flxanimate.display.FlxAnimateFilterRenderer;
+import flixel.math.FlxMatrix;
+import flixel.graphics.frames.FlxFrame;
+import flixel.FlxCamera;
+import openfl.display.BitmapData;
 import flxanimate.data.AnimationData.LayerType;
 import flixel.math.FlxMath;
 import haxe.extern.EitherType;
@@ -7,30 +13,46 @@ import flxanimate.data.AnimationData.Frame;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flxanimate.data.AnimationData.Layers;
 
-class FlxLayer implements IFlxDestroyable
+class FlxLayer extends FlxObject
 {
+    @:allow(flxanimate.FlxAnimate)
+    var _filterCamera:FlxCamera;
+
+    @:allow(flxanimate.FlxAnimate)
+    var _filterFrame:FlxFrame;
+
+    @:allow(flxanimate.FlxAnimate)
+    var _filterMatrix:FlxMatrix;
+    
+    @:allow(flxanimate.FlxAnimate)
+    var _renderable:Bool = true;
+
     @:allow(flxanimate.animate.FlxTimeline)
     var _parent(default, set):FlxTimeline;
     
     public var name(default, null):String;
-    
+
     @:allow(flxanimate.animate.FlxKeyFrame)
+    @:allow(flxanimate.animate.FlxSymbol)
     var _labels:Map<String, FlxKeyFrame>;
     
-    public var type:LayerType;
+    public var type(default, set):LayerType;
     var _keyframes(default, null):Array<FlxKeyFrame>;
-
-    public var visible:Bool;
 
     public var length(get, null):Int;
 
+    @:allow(flxanimate.FlxAnimate)
+    var _currFrame:FlxKeyFrame;
+
     public function new(?name:String, ?keyframes:Array<FlxKeyFrame>)
     {
+        super();
         this.name = name;
         type = Normal;
         _keyframes = (keyframes != null) ? keyframes : [];
         visible = true;
         _labels = [];
+        _filterMatrix = new FlxMatrix();
     }
 
     public function hide()
@@ -41,17 +63,33 @@ class FlxLayer implements IFlxDestroyable
     {
         visible = true;
     }
-    public function destroy()
+    override public function destroy()
     {
     }
     public function get(frame:EitherType<String, Int>)
     {
+        return _get(frame, false);
+    }
+    @:allow(flxanimate.FlxAnimate)
+    function _get(frame:EitherType<String, Int>, _animateRendering:Bool = true)
+    {
+        if (_animateRendering && type.getName() == "Clipped")
+        {
+            var layers = _parent.getList();
+            var layer = layers[layers.indexOf(this) - 1];
+            if (_parent != null && layer != null && layer.type.getName() == "Clipper")
+            {
+                layer._renderable = false;
+            }
+        }
         var index = 0;
-        if (frame is String)
+        if ((frame is String))
         {
             if (!_labels.exists(frame)) return null;
-            
-            return _labels.get(frame);
+
+            var label = _labels.get(frame);
+
+            return label;
         }
         else
         {
@@ -62,7 +100,9 @@ class FlxLayer implements IFlxDestroyable
         for (keyframe in _keyframes)
         {
             if (keyframe.index + keyframe.duration > index)
+            {
                 return keyframe;
+            }
         }
         return null;
     }
@@ -103,7 +143,7 @@ class FlxLayer implements IFlxDestroyable
     }
     public function remove(frame:EitherType<Int, FlxKeyFrame>)
     {
-        if (frame is FlxKeyFrame)
+        if ((frame is FlxKeyFrame))
         {
             _keyframes.remove(frame);
             return frame;
@@ -141,6 +181,63 @@ class FlxLayer implements IFlxDestroyable
         var keyframe = _keyframes[_keyframes.length - 1];
         return (keyframe != null) ? keyframe.index + keyframe.duration : 0;
     }
+    function set_type(value:LayerType)
+    {
+        if (type != null && type.getName() == "Clipped")
+        {
+            var layers = _parent.getList();
+            var layer = layers[layers.indexOf(this) - 1];
+            if (_parent != null && layer != null && layer.type.getName() == "Clipper")
+            {
+                layer._renderable = true;
+            }
+        }
+        return type = value;
+    }
+    @:allow(flxanimate.FlxAnimate)
+    function _setCurFrame(frame:Int)
+    {
+        if (length == 0 || frame > length)
+        {
+            _currFrame = null;
+            return;
+        }
+        
+        if (_currFrame != null)
+        {
+            if (frame >= _currFrame.index && frame < _currFrame.duration) return;
+
+            var i = _keyframes.indexOf(_currFrame);
+
+            if (frame >= _currFrame.index + _currFrame.duration)
+            {
+                var keyframe = _keyframes[i];
+                while (frame >= keyframe.index + keyframe.duration)
+                {
+                    keyframe = _keyframes[i++];
+                    if (keyframe == null)
+                        break;
+                }
+
+                _currFrame = keyframe;
+            }
+            else if (frame < _currFrame.index)
+            {
+                var keyframe = _keyframes[i];
+                while (frame < keyframe.index)
+                {
+                    keyframe = _keyframes[i--];
+                    if (keyframe == null)
+                        break;
+                }
+
+                _currFrame = keyframe;
+            }
+        }
+        else
+            _currFrame = get(frame);
+    }
+
     public static function fromJSON(layer:Layers)
     {
         if (layer == null) return null;

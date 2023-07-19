@@ -1,5 +1,8 @@
 package flxanimate.animate;
 
+import flxanimate.display.FlxAnimateFilterRenderer;
+import openfl.filters.BitmapFilter;
+import openfl.display.BitmapData;
 import openfl.events.Event;
 import openfl.events.EventType;
 import openfl.display.Sprite;
@@ -11,6 +14,17 @@ import flxanimate.data.AnimationData;
 
 class FlxSymbol
 {
+    @:allow(flxanimate.animate.FlxElement)
+    var filterPool:Map<Array<BitmapFilter>, BitmapData> = [];
+
+    var _sprite:Sprite;
+    @:allow(flxanimate.FlxAnimate)
+    var _checking:Bool = false;
+    @:allow(flxanimate.FlxAnimate)
+    var activeCount:Int = 0;
+
+    var _sprites:Array<Sprite> = [];
+
     public var timeline(default, null):FlxTimeline;
     /**
      * The amount of frames the symbol has.
@@ -24,15 +38,23 @@ class FlxSymbol
     @:deprecated("")
     public var labels(default, null):Map<String, FlxLabel>;
     
+    /**
+     * The callback that's called for every `fireCallbacks()`.
+     */
+    public var onCallback:()->Void;
+
+    /**
+     * The amount of layers structured in names.
+     */
     public var layers(get, null):Array<String>;
-    
+
+    /**
+     * The current frame.
+     */
     public var curFrame(get, set):Int;
     
     @:allow(flxanimate.animate.FlxAnim)
     var _curFrame:Int;
-
-    @:allow(flxanimate.FlxAnimate)
-    var _shootCallback:Bool;
 
     var _tick:Float;
     
@@ -42,20 +64,11 @@ class FlxSymbol
         layers = [];
         curFrame = 0;
         this.timeline = timeline;
+        timeline._parent = this;
+
         this.name = name;
-    }
-    @:access(flxanimate.FlxAnimate)
-    function toSprite()
-    {
-        var sprite = new Sprite();
-        var list = timeline.getList();
-        for (layer in list)
-        {
-            var spr = new Sprite();
-            spr.name = layer.name;
-            sprite.addChildAt(spr, 0);
-        }
-        return sprite;
+
+        activeCount = 0;
     }
     /**
      * Hides a layer from the timeline.
@@ -106,10 +119,10 @@ class FlxSymbol
         return c;
     }
     /**
-     * [Description]
-     * @param label 
-     * @param callback 
-     * @param layer 
+     * Removes a callback from a certain label. can be extracted from a certain layer.
+     * @param label The label in question.
+     * @param callback The callback. Can be the actual function or an `Int` referring to its index.
+     * @param layer The layer in question.
      */
     public function removeCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
     {
@@ -179,43 +192,10 @@ class FlxSymbol
 
         return frame;
     }
-    public function frameControl(frame:Int, loopType:LoopType)
+
+    public function update(elapsed:Float)
     {
-        if (frame < 0)
-		{
-			if ([loop, "loop"].indexOf(loopType) != -1)
-				frame += (length > 0) ? length - 1 : frame;
-			else
-			{
-				frame = 0;
-			}
-			
-		}
-		else if (frame > length - 1)
-		{
-			if ([loop, "loop"].indexOf(loopType) != -1)
-			{
-				frame -= (length > 0) ? length - 1 : frame;
-			}
-			else
-			{
-				frame = length - 1;
-			}
-		}
-
-        return frame;
-    }
-
-    public function update(framerate:Float, reversed:Bool)
-    {
-        // _tick += FlxG.elapsed;
-        // var delay = 1 / framerate;
-
-        // while (_tick > delay)
-        // {
-        //     curFrame++;
-        //     _tick -= delay;
-        // }
+        
     }
     /**
      * Gets an element through a specific index from a frame.
@@ -275,9 +255,20 @@ class FlxSymbol
         labels.sort((a, b) -> a.index - b.index);
         for (label in labels)
         {
-            array.push(label.name);
+            array.push(label);
         }
         
+        return array;
+    }
+    public function getFrameLabelNames(?layer:EitherType<Int, String> = null)
+    {
+        var labels = getFrameLabels(layer);
+        var array = [];
+        for (label in labels)
+        {
+            array.push(label.name);
+        }
+
         return array;
     }
     /**
@@ -383,6 +374,24 @@ class FlxSymbol
         var oldElement = getElement(index);
         oldElement = newElement;
     }
+    public function fireCallbacks(?frame:Int)
+    {
+        if (frame == null)
+            frame = _curFrame;
+
+        for (layer in timeline.getList())
+        {
+            for (label in layer._labels.iterator())
+            {
+                if (label.index != frame)
+                    continue;
+                
+                label.fireCallbacks();
+            }
+        }
+        if (onCallback != null)
+            onCallback();
+    }
 
     function get_length()
     {
@@ -398,11 +407,6 @@ class FlxSymbol
     }
     function set_curFrame(value:Int)
     {
-        _curFrame = value;
-        _shootCallback = false;
-
-        return value;
+        return _curFrame = value;
     }
-
-    public static function prepareMatrix(d:Dynamic, e:Dynamic) {return new FlxMatrix();}
 }

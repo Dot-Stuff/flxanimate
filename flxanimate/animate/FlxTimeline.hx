@@ -6,6 +6,9 @@ import flxanimate.data.AnimationData.Timeline;
 
 class FlxTimeline
 {
+    @:allow(flxanimate.animate.FlxSymbol)
+    var _parent:FlxSymbol;
+
     @:allow(flxanimate.FlxAnimate)
     var _layers:Array<FlxLayer>;
     /**
@@ -119,6 +122,7 @@ class FlxTimeline
         {
             layer = name;
         }
+
         layer._parent = this;
         _layers.insert(position, layer);
         return layer;
