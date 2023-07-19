@@ -481,7 +481,7 @@ class FlxAnimate extends FlxSprite
 
 				getScreenPosition(_point, camera).subtractPoint(offset);
 				matrix.translate(-origin.x, -origin.y);
-				if (limb.name != "pivot")
+				if (limb != _pivot)
 				{
 					matrix.scale(scale.x, scale.y);
 					
@@ -533,7 +533,8 @@ class FlxAnimate extends FlxSprite
 
 		_point.copyFromFlash(rect.topLeft);
 
-		_flashRect = _flashRect.union(rect);
+		if (limb != _pivot)
+			_flashRect = _flashRect.union(rect);
 		
 		return Camera.containsPoint(_point, rect.width, rect.height);
 	}
