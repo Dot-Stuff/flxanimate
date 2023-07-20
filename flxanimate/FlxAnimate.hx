@@ -41,6 +41,7 @@ typedef Settings = {
 
 @:access(openfl.geom.ColorTransform)
 @:access(openfl.geom.Rectangle)
+@:access(flixel.graphics.frames.FlxFrame)
 class FlxAnimate extends FlxSprite
 {
 	public var anim(default, null):FlxAnim;
@@ -56,6 +57,7 @@ class FlxAnimate extends FlxSprite
 	public var showPivot:Bool = #if debug true #else false #end;
 
 	var _pivot:FlxFrame;
+	var _indicator:FlxFrame;
 
 	var renderer:FlxAnimateFilterRenderer = new FlxAnimateFilterRenderer();
 
@@ -85,10 +87,8 @@ class FlxAnimate extends FlxSprite
 			loadAtlas(Path);
 		if (Settings != null)
 			setTheSettings(Settings);
-		@:privateAccess
-		_pivot = new FlxFrame(FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png")));
-		_pivot.frame = new FlxRect(0,0,_pivot.parent.width,_pivot.parent.height);
-		_pivot.name = "pivot";
+		_pivot = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png"), "__pivot").imageFrame.frame;
+		_indicator = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/indicator.png"), "__indicator").imageFrame.frame;
 		camera.canvas.addChild(_sprite);
 		rect = Rectangle.__pool.get();
 	}
@@ -102,6 +102,7 @@ class FlxAnimate extends FlxSprite
 		}
 		anim._loadAtlas(atlasSetting(Path));
 		frames = FlxAnimateFrames.fromTextureAtlas(Path);
+		origin = anim.curInstance.symbol.transformationPoint;
 	}
 
 	/**
@@ -134,7 +135,10 @@ class FlxAnimate extends FlxSprite
 		frameHeight = Std.int(height);
 
 		if (showPivot)
-			drawLimb(_pivot, new FlxMatrix(1, 0, 0, 1, origin.x, origin.y));
+		{
+			drawLimb(_pivot, new FlxMatrix(1, 0, 0, 1, origin.x - _pivot.frame.width * 0.5, origin.y - _pivot.frame.height * 0.5), cameras);
+			drawLimb(_indicator, new FlxMatrix(1, 0, 0, 1, -_indicator.frame.width * 0.5, -_indicator.frame.height * 0.5), cameras);
+		}
 	}
 
 	function parseElement(instance:FlxElement, curFrame:Int, m:FlxMatrix, colorFilter:ColorTransform, mainSymbol:Bool = false, ?filterInstance:{?instance:FlxElement} = null, ?cameras:Array<FlxCamera> = null)
@@ -280,82 +284,6 @@ class FlxAnimate extends FlxSprite
 			}
 		}
 	}
-	/**
-		function parseElement(instance:FlxElement, curFrame:Int, sprite:Sprite)
-		{
-			if (instance.bitmap != null)
-			{
-				if (frames.getByName(instance.bitmap) != null)
-				{
-					drawQuads(sprite, instance);
-				}
-				return;
-			}
-			
-			var symbol = anim.symbolDictionary.get(instance.symbol.name);
-
-			if (symbol == null)
-				return;
-
-			if (_symbols.indexOf(symbol) == -1)
-			{
-				symbol.activeCount = 0;
-				_symbols.push(symbol);
-			}
-
-			@:privateAccess
-			var _spr = symbol.toSprite();
-			_spr.transform.matrix = instance.matrix;
-			_spr.transform.colorTransform = instance.symbol._colorEffect;
-			_spr.filters = instance.symbol.filters;
-			@:privateAccess
-			// _spr.__filters = instance.symbol.filters;
-			@:privateAccess
-			sprite.addChild(_spr);
-			
-			var firstFrame:Int = instance.symbol.firstFrame + curFrame;
-			switch (instance.symbol.type)
-			{
-				case Button: firstFrame = setButtonFrames(firstFrame);
-				default:
-			}
-
-			firstFrame = switch (instance.symbol.loop)
-			{
-				case Loop: firstFrame % symbol.length;
-				case PlayOnce: cast FlxMath.bound(firstFrame, 0, symbol.length - 1);
-				default: firstFrame;
-			}
-			
-			var layers = symbol.timeline.getList();
-			
-			for (i in 0...layers.length)
-			{
-				var layer = layers[layers.length - 1 - i];
-
-				var spr:Sprite = cast _spr.getChildByName(layer.name);
-				spr.visible = (!layer.visible && sprite == _sprite) ? false : true;
-
-
-				var frame = layer.get(firstFrame);
-				if (frame == null) continue;
-
-				spr.transform.colorTransform = frame._colorEffect;
-				
-				
-				for (element in frame.getList())
-				{
-					var firstframe = 0;
-					
-					if (element.symbol != null && (element.symbol.type == MovieClip && anim.swfRender || element.symbol.type == Graphic && element.symbol.loop != SingleFrame))
-					{
-						firstframe = firstFrame - frame.index;
-					}
-					parseElement(element, firstframe, spr);
-				}
-			}
-		}
-	*/
 	function renderFilter(filterCamera:FlxCamera, filters:Array<BitmapFilter>, filter:FlxFrame,  _cacheBitmapMatrix:FlxMatrix, renderer:FlxAnimateFilterRenderer)
 	{	
 		@:privateAccess
@@ -478,11 +406,11 @@ class FlxAnimate extends FlxSprite
 			
 			if (!filterin)
 			{
-
 				getScreenPosition(_point, camera).subtractPoint(offset);
-				matrix.translate(-origin.x, -origin.y);
-				if (limb != _pivot)
+				if ([_pivot, _indicator].indexOf(limb) == -1)
 				{
+					matrix.translate(-origin.x, -origin.y);
+
 					matrix.scale(scale.x, scale.y);
 					
 					if (bakedRotationAngle <= 0)
@@ -492,11 +420,22 @@ class FlxAnimate extends FlxSprite
 						if (angle != 0)
 							matrix.rotateWithTrig(_cosAngle, _sinAngle);
 					}
-				}
-				else 
-					matrix.a = matrix.d = 0.7 / camera.zoom;
 
-				_point.addPoint(origin);
+					_point.addPoint(origin);
+				}
+				else
+				{
+					matrix.scale(0.7, 0.7);
+
+					matrix.a /= camera.zoom;
+					matrix.d /= camera.zoom;
+					matrix.tx /= camera.zoom;
+					matrix.ty /= camera.zoom;
+					
+					
+				}
+				
+				
 				if (isPixelPerfectRender(camera))
 				{
 					_point.floor();

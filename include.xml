@@ -2,4 +2,5 @@
 	xsi:schemaLocation="http://lime.software/project/1.0.2 http://lime.software/xsd/project-1.0.2.xsd">
 
     <assets path="assets/images/pivot.png" rename="flxanimate/images/pivot.png" embed="true" />
+    <assets path="assets/images/indicator.png" rename="flxanimate/images/indicator.png" embed="true" />
 </project>
