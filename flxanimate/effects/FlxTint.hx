@@ -10,8 +10,7 @@ class FlxTint extends FlxColorEffect
 {
     /**
      * a 0x​_AARRGGBB_ `FlxColor` value.
-     * **WARNING:** the `alpha` variable will be 
-     * ignored, use multiplier instead!
+     * The strength of the tint is used by the color's alpha.
      */
     public var tint(default, set):FlxColor;
 
@@ -20,9 +19,10 @@ class FlxTint extends FlxColorEffect
      * @param tint A `FlxColor` value with the hexadecimal _RR_, _GG_, _BB_.
      * @param multiplier a decimal number representing the amount of tint applied.
      */
-    public function new(tint:FlxColor)
+    public function new(tint:FlxColor, multiplier:Float)
     {
         super();
+        tint.alphaFloat = multiplier;
         this.tint = tint;
     }
     override public function process() 
@@ -42,11 +42,5 @@ class FlxTint extends FlxColorEffect
         if (tint != value) renderDirty = true;
 
         return tint = value;
-    }
-    function set_multiplier(value:Float)
-    {
-        if (multiplier != value) renderDirty = true;
-
-        return multiplier = value;
     }
 }
