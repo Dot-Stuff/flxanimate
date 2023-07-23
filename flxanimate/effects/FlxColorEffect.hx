@@ -43,9 +43,9 @@ class FlxColorEffect
         if (c_Transform == null)
             c_Transform = new ColorTransform();
         
-        renderDirty = false;
         
         process();
+        renderDirty = false;
 
 
         return c_Transform;

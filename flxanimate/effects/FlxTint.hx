@@ -2,43 +2,38 @@ package flxanimate.effects;
 
 import flixel.util.FlxColor;
 
+using flixel.util.FlxColorTransformUtil;
 /**
  * `FlxTint` lets you apply a color onto an object on a certain amount.
  */
 class FlxTint extends FlxColorEffect 
 {
     /**
-     * a 0x​_RRGGBB_ `FlxColor` value.
+     * a 0x​_AARRGGBB_ `FlxColor` value.
      * **WARNING:** the `alpha` variable will be 
      * ignored, use multiplier instead!
      */
     public var tint(default, set):FlxColor;
 
     /**
-     * The amount of color that should be applied
-     * to the effect.
-     * Works as relative `alpha` for the effect.
-     */
-    public var multiplier(default, set):Float;
-
-    /**
      * Creates a new `FlxTint` instance.
      * @param tint A `FlxColor` value with the hexadecimal _RR_, _GG_, _BB_.
      * @param multiplier a decimal number representing the amount of tint applied.
      */
-    public function new(tint:FlxColor, multiplier:Float)
+    public function new(tint:FlxColor)
     {
         super();
         this.tint = tint;
-        this.multiplier = multiplier;
     }
     override public function process() 
     {
-        c_Transform.redMultiplier -= multiplier;
+        var multiplier = tint.alphaFloat;
+        var cMultiplier = 1 - multiplier;
+        c_Transform.redMultiplier = cMultiplier;
         c_Transform.redOffset = Math.round(tint.red * multiplier);
-        c_Transform.greenMultiplier -= multiplier;
+        c_Transform.greenMultiplier = cMultiplier;
         c_Transform.greenOffset = Math.round(tint.green * multiplier);
-        c_Transform.blueMultiplier -= multiplier;
+        c_Transform.blueMultiplier = cMultiplier;
         c_Transform.blueOffset = Math.round(tint.blue * multiplier);
     }    
 
