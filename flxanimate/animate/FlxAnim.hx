@@ -196,6 +196,18 @@ class FlxAnim implements IFlxDestroyable
 		resume();
 	}
 
+	public function playElement(element:FlxElement)
+	{
+		if (element == null || curInstance == element) return;
+
+		pause();
+
+		curInstance = element;
+		curFrame = 0;
+		
+		resume();
+	}
+
 	/**
 	 * Pauses the current animation.
 	 */
