@@ -1,5 +1,7 @@
 package flxanimate;
 
+import flixel.graphics.frames.FlxFramesCollection;
+import haxe.extern.EitherType;
 import flxanimate.display.FlxAnimateFilterRenderer;
 import openfl.filters.BitmapFilter;
 import flxanimate.geom.FlxMatrix3D;
@@ -54,7 +56,7 @@ class FlxAnimate extends FlxSprite
 
 	var _symbols:Array<FlxSymbol>;
 	
-	public var showPivot:Bool = #if debug true #else false #end;
+	public var showPivot(default, set):Bool;
 
 	var _pivot:FlxFrame;
 	var _indicator:FlxFrame;
@@ -83,13 +85,13 @@ class FlxAnimate extends FlxSprite
 		super(X, Y);
 		_sprite = new Sprite();
 		anim = new FlxAnim(this);
+		showPivot = #if debug true #else false #end;
 		if (Path != null)
 			loadAtlas(Path);
 		if (Settings != null)
 			setTheSettings(Settings);
-		_pivot = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png"), "__pivot").imageFrame.frame;
-		_indicator = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/indicator.png"), "__indicator").imageFrame.frame;
 		camera.canvas.addChild(_sprite);
+		
 		rect = Rectangle.__pool.get();
 	}
 
@@ -100,8 +102,19 @@ class FlxAnimate extends FlxSprite
 			FlxG.log.error('Animation file not found in specified path: "$path", have you written the correct path?');
 			return;
 		}
-		anim._loadAtlas(atlasSetting(Path));
-		frames = FlxAnimateFrames.fromTextureAtlas(Path);
+		loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
+	}
+
+	public function loadSeparateAtlas(animation:EitherType<String, AnimAtlas>, ?frames:FlxFramesCollection = null)
+	{
+		if (animation == null)
+			return;
+
+		var json:AnimAtlas = (animation is String) ? haxe.Json.parse(animation) : animation;
+
+		anim._loadAtlas(json);
+		if (frames != null)
+			this.frames = frames;
 		origin = anim.curInstance.symbol.transformationPoint;
 	}
 
@@ -128,11 +141,6 @@ class FlxAnimate extends FlxSprite
 		_flashRect.setEmpty();
 		
 		parseElement(anim.curInstance, anim.curFrame, _matrix, colorTransform, true, cameras);
-
-		width = _flashRect.width;
-		height = _flashRect.height;
-		frameWidth = Std.int(width);
-		frameHeight = Std.int(height);
 
 		if (showPivot)
 		{
@@ -198,7 +206,8 @@ class FlxAnimate extends FlxSprite
 
 		if (instance.bitmap != null)
 		{
-			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect, filterin, cameras);
+			if (frames.framesHash.exists(instance.bitmap))
+				drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect, filterin, cameras);
 			return;
 		}
 		
@@ -407,7 +416,7 @@ class FlxAnimate extends FlxSprite
 			if (!filterin)
 			{
 				getScreenPosition(_point, camera).subtractPoint(offset);
-				if ([_pivot, _indicator].indexOf(limb) == -1)
+				if (limb != _pivot && limb != _indicator)
 				{
 					matrix.translate(-origin.x, -origin.y);
 
@@ -425,7 +434,7 @@ class FlxAnimate extends FlxSprite
 				}
 				else
 				{
-					matrix.scale(0.7, 0.7);
+					matrix.scale(0.9, 0.9);
 
 					matrix.a /= camera.zoom;
 					matrix.d /= camera.zoom;
@@ -449,9 +458,24 @@ class FlxAnimate extends FlxSprite
 			camera.drawPixels(limb, null, matrix, colorTransform, blend, antialiasing);
 		}
 
+		width = rect.width;
+		height = rect.height;
+		frameWidth = Std.int(width);
+		frameHeight = Std.int(height);
+		
+		
 		#if FLX_DEBUG
-		if (FlxG.debugger.drawDebug)
+		if (FlxG.debugger.drawDebug && limb != _pivot && limb != _indicator)
+		{
+			var oldX = x;
+			var oldY = y;
+
+			x = rect.x;
+			y = rect.y;
 			drawDebug();
+			x = oldX;
+			y = oldY;
+		}
 		#end
 		#if FLX_DEBUG
 		FlxBasic.visibleCount++;
@@ -472,13 +496,13 @@ class FlxAnimate extends FlxSprite
 
 		_point.copyFromFlash(rect.topLeft);
 
-		if (limb != _pivot)
+		if ([_indicator, _pivot].indexOf(limb) == -1)
 			_flashRect = _flashRect.union(rect);
 		
 		return Camera.containsPoint(_point, rect.width, rect.height);
 	}
 
-	override function destroy()      
+	override function destroy()
 	{                                                                
 		if (anim != null)
 			anim.destroy();
@@ -500,6 +524,22 @@ class FlxAnimate extends FlxSprite
 	{
 		@:privateAccess
 		anim.buttonMap.set(button, {Callbacks: callbacks, #if FLX_SOUND_SYSTEM Sound:  sound #end});
+	}
+
+	function set_showPivot(value:Bool)
+	{
+		if (value != showPivot)
+		{
+			showPivot = value;
+
+			if (showPivot && _pivot == null)
+			{
+				_pivot = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png"), "__pivot").imageFrame.frame;
+				_indicator = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/indicator.png"), "__indicator").imageFrame.frame;
+			}
+		}
+
+		return value;
 	}
 
 	public function setTheSettings(?Settings:Settings):Void
