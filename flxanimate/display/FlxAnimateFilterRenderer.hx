@@ -98,22 +98,21 @@ class FlxAnimateFilterRenderer
 			renderer.__worldTransform = new Matrix();
 			renderer.__worldColorTransform = new ColorTransform();
 		}
+		renderer.__worldTransform.identity();
+		renderer.__worldColorTransform.__identity();
 
 		var bitmap:BitmapData = new BitmapData(Math.ceil(rect.width), Math.ceil(rect.height), true, 0);
 		var bitmap2 = bitmap.clone();
 
 		
 		var bitmap3 = bitmap2.clone();
-
 		
-		bitmap.copyPixels(bmp, bmp.rect, new Point((bitmap.width - bmp.width) * 0.5, (bitmap.height - bmp.height) * 0.5));
-
-		renderer.__setBlendMode(NORMAL);
-
-		renderer.__worldAlpha = 1;
-		renderer.__worldTransform.identity();
-		renderer.__worldColorTransform.__identity();
+		renderer.__setRenderTarget(bitmap);
 		
+		bmp.__renderTransform.translate((bitmap.width - bmp.width) * 0.5, (bitmap.height - bmp.height) * 0.5);
+		renderer.__renderFilterPass(bmp, renderer.__defaultDisplayShader, true);
+		bmp.__renderTransform.identity();
+
 
 		var shader, cacheBitmap = null;
 
