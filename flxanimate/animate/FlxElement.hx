@@ -25,6 +25,12 @@ class FlxElement
      * The matrix that the symbol or bitmap has.
      */
     public var matrix(default, set):FlxMatrix;
+
+    @:allow(flxanimate.FlxAnimate)
+    var _matrix:FlxMatrix = new FlxMatrix();
+
+    @:allow(flxanimate.FlxAnimate)
+    var _color:ColorTransform = new ColorTransform();
     /**
      * Creates a new `FlxElement` instance.
      * @param name the name of the element. `WARNING:` this name is dynamic, in other words, this name can used for the limb or the symbol!

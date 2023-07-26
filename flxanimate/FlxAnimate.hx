@@ -115,6 +115,8 @@ class FlxAnimate extends FlxSprite
 	 */
 	public function loadSeparateAtlas(?animation:EitherType<String, AnimAtlas> = null, ?frames:FlxFramesCollection = null)
 	{
+		if (frames != null)
+			this.frames = frames;
 		if (animation != null)
 		{
 			var json:AnimAtlas = (animation is String) ? haxe.Json.parse(animation) : animation;
@@ -122,8 +124,6 @@ class FlxAnimate extends FlxSprite
 			anim._loadAtlas(json);
 			origin = anim.curInstance.symbol.transformationPoint;
 		}
-		if (frames != null)
-			this.frames = frames;
 	}
 
 	/**
@@ -163,13 +163,13 @@ class FlxAnimate extends FlxSprite
 		if (cameras == null)
 			cameras = this.cameras;
 
-		var matrix = new FlxMatrix();
+		var matrix = instance._matrix;
 
-		matrix.concat(instance.matrix);
+		matrix.copyFrom(cast instance.matrix);
 		matrix.concat(m);
 
 
-		var colorEffect = new ColorTransform();
+		var colorEffect = instance._color;
 		colorEffect.__copyFrom(colorFilter);
 
 		var symbol = (instance.symbol != null) ? anim.symbolDictionary.get(instance.symbol.name) : null;
