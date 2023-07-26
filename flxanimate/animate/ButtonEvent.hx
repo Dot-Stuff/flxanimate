@@ -1,6 +1,10 @@
 package flxanimate.animate;
 
+#if (flixel >= "5.3.0")
+import flixel.sound.FlxSound;
+#else
 import flixel.system.FlxSound;
+#end
 
 class ButtonEvent
 {
