@@ -234,13 +234,15 @@ class SymbolParameters
         {
             _renderDirty = true;
         }
-
         else
         {
             if (_cacheAsBitmap)
                 _renderDirty = true;
             else
+            {
+                _filterBitmap.parent = FlxDestroyUtil.destroy(_filterBitmap.parent);
                 _filterBitmap = FlxDestroyUtil.destroy(_filterBitmap);
+            }
                 
         }
 
