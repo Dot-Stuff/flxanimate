@@ -95,6 +95,10 @@ class FlxAnimate extends FlxSprite
 		rect = Rectangle.__pool.get();
 	}
 
+	/**
+	 * Loads a regular atlas.
+	 * @param Path The path where the atlas is located. Must be the folder, **NOT** any of the contents of it! 
+	 */
 	public function loadAtlas(Path:String)
 	{
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
@@ -104,18 +108,22 @@ class FlxAnimate extends FlxSprite
 		}
 		loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
 	}
-
-	public function loadSeparateAtlas(animation:EitherType<String, AnimAtlas>, ?frames:FlxFramesCollection = null)
+	/**
+	 * Function in handy to load atlases that share same animation/frames but dont necessarily mean it comes together.
+	 * @param animation The animation file.
+	 * @param frames The collection of frames.
+	 */
+	public function loadSeparateAtlas(?animation:EitherType<String, AnimAtlas> = null, ?frames:FlxFramesCollection = null)
 	{
-		if (animation == null)
-			return;
+		if (animation != null)
+		{
+			var json:AnimAtlas = (animation is String) ? haxe.Json.parse(animation) : animation;
 
-		var json:AnimAtlas = (animation is String) ? haxe.Json.parse(animation) : animation;
-
-		anim._loadAtlas(json);
+			anim._loadAtlas(json);
+			origin = anim.curInstance.symbol.transformationPoint;
+		}
 		if (frames != null)
 			this.frames = frames;
-		origin = anim.curInstance.symbol.transformationPoint;
 	}
 
 	/**
