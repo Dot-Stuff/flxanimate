@@ -238,7 +238,7 @@ class SymbolParameters
         {
             if (_cacheAsBitmap)
                 _renderDirty = true;
-            else
+            else if (_filterBitmap != null)
             {
                 _filterBitmap.parent = FlxDestroyUtil.destroy(_filterBitmap.parent);
                 _filterBitmap = FlxDestroyUtil.destroy(_filterBitmap);
