@@ -282,7 +282,7 @@ class FlxAnim implements IFlxDestroyable
 	{
 		curSymbol.curFrame = switch (loopType)
 		{
-			case Loop: Value % curSymbol.length;
+			case Loop: (Value < 0) ? curSymbol.length - 1 : Value % curSymbol.length;
 			case PlayOnce: cast FlxMath.bound(Value, 0, curSymbol.length - 1);
 			case _: Value;
 		}
