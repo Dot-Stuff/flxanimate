@@ -56,7 +56,7 @@ class FlxAnim implements IFlxDestroyable
 	 * When ever the animation is playing.
 	 */
 	public var isPlaying(default, null):Bool;
-	public var callback:(name:String, frameNumber:Int, frameIndex:Int) -> Void;
+	public var callback:(name:String, frameNumber:Int) -> Void;
 	
 	public var onComplete:()->Void;
 
@@ -472,8 +472,7 @@ class FlxAnim implements IFlxDestroyable
 		if (callback != null)
 		{
 			var name:String = (curSymbol != null) ? curSymbol.name : null;
-			var number:Int = (curSymbol != null) ? curSymbol.curFrame : null;
-			callback(name, number, curFrame);
+			callback(name, curFrame);
 		}
 			
 	}
