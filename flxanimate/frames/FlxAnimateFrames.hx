@@ -139,6 +139,19 @@ class FlxAnimateFrames extends FlxAtlasFrames
         }
         return frames;
     }
+    #if (flixel > "5.2") 
+    public override function concat(collection:FlxAtlasFrames, overwriteHash:Bool = false):FlxAtlasFrames
+    {
+        if (parents.indexOf(collection.parent) == -1)
+            parents.push(collection.parent);
+        for (frame in collection.frames)
+        {
+            this.frames.push(frame);
+            framesHash.set(frame.name, frame);
+        }
+        return this;
+    }
+    #else
     public function concat(frames:FlxFramesCollection)
     {
         if (parents.indexOf(frames.parent) == -1)
@@ -149,6 +162,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
             framesHash.set(frame.name, frame);
         }
     }
+    #end
     /**
      * Sparrow spritesheet format parser with support of both of the versions and making the image completely optional to you.
      * @param Path The direction of the Xml you want to parse.
