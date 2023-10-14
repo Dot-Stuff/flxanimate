@@ -139,7 +139,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
         }
         return frames;
     }
-    #if (flixel > "5.2") 
+    #if (flixel >= "5.3.0") 
     public override function concat(collection:FlxAtlasFrames, overwriteHash:Bool = false):FlxAtlasFrames
     {
         if (parents.indexOf(collection.parent) == -1)
