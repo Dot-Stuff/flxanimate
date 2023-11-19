@@ -27,20 +27,15 @@ import flixel.graphics.frames.FlxFrame;
 
 class FlxAnimateFrames extends FlxAtlasFrames
 {
-    #if (flixel < "5.4.0")
-    public var parents:Array<FlxGraphic>;
-    
-    public function new(parent:FlxGraphic, ?border:FlxPoint)
+    public function new()
     {
-        parents = [parent];
-        super(parent, border);
+        super(null);
+        parents = [];
     }
-    #end
-    
     static var data:AnimateAtlas = null;
     static var zip:Null<List<haxe.zip.Entry>>;
 
-    
+    public var parents:Array<FlxGraphic>;
     /**
      * Parses the spritemaps into small sprites to use in the animation.
      * 
@@ -49,7 +44,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
      */
     public static function fromTextureAtlas(Path:String):FlxAtlasFrames
     {
-        var frames:FlxAnimateFrames = null;
+        var frames:FlxAnimateFrames = new FlxAnimateFrames();
         
         if (zip != null || haxe.io.Path.extension(Path) == "zip")
         {
@@ -78,8 +73,6 @@ class FlxAnimateFrames extends FlxAtlasFrames
                 var curImage = BitmapData.fromBytes(imagemap[curJson.meta.image]);
                 if (curImage != null)
                 {
-                    var graphic = FlxG.bitmap.add(curImage);
-                    frames = new FlxAnimateFrames(graphic);
                     for (sprites in curJson.ATLAS.SPRITES)
                     {
                         frames.pushFrame(textureAtlasHelper(curImage, sprites.SPRITE, curJson.meta));
@@ -102,14 +95,14 @@ class FlxAnimateFrames extends FlxAtlasFrames
                     var spritemapFrames = FlxAtlasFrames.findFrame(graphic);
                     if (spritemapFrames == null)
                     {
-                        spritemapFrames = new FlxAnimateFrames(graphic);
+                        spritemapFrames = new FlxAnimateFrames();
                         for (curSprite in curJson.ATLAS.SPRITES)
                         {
                             spritemapFrames.pushFrame(textureAtlasHelper(graphic.bitmap,curSprite.SPRITE, curJson.meta));
                         }
                     }
                     graphic.addFrameCollection(spritemapFrames);
-                    frames.addAtlas(spritemapFrames);
+                    frames.concat(spritemapFrames);
                 }
                 else
                     FlxG.log.error('the image called "${curJson.meta.image}" does not exist in Path $Path, maybe you changed the image Path somewhere else?');
@@ -125,16 +118,14 @@ class FlxAnimateFrames extends FlxAtlasFrames
                     var spritemapFrames = FlxAtlasFrames.findFrame(graphic);
                     if (spritemapFrames == null)
                     {
-                        spritemapFrames = new FlxAnimateFrames(graphic);
+                        spritemapFrames = new FlxAnimateFrames();
                         for (curSprite in curJson.ATLAS.SPRITES)
                         {
                             spritemapFrames.pushFrame(textureAtlasHelper(graphic.bitmap,curSprite.SPRITE, curJson.meta));
                         }
                     }
                     graphic.addFrameCollection(spritemapFrames);
-                    if (frames == null)
-                        frames = new FlxAnimateFrames(graphic);
-                    frames.addAtlas(spritemapFrames);
+                    frames.concat(spritemapFrames);
                 }
                 else
                     FlxG.log.error('the image called "${curJson.meta.image}" does not exist in Path $Path, maybe you changed the image Path somewhere else?');
@@ -148,19 +139,30 @@ class FlxAnimateFrames extends FlxAtlasFrames
         }
         return frames;
     }
-	
-    public function addAtlas(collection:FlxFramesCollection, overwriteHash:Bool = false):FlxAtlasFrames
+    #if (flixel >= "5.3.0") 
+    public override function concat(collection:FlxFramesCollection, overwriteHash:Bool = false):FlxAtlasFrames
     {
-        if (collection.parent == null)
-            throw "Cannot add atlas with null parent";
-        
         if (parents.indexOf(collection.parent) == -1)
             parents.push(collection.parent);
         for (frame in collection.frames)
-            pushFrame(frame);
+        {
+            this.frames.push(frame);
+            framesHash.set(frame.name, frame);
+        }
         return this;
     }
-	
+    #else
+    public function concat(frames:FlxFramesCollection)
+    {
+        if (parents.indexOf(frames.parent) == -1)
+            parents.push(frames.parent);
+        for (frame in frames.frames)
+        {
+            this.frames.push(frame);
+            framesHash.set(frame.name, frame);
+        }
+    }
+    #end
     /**
      * Sparrow spritesheet format parser with support of both of the versions and making the image completely optional to you.
      * @param Path The direction of the Xml you want to parse.
