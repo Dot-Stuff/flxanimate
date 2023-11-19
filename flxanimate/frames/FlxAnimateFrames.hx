@@ -148,7 +148,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
         }
         return frames;
     }
-	
+    #if (flixel < "5.4.0")
     public function addAtlas(collection:FlxFramesCollection, overwriteHash:Bool = false):FlxAtlasFrames
     {
         if (collection.parent == null)
@@ -160,6 +160,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
             pushFrame(frame);
         return this;
     }
+    #end
 	
     /**
      * Sparrow spritesheet format parser with support of both of the versions and making the image completely optional to you.
