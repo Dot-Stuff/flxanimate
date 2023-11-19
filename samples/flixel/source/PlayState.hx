@@ -25,7 +25,7 @@ class PlayState extends FlxState
 
 	override public function update(elapsed:Float)
 	{
-		if (FlxG.keys.justPressed.SPACE)
+		if (FlxG.keys.justPressed.SPACE || FlxG.mouse.pressed)
 		{
 			if (!char.anim.isPlaying)
 				char.anim.play();
@@ -33,13 +33,22 @@ class PlayState extends FlxState
 				char.anim.pause();
 		}
 
-		char.x = FlxG.mouse.x;
-		char.y = FlxG.mouse.y;
+		char.x = FlxG.mouse.x - 300;
+		char.y = FlxG.mouse.y - 300;
 
 		if (FlxG.keys.justPressed.E)
 			FlxG.camera.zoom += 0.25;
 		if (FlxG.keys.justPressed.Q)
 			FlxG.camera.zoom -= 0.25;
+		
+		if (FlxG.mouse.wheel != 0)
+			FlxG.camera.zoom += FlxG.mouse.wheel * #if html5 1 #else 0.02 #end;
+		
+		if (FlxG.camera.zoom < 0.5)
+			FlxG.camera.zoom = 0.5;
+		
+		if (FlxG.camera.zoom > 2.0)
+			FlxG.camera.zoom = 2.0;
 
 		super.update(elapsed);
 	}
