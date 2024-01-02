@@ -32,6 +32,7 @@ class FlxKeyFrame
         this.name = name;
         _elements = (elements == null) ? [] : elements;
         this.colorEffect = colorEffect;
+        callbacks = [];
     }
     
     function set_duration(duration:Int)
