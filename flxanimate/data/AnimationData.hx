@@ -504,7 +504,7 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var TRP(get, never):TransformationPoint;
 	/**
-	 * The Matrix of the Symbol, Be aware from Neo! He can be anywhere!!! :fearful:
+	 * The Matrix of the Symbol, Be aware of Neo! He can be anywhere!!! :fearful:
 	 */
 	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
 	/**
