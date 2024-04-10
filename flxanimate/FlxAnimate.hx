@@ -86,6 +86,10 @@ class FlxAnimate extends FlxSprite
 		return showPivot = v;
 	}
 
+	/**
+	 * Loads a regular atlas.
+	 * @param Path The path where the atlas is located. Must be the folder, **NOT** any of the contents of it! 
+	 */
 	public function loadAtlas(Path:String)
 	{
 		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
@@ -95,6 +99,7 @@ class FlxAnimate extends FlxSprite
 		}
 		loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
 	}
+
 	/**
 	 * Function in handy to load atlases that share same animation/frames but dont necessarily mean it comes together.
 	 * @param animation The animation file. This should be the content of the `JSON`, **NOT** the path of it.
