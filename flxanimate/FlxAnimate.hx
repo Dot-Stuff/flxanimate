@@ -93,8 +93,25 @@ class FlxAnimate extends FlxSprite
 			FlxG.log.error('Animation file not found in specified path: "$path", have you written the correct path?');
 			return;
 		}
-		anim._loadAtlas(atlasSetting(Path));
-		frames = FlxAnimateFrames.fromTextureAtlas(Path);
+		loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
+	}
+	/**
+	 * Function in handy to load atlases that share same animation/frames but dont necessarily mean it comes together.
+	 * @param animation The animation file. This should be the content of the `JSON`, **NOT** the path of it.
+	 * @param frames The collection of frames.
+	 */
+	public function loadSeparateAtlas(?animation:String = null, ?frames:FlxFramesCollection = null)
+	{
+		if (frames != null)
+			this.frames = frames;
+		if (animation != null)
+		{
+			var json:AnimAtlas = haxe.Json.parse(animation);
+
+			anim._loadAtlas(json);
+		}
+		if (anim != null)
+			origin = anim.curInstance.symbol.transformationPoint;
 	}
 	/**
 	 * the function `draw()` renders the symbol that `anim` has currently plus a pivot that you can toggle on or off.
