@@ -113,7 +113,8 @@ class FlxAnimateFrames extends FlxAtlasFrames
             for (spritemap in spritemaps)
             {
                 var spritemapFrames = fromSpriteMap(spritemap.json, spritemap.image);
-                frames.addAtlas(spritemapFrames);
+		if (spritemapFrames != null)
+                	frames.addAtlas(spritemapFrames);
             }
 
             if (frames.frames == [])
@@ -150,7 +151,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
         {
             if (Path is String)
             {
-                Image = haxe.io.Path.directory(Path) + json.meta.image;
+                Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + json.meta.image;
             }
             else
                 return null;
