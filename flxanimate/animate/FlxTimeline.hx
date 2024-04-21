@@ -25,6 +25,8 @@ class FlxTimeline
     public function new(?layers:Array<FlxLayer>)
     {
         _layers = (layers != null) ? layers : [];
+        for (layer in _layers)
+            layer._parent = this;
     }
     /**
      * Gets a list layers' names that the timeline has.
@@ -150,6 +152,14 @@ class FlxTimeline
         layer._parent = null;
         _layers.remove(layer);
         return layer;
+    }
+
+    public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+    {
+        for (layer in _layers)
+        {
+            layer.updateRender(elapsed, curFrame, dictionary, swfRender);
+        }
     }
 
     function get_length()

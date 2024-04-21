@@ -10,6 +10,11 @@ import openfl.filters.*;
 @:noCompletion
 class AnimationData
 {
+
+	// public static var internalParam:EReg = ~/_FA{/;
+	
+	// public static var bracketReg:EReg = ~/(\{([^{}]|(?R))*\})/s;.
+
 	/**
 	 * Checks a value, using `Reflection`.
 	 * @param abstracto The abstract in specific.
@@ -51,9 +56,7 @@ class AnimationData
 		switch (effect.M)
 		{
 			case Tint, "Tint":
-				var tc = "0x" + effect.TC.substring(1);
-				
-				colorEffect = Tint(Std.parseInt(tc), effect.TM);
+				colorEffect = Tint(colorFromString(effect.TC), effect.TM);
 			case Alpha, "Alpha":
 				colorEffect = Alpha(effect.AM);
 			case Brightness, "Brightness":
@@ -92,17 +95,27 @@ class AnimationData
 
 		for (filter in Reflect.fields(filters))
 		{
-			switch (filter)
+			switch (filter.split("_")[0])
 			{
+				case "DSF", "DropShadowFilter":
+				{
+					var drop:DropShadowFilter = Reflect.field(filters, filter);
+					bitmapFilter.unshift(new openfl.filters.DropShadowFilter(drop.DST, drop.AL, colorFromString(drop.C), drop.A, drop.BLX, drop.BLY, drop.STR, drop.Q, drop.IN, drop.KK));
+				}
 				case "GF", "GlowFilter":
 				{
 					var glow:GlowFilter = Reflect.field(filters, filter);
-					bitmapFilter.push(new openfl.filters.GlowFilter(colorFromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK));
+					bitmapFilter.unshift(new openfl.filters.GlowFilter(colorFromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK));
+				}
+				case "BF", "BevelFilter": // Friday Night Funkin reference ?!??!?!''1'!'?1'1''?1''
+				{
+					var bevel:BevelFilter = Reflect.field(filters, filter);
+					bitmapFilter.unshift(new flxanimate.filters.BevelFilter(bevel.DST, bevel.AL, colorFromString(bevel.HC), bevel.HA, colorFromString(bevel.SC), bevel.SA, bevel.BLX, bevel.BLY, bevel.STR, bevel.Q, bevel.TP, bevel.KK));
 				}
 				case "BLF", "BlurFilter":
 				{
 					var blur:BlurFilter = Reflect.field(filters, filter);
-					bitmapFilter.push(new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q));
+					bitmapFilter.unshift(new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q));
 				}
 				case "ACF", "AdjustColorFilter":
 				{
@@ -115,12 +128,42 @@ class AnimationData
 					colorAdjust.contrast = adjustColor.CT;
 					colorAdjust.saturation = adjustColor.SAT;
 
-					bitmapFilter.push(new openfl.filters.ColorMatrixFilter(colorAdjust.calculateFinalFlatArray()));
+					bitmapFilter.unshift(new openfl.filters.ColorMatrixFilter(colorAdjust.calculateFinalFlatArray()));
 				}
-				case "BF", "BevelFilter":
+				
+				case "GGF", "GradientGlowFilter":
 				{
-					var bevel:BevelFilter = Reflect.field(filters, filter);
-					bitmapFilter.push(new flxanimate.filters.BevelFilter(bevel.DST, bevel.AL, colorFromString(bevel.HC), bevel.HA, colorFromString(bevel.SC), bevel.SA, bevel.BLX, bevel.BLY, bevel.STR, bevel.Q, bevel.TP, bevel.KK));
+					var gradient:GradientFilter = Reflect.field(filters, filter);
+					var colors:Array<Int> = [];
+					var alphas:Array<Float> = [];
+					var ratios:Array<Int> = [];
+
+					for (entry in gradient.GE)
+					{
+						colors.push(colorFromString(entry.C));
+						alphas.push(entry.A);
+						ratios.push(Std.int(entry.R * 255));
+					}
+
+					
+					bitmapFilter.unshift(new flxanimate.filters.GradientGlowFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK));
+				}
+				case "GBF", "GradientBevelFilter":
+				{
+					var gradient:GradientFilter = Reflect.field(filters, filter);
+					var colors:Array<Int> = [];
+					var alphas:Array<Float> = [];
+					var ratios:Array<Int> = [];
+
+					for (entry in gradient.GE)
+					{
+						colors.push(colorFromString(entry.C));
+						alphas.push(entry.A);
+						ratios.push(Math.round(entry.R * 255));
+					}
+
+					
+					bitmapFilter.unshift(new flxanimate.filters.GradientBevelFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK));
 				}
 			}
 		}
@@ -151,10 +194,6 @@ class AnimationData
 
 		return CT;
 	}
-
-	#if macro
-	
-	#end
 }
 /**
  * The types of Color Effects the symbol can have.
@@ -542,7 +581,9 @@ abstract SymbolInstance({}) from {}
 	}
 	function get_FF()
 	{
-		return AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
+		var ff = AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
+		trace(ff);
+		return (ff == null) ? 0 : ff;
 	}
 
 	function get_LP()
@@ -748,6 +789,7 @@ abstract BlurFilter({})
 		return AnimationData.setFieldBool(this, ["Q", "quality"]);
 	}
 }
+
 @:forward
 abstract GlowFilter(BlurFilter) 
 {
@@ -759,11 +801,11 @@ abstract GlowFilter(BlurFilter)
 
 	function get_C()
 	{
-		return AnimationData.setFieldBool(this, ["C"]);
+		return AnimationData.setFieldBool(this, ["C", "color"]);
 	}
 	function get_A()
 	{
-		return AnimationData.setFieldBool(this, ["A"]);
+		return AnimationData.setFieldBool(this, ["A", "alpha"]);
 	}
 	function get_STR()
 	{
@@ -775,28 +817,31 @@ abstract GlowFilter(BlurFilter)
 	}
 	function get_IN()
 	{
-		return AnimationData.setFieldBool(this, ["IN"]);
+		return AnimationData.setFieldBool(this, ["IN", "inner"]);
 	}
 }
 
 @:forward
 abstract DropShadowFilter(GlowFilter) 
 {
+	public var HO(get, never):Bool;
+	public var AL(get, never):Float;
+	public var DST(get, never):Float;
+
+	function get_HO()
+	{
+		return AnimationData.setFieldBool(this, ["HO", "hideObject"]);
+	}
+	function get_AL()
+	{
+		return AnimationData.setFieldBool(this, ["AL", "angle"]);
+	}
+	function get_DST()
+	{
+		return AnimationData.setFieldBool(this, ["DST", "distance"]);
+	}
 }
-/**
-"BLX": 0.0,
-"BLY": 0.0,
-"SC": "#FFFFFF",
-"SA": 1.0,
-"HC": "#FFFFFF",
-"HA": 1.0,
-"Q": 1,
-"STR": 1.0,
-"KK": false,
-"AL": 0.0,
-"DST": 19.0,
-"TP": "outer"
- */
+
 @:forward
 abstract BevelFilter(BlurFilter) 
 {
@@ -846,6 +891,64 @@ abstract BevelFilter(BlurFilter)
 	{
 		return AnimationData.setFieldBool(this, ["TP", "type"]);
 	}
+}
+@:forward
+abstract GradientFilter(BlurFilter)
+{
+	public var STR(get, never):Float;
+	public var KK(get, never):Bool;
+	public var AL(get, never):Float;
+	public var DST(get, never):Float;
+	public var TP(get, never):String;
+	public var GE(get, never):Array<GradientEntry>;
+
+
+	function get_STR()
+	{
+		return AnimationData.setFieldBool(this, ["STR", "strength"]);
+	}
+	function get_KK()
+	{
+		return AnimationData.setFieldBool(this, ["KK", "knockout"]);
+	}
+	function get_AL()
+	{
+		return AnimationData.setFieldBool(this, ["AL", "angle"]);
+	}
+	function get_DST()
+	{
+		return AnimationData.setFieldBool(this, ["DST", "distance"]);
+	}
+	function get_TP()
+	{
+		return AnimationData.setFieldBool(this, ["TP", "type"]);
+	}
+	function get_GE()
+	{
+		return AnimationData.setFieldBool(this, ["GE", "GradientEntries"]);
+	}
+}
+
+abstract GradientEntry({})
+{
+	public var R(get, never):Float;
+	public var C(get, never):String;
+	public var A(get, never):Float;
+
+
+	function get_R()
+	{
+		return AnimationData.setFieldBool(this, ["R", "ratio"]);
+	}
+	function get_C()
+	{
+		return AnimationData.setFieldBool(this, ["C", "color"]);
+	}
+	function get_A()
+	{
+		return AnimationData.setFieldBool(this, ["A", "alpha"]);
+	}
+
 }
 
 enum abstract ColorMode(String) from String to String

@@ -18,9 +18,14 @@ In case that you have any questions or problems about the project, you can conta
 <p>(as <b>cheemsnfriends</b>) &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;(as <a href="https://twitter.com/CheemsnFriendos/"><b>@CheemsnFriendos</b><a/>) </p>
 </div>
 
+
+# Limitations
+
+* No support on symbols that require 3D transformation ([See More](https://en.wikipedia.org/wiki/Transformation_matrix#Examples_in_3D_computer_graphics))
+
 ## TODO
 
-* Implement filters that use gradients to enhance the filter's richness.
+* Blend mode support for shader based blends.
 * Support on layer masks.
 * A wiki or website API related + samples to tweak on. Something similar as [HaxeFlixel's demos](https://haxeflixel.com/demos) and [HaxeFlixel's API](https://api.haxeflixel.com).
 
@@ -43,7 +48,7 @@ There are two usages that you can apply to FlxAnimate: One is the Texture Atlas 
 
 ## Texture Atlas
 
-**WARNING:** This repository **DOES NOT** transform texture atlases into spritesheets! If you wish to use this, It's better to use [Smokey555's repo](https://github.com/Smokey555/Flixel-TextureAtlas)
+**WARNING:** This repository **DOES NOT** transform texture atlases into spritesheets! If you wish to use this, It's better to use [Smokey555's repo](https://github.com/Smokey555/Flixel-TextureAtlas).
 
 In order to use FlxAnimate's texture atlas support, you will need to create a new instance of FlxAnimate, as you would do with FlxSprite.
 

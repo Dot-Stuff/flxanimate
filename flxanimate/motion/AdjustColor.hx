@@ -1,14 +1,11 @@
 package flxanimate.motion;
 
 /**
- * Extracted from [`fl.motion.AdjustColor`](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/motion/AdjustColor.html)
- * 
- * -------------------------------------------
  * The AdjustColor class defines various color properties, such as brightness, contrast, hue, and saturation, to support the ColorMatrixFilter class. 
  * You can apply the AdjustColor filter to any display object, 
  * and also generate a flat array representing all four color properties to use with the ColorMatrixFilter class.
  * 
- * @see [flash.filters.ColorMatrixFilter](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/filters/ColorMatrixFilter.html)
+ * @see [openfl.filters.ColorMatrixFilter](https://api.openfl.org/openfl/filters/ColorMatrixFilter.html)
  */
 class AdjustColor 
 {
@@ -31,26 +28,31 @@ class AdjustColor
     private var m_saturationMatrix:ColorMatrix;
     private var m_hueMatrix:ColorMatrix;
     private var m_finalMatrix:ColorMatrix;
+    
     /**
      * Sets the brightness of the AdjustColor filter. The range of valid values is `-100` to `100`.
      */
     public var brightness(null, set):Float;
+
     /**
      * Sets the contrast of the AdjustColor filter. The range of valid values is `-100` to `100`.
      */
     public var contrast(null, set):Float;
+
     /**
      * Sets the saturation of the AdjustColor filter. The range of valid values is `-100` to `100`.
      */
     public var saturation(null, set):Float;
+
     /**
      * Sets the hue of the AdjustColor filter. The range of valid values is `-180` to `180`.
      */
     public var hue(null, set):Float;
+
     /**
      * The AdjustColor class defines various color properties to support the ColorMatrixFilter.
      * 
-     * @see [flash.filters.ColorMatrixFilter](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/filters/ColorMatrixFilter.html)
+     * @see [openfl.filters.ColorMatrixFilter](https://api.openfl.org/openfl/filters/ColorMatrixFilter.html)
      */
     public function new() {}
 
@@ -59,11 +61,7 @@ class AdjustColor
         if (m_brightnessMatrix == null)
             m_brightnessMatrix = new ColorMatrix();
 
-        if (value != 0)
-        {
-            // brightness does not need to be denormalized
-            m_brightnessMatrix.setBrightnessMatrix(value);
-        }
+        m_brightnessMatrix.setBrightnessMatrix(value);
 
         return value;
     }
@@ -73,15 +71,10 @@ class AdjustColor
         // denormalized contrast value
         var deNormVal:Float = value;
 
-        if(value > 0) 
-            deNormVal = s_arrayOfDeltaIndex[Std.int(value)] * 127 + 127;
-        else 
-            deNormVal = (value / 100 * 127) + 127;
+        deNormVal = ((value > 0) ? s_arrayOfDeltaIndex[Std.int(value)] : value / 100) * 127 + 127;
     
         if(m_contrastMatrix == null)
-        {
             m_contrastMatrix = new ColorMatrix();
-        }
         
         m_contrastMatrix.setContrastMatrix(deNormVal);
 
@@ -117,10 +110,8 @@ class AdjustColor
         }
 
         if(value != 0)
-        {		
-            // Convert to radian
             m_hueMatrix.setHueMatrix(value * Math.PI / 180.0);
-        }
+        
         return value;
     }
     /**
@@ -134,8 +125,8 @@ class AdjustColor
     /**
      * Returns the flat array of values for all four properties.
      * @return An array of 20 numerical values representing all four AdjustColor properties
-     * to use with the `flash.filters.ColorMatrixFilter` class.
-     * @see [flash.filters.ColorMatrixFilter](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/filters/ColorMatrixFilter.html)
+     * to use with the `openfl.filters.ColorMatrixFilter` class.
+     * @see [openfl.filters.ColorMatrixFilter](https://api.openfl.org/openfl/filters/ColorMatrixFilter.html)
      */
     public function calculateFinalFlatArray()
     {
@@ -152,7 +143,10 @@ class AdjustColor
         if(!allValuesAreSet()) 
             return false;
         
-        m_finalMatrix = new ColorMatrix();
+        if (m_finalMatrix == null)
+            m_finalMatrix = new ColorMatrix();
+        else
+            m_finalMatrix.loadIdentity();
         
         m_finalMatrix.multiply(m_brightnessMatrix);
         m_finalMatrix.multiply(m_contrastMatrix);

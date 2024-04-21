@@ -1,5 +1,8 @@
 package flxanimate.display;
 
+import flxanimate.filters.MaskShader;
+import openfl.filters.ShaderFilter;
+import flixel.FlxCamera;
 import openfl.display.BlendMode;
 import openfl.display3D.Context3DClearMask;
 import openfl.display3D.Context3D;
@@ -21,6 +24,7 @@ import openfl.display._internal.Context3DGraphics;
 #if (js && html5)
 import openfl.display.CanvasRenderer;
 import openfl.display._internal.CanvasGraphics as GfxRenderer;
+import lime._internal.graphics.ImageCanvasUtil;
 #else
 import openfl.display.CairoRenderer;
 import openfl.display._internal.CairoGraphics as GfxRenderer;
@@ -39,16 +43,24 @@ import openfl.display._internal.CairoGraphics as GfxRenderer;
 @:access(openfl.display3D.Context3D)
 @:access(openfl.display.CanvasRenderer)
 @:access(openfl.display.CairoRenderer)
+@:access(openfl.display3D.Context3D)
 class FlxAnimateFilterRenderer
 {
     var renderer:OpenGLRenderer;
 	var context:Context3D;
+	@:privateAccess
+	var maskShader:flxanimate.filters.MaskShader;
+
+	var maskFilter:ShaderFilter;
 
     public function new()
     {
 		// context = new openfl.display3D.Context3D(null);
         renderer = new OpenGLRenderer(FlxG.game.stage.context3D);
-
+		renderer.__worldTransform = new Matrix();
+		renderer.__worldColorTransform = new ColorTransform();
+		maskShader = new MaskShader();
+		maskFilter = new ShaderFilter(maskShader);
     }
     
     @:noCompletion function setRenderer(renderer:DisplayObjectRenderer, rect:Rectangle)
@@ -79,103 +91,159 @@ class FlxAnimateFilterRenderer
 			renderer.__worldTransform.concat(new Matrix());
 			renderer.__worldTransform.tx -= offsetX;
 			renderer.__worldTransform.ty -= offsetY;
-			renderer.__worldTransform.scale(pixelRatio, pixelRatio);
 
 			renderer.__pixelRatio = pixelRatio;
 
 		}
 	}
 
-	public function applyFilter(bmp:BitmapData, filters:Array<BitmapFilter>, rect:Rectangle)
+	public function applyFilter(bmp:BitmapData, target:BitmapData, target1:BitmapData, target2:BitmapData, filters:Array<BitmapFilter>, rect:Rectangle, ?mask:BitmapData, ?maskPos:FlxPoint)
 	{
-		if (filters == null || filters.length == 0) return bmp;
-		
+		if (mask != null)
+		{
+			maskShader.relativePos.value[0] = maskPos.x;
+			maskShader.relativePos.value[1] = maskPos.y;
+			maskShader.mainPalette.input = mask;
+			maskFilter.invalidate();
+			if (filters == null)
+				filters = [maskFilter];
+			else
+				filters.push(maskFilter);
+		}
 		renderer.__setBlendMode(NORMAL);
 		renderer.__worldAlpha = 1;
-		
-		if (renderer.__worldTransform == null)
-		{
-			renderer.__worldTransform = new Matrix();
-			renderer.__worldColorTransform = new ColorTransform();
-		}
+
 		renderer.__worldTransform.identity();
 		renderer.__worldColorTransform.__identity();
 
-		var bitmap:BitmapData = new BitmapData(Math.ceil(rect.width), Math.ceil(rect.height), true, 0);
-		var bitmap2 = bitmap.clone();
+		var bitmap:BitmapData = target;
+		var bitmap2 = target1;
+		
+		var bitmap3 = target2;
+		
 
-		
-		var bitmap3 = bitmap2.clone();
-		
+		bmp.__renderTransform.translate(Math.abs(rect.x), Math.abs(rect.y));
 		renderer.__setRenderTarget(bitmap);
-		
-		bmp.__renderTransform.translate((bitmap.width - bmp.width) * 0.5, (bitmap.height - bmp.height) * 0.5);
 		renderer.__renderFilterPass(bmp, renderer.__defaultDisplayShader, true);
 		bmp.__renderTransform.identity();
 
-
-		var shader, cacheBitmap = null;
-
-		for (filter in filters)
+		if (filters != null)
 		{
-			if (filter.__preserveObject)
+			for (filter in filters)
 			{
-				renderer.__setRenderTarget(bitmap3);
-				renderer.__renderFilterPass(bitmap, renderer.__defaultDisplayShader, filter.__smooth);
-			}
+				if (filter.__preserveObject)
+				{
+					renderer.__setRenderTarget(bitmap3);
+					renderer.__renderFilterPass(bitmap, renderer.__defaultDisplayShader, filter.__smooth);
+				}
 
-			for (i in 0...filter.__numShaderPasses)
-			{
-				shader = filter.__initShader(renderer, i, (filter.__preserveObject) ? bitmap3 : null);
-				renderer.__setBlendMode(filter.__shaderBlendMode);
-				renderer.__setRenderTarget(bitmap2);
-				renderer.__renderFilterPass(bitmap, shader, filter.__smooth);
+				for (i in 0...filter.__numShaderPasses)
+				{
+					renderer.__setBlendMode(filter.__shaderBlendMode);
+					renderer.__setRenderTarget(bitmap2);
+					renderer.__renderFilterPass(bitmap, filter.__initShader(renderer, i, (filter.__preserveObject) ? bitmap3 : null), filter.__smooth);
 
-				cacheBitmap = bitmap;
-				bitmap = bitmap2;
-				bitmap2 = cacheBitmap;
+					renderer.__setRenderTarget(bitmap);
+					renderer.__renderFilterPass(bitmap2, renderer.__defaultDisplayShader, filter.__smooth);
+				}
+				
+				filter.__renderDirty = false;
 			}
-			filter.__renderDirty = false;
+			
+			if (mask != null)
+				filters.pop();
+
+			var gl = renderer.__gl;
+
+			var renderBuffer = bitmap.getTexture(renderer.__context3D);
+			@:privateAccess
+			gl.readPixels(0, 0, bitmap.width, bitmap.height, renderBuffer.__format, gl.UNSIGNED_BYTE, bitmap.image.data);
+			bitmap.image.version = 0;
+			@:privateAccess
+			bitmap.__textureVersion = -1;
 		}
-		
-		bitmap2.dispose();
-        bitmap3.dispose();
-		if (cacheBitmap != null)
-			cacheBitmap.dispose();
-
-		return bitmap;
 	}
 
 	public function applyBlend(blend:BlendMode, bitmap:BitmapData)
 	{
+		bitmap.__update(false, true);
 		var bmp = new BitmapData(bitmap.width, bitmap.height, 0);
 
 		#if (js && html5)
 		ImageCanvasUtil.convertToCanvas(bmp.image);
+		@:privateAccess
 		var renderer = new CanvasRenderer(bmp.image.buffer.__srcContext);
 		#else
 		var renderer = new CairoRenderer(new Cairo(bmp.getSurface()));
 		#end
+		
+		// setRenderer(renderer, bmp.rect);
 
-		setRenderer(renderer, bmp.rect);
+		var m = new Matrix();
+		var c = new ColorTransform();
+		renderer.__allowSmoothing = true;
+		renderer.__overrideBlendMode = blend;
+		renderer.__worldTransform = m;
+		renderer.__worldAlpha = 1;
+		renderer.__worldColorTransform = c;
+		
 		renderer.__setBlendMode(blend);
-
 		#if (js && html5)
 		bmp.__drawCanvas(bitmap, renderer);
 		#else
 		bmp.__drawCairo(bitmap, renderer);
 		#end
 
-		return bmp;
+		return bitmap;
 	}
 
-    public function graphicstoBitmapData(gfx:Graphics)
+	// var bmp = new BitmapData(Math.ceil(1280) , Math.ceil(720), 0);
+    public function graphicstoBitmapData(gfx:Graphics) // TODO!: Turn from CPU based to GPU based
     {
+		if (gfx.__bounds == null) return null;
+		var cacheRTT = renderer.__context3D.__state.renderToTexture;
+		var cacheRTTDepthStencil = renderer.__context3D.__state.renderToTextureDepthStencil;
+		var cacheRTTAntiAlias = renderer.__context3D.__state.renderToTextureAntiAlias;
+		var cacheRTTSurfaceSelector = renderer.__context3D.__state.renderToTextureSurfaceSelector;
+		
+		// var bounds = gfx.__owner.getBounds(null);
+
+		// trace(renderer.__context3D.backBufferWidth);
+		// // var divisor = 1;
+		// // if (FlxG.keys.pressed.X)
+		// // 	divisor = 2;
+		// bmp.fillRect(bmp.rect, 0);
+		// var renderBuffer = bmp.getTexture(renderer.__context3D);
+		// renderer.__defaultRenderTarget = bmp;
+		// renderer.__context3D.setRenderToTexture(renderBuffer);
+		
+		// renderer.__worldTransform.translate(-Math.floor(bounds.x), -Math.floor(bounds.y));
+		// // // renderer.__worldTransform.scale(1.255, 1.255);
+		// renderer.setViewport();
+		// Context3DGraphics.debugSHIT = true;
+		// Context3DGraphics.render(gfx, renderer);
+		// Context3DGraphics.debugSHIT = false;
 		GfxRenderer.render(gfx, cast renderer.__softwareRenderer);
 		var bmp = gfx.__bitmap;
 
-		gfx.__bitmap = null;
-		gfx.__renderTransform.identity();
+		// var gl = renderer.__gl;
+		// @:privateAccess
+		// gl.readPixels(0, 0, bmp.width, bmp.height, renderBuffer.__format, gl.UNSIGNED_BYTE, bmp.image.data);
+		// bmp.image.version = 0;
+		// @:privateAccess
+		// bmp.__textureVersion = -1;
+
+		
+
+		if (cacheRTT != null)
+		{
+			renderer.__context3D.setRenderToTexture(cacheRTT, cacheRTTDepthStencil, cacheRTTAntiAlias, cacheRTTSurfaceSelector);
+		}
+		else
+		{
+			renderer.__context3D.setRenderToBackBuffer();
+		}
+		renderer.__worldTransform.identity();
 
         return bmp;
     }

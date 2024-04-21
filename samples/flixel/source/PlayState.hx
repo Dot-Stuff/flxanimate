@@ -75,8 +75,6 @@ class PlayState extends FlxState
 
 			bitmapData.fillRect(new openfl.geom.Rectangle(125, 125, 100, 100), 0xFF0000FF);
 
-			trace(char._sprite.graphics.__bitmap);
-
 			// var renderer:OpenGLRenderer = cast FlxG.stage.__renderer;
 			// var filter = new openfl.filters.BlurFilter(25, 0);
 
@@ -90,7 +88,12 @@ class PlayState extends FlxState
 		sprite.screenCenter();
 		add(sprite);
 
-		labels = char.anim.getFrameLabels();
+		var stuff = char.anim.getFrameLabels();
+		labels = [];
+		for (i in stuff)
+		{
+			labels.push(i.name);
+		}
 		if (!optimiseMemory)
 		{
 			textCamera = new FlxCamera();

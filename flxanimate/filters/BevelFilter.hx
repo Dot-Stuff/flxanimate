@@ -337,7 +337,7 @@ class BevelFilter extends BitmapFilter
 			}
 			shader.uColor.value[3] = 1;
 
-			shader.uStrength.value[0] = pass == (__horizontalPasses + __verticalPasses - 1) ? __strength : 1.0;
+			shader.uStrength.value[0] = 1.0;
 			return shader;
 		}
 
@@ -361,6 +361,7 @@ class BevelFilter extends BitmapFilter
 			shader.uColorS.value[1] = ((shadowColor >> 8) & 0xFF) / 255;
 			shader.uColorS.value[2] = (shadowColor & 0xFF) / 255;
 			shader.uColorS.value[3] = shadowAlpha;
+			shader.uStrength.value[0] = __strength;
 
 			shader.knockout.value[0] = (__knockout) ? 1 : 0;
 			shader.offset.value[0] = __offsetX;
@@ -374,12 +375,11 @@ class BevelFilter extends BitmapFilter
     }
     @:noCompletion private function __updateSize():Void
 	{
-        var inner = type == "inner";
 		__offsetX = Std.int(__distance * Math.cos(__angle * Math.PI / 180));
 		__offsetY = Std.int(__distance * Math.sin(__angle * Math.PI / 180));
-		__topExtension = (!inner) ? Math.ceil(Math.abs(__offsetY) + __blurY) : 0;
+		__topExtension = (type != BitmapFilterType.INNER) ? Math.ceil(Math.abs(__offsetY) + __blurY) : 0;
 		__bottomExtension =  __topExtension;
-		__leftExtension = (!inner) ? Math.ceil(Math.abs(__offsetX) + __blurX) : 0;
+		__leftExtension = (type != BitmapFilterType.INNER) ? Math.ceil(Math.abs(__offsetX) + __blurX) : 0;
 		__rightExtension = __leftExtension;
 		__calculateNumShaderPasses();
 	}
@@ -558,24 +558,26 @@ private class BevelShader extends BitmapFilterShader
 	@:glFragmentHeader("
 		uniform vec4 uColorH;
 		uniform vec4 uColorS;
+		uniform float uStrength;
 		uniform int knockout;
 		uniform sampler2D sourceBitmap;
 		varying vec4 textureCoords;
 	")
 	@:glFragmentBody("
-		vec4 highlight = texture2D(openfl_Texture, textureCoords.zw);
-		highlight.rgb = vec3(1., 1., 1.) * highlight.a;
-		vec4 shadow = texture2D(openfl_Texture, textureCoords.xy);
+		float HA = texture2D(openfl_Texture, textureCoords.zw).a * uStrength;
+		float SA = texture2D(openfl_Texture, textureCoords.xy).a * uStrength;
 
-		shadow.rgb = vec3(1., 1., 1.) * shadow.a;
+		float a = SA;
 
-		vec4 a = highlight;
 
-		highlight = mix(highlight, vec4(0.), shadow.a);
+		SA -= HA;
+		HA -= a;
+
+		SA = clamp(SA, 0., 1.);
+		HA = clamp(HA, 0., 1.);
 		
-		shadow = mix(shadow, vec4(0.), a.a);
 
-		vec4 bevel = (uColorS * shadow) + (uColorH * highlight);
+		vec4 bevel = ((uColorS * SA) + (uColorH * HA));
 
 		vec4 src = texture2D(sourceBitmap, openfl_TextureCoordv);
 	")
@@ -592,6 +594,7 @@ private class BevelShader extends BitmapFilterShader
 		#if !macro
 		uColorH.value = [0, 0, 0, 0];
 		uColorS.value = [0, 0, 0, 0];
+		uStrength.value = [0];
 		offset.value = [0, 0];
 		knockout.value = [0];
 		#end

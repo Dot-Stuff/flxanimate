@@ -13,7 +13,7 @@ class Main extends Sprite
 	{
 		super();
 
-		addChild(new FlxGame(1280, 720, PlayState, 1, framerate, framerate, true, false));
+		addChild(new FlxGame(1280, 720, PlayState, framerate, framerate, true, false));
 
 		var fpsCounter = new FPS(10, 3, FlxColor.BLACK);
 		addChild(fpsCounter);

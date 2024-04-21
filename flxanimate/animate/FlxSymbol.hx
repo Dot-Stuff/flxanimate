@@ -193,9 +193,9 @@ class FlxSymbol
         return frame;
     }
 
-    public function update(elapsed:Float)
+    public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
     {
-        
+        timeline.updateRender(elapsed, curFrame, dictionary, swfRender);
     }
     /**
      * Gets an element through a specific index from a frame.

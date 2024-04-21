@@ -1,8 +1,5 @@
 package flxanimate.motion;
 /**
- * Extracted from [`fl.motion.ColorMatrix`](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/motion/ColorMatrix.html)
- * 
- * ---------------------------------------------
  * The ColorMatrix class calculates and stores color matrixes based on given values. 
  * This class extends the DynamicMatrix class and also supports the ColorMatrixFilter class.
  * @see flxanimate.motion.DynamicMatrix
@@ -10,9 +7,10 @@ package flxanimate.motion;
  */
 class ColorMatrix extends DynamicMatrix
 {
-    static var lumR = 0.3086;
-    static var lumG = 0.6094;
-    static var lumB = 0.0820;
+    var lumR = 0.3086;
+    var lumG = 0.6094;
+    var lumB = 0.0820;
+
     /**
      * Calculates and stores color matrixes based on given values.
      * @see DynamicMatrix

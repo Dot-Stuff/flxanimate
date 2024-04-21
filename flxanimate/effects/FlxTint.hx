@@ -9,10 +9,16 @@ using flixel.util.FlxColorTransformUtil;
 class FlxTint extends FlxColorEffect 
 {
     /**
-     * a 0x​_AARRGGBB_ `FlxColor` value.
-     * The strength of the tint is used by the color's alpha.
+     * a 0x​_RRGGBB_ `FlxColor` value.
+     * The alpha of the color will be ignored.
      */
     public var tint(default, set):FlxColor;
+
+
+    /**
+     * a decimal number representing the amount of tint applied.
+     */
+    public var multiplier(default, set):Float;
 
     /**
      * Creates a new `FlxTint` instance.
@@ -22,12 +28,11 @@ class FlxTint extends FlxColorEffect
     public function new(tint:FlxColor, multiplier:Float)
     {
         super();
-        tint.alphaFloat = multiplier;
+        this.multiplier = multiplier;
         this.tint = tint;
     }
     override public function process() 
     {
-        var multiplier = tint.alphaFloat;
         var cMultiplier = 1 - multiplier;
         c_Transform.redMultiplier = cMultiplier;
         c_Transform.redOffset = Math.round(tint.red * multiplier);
@@ -42,5 +47,11 @@ class FlxTint extends FlxColorEffect
         if (tint != value) renderDirty = true;
 
         return tint = value;
+    }
+    function set_multiplier(value:Float)
+    {
+        if (tint != value) renderDirty = true;
+
+        return multiplier = value;
     }
 }

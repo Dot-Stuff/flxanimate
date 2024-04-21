@@ -19,7 +19,11 @@ class FlxKeyFrame
 
     @:allow(flxanimate.FlxAnimate)
     var _filterFrame:FlxFrame;
-    
+
+    public var classicTween(default, set):Bool;
+
+    private var _tFrame:FlxKeyFrame;
+
     @:allow(flxanimate.FlxAnimate)
     var _bitmapMatrix:FlxMatrix;
 
@@ -37,13 +41,20 @@ class FlxKeyFrame
     var _elements(default, null):Array<FlxElement>;
 
     @:allow(flxanimate.FlxAnimate)
+    @:allow(flxanimate.animate.FlxLayer)
     var _renderDirty:Bool = false;
+
+    @:allow(flxanimate.animate.FlxLayer)
+    var _cacheAsBitmap:Bool;
 
     @:allow(flxanimate.FlxAnimate)
     var _ff:Int = -1;
 
-    public var filters(default, set):Array<BitmapFilter>;
+    var clTMat:FlxMatrix = new FlxMatrix();
 
+    public var filters(default, set):Array<BitmapFilter>;
+    
+    var _curFrame:Int = 0;
     public function new(index:Int, ?duration:Int = 1, ?elements:Array<FlxElement> = null, ?colorEffect:FlxColorEffect = null, ?name:String = null)
     {
         this.index = index;
@@ -71,13 +82,13 @@ class FlxKeyFrame
     function set_filters(value:Array<BitmapFilter>)
     {
         _renderDirty = true;
-
+        if (value != null && value.length > 0)
+            _cacheAsBitmap = true;
         return filters = value;
     }
 
     public function update(frame:Int)
     {
-
         if (filters == null || filters.length == 0 || _renderDirty) return;
 
         for (filter in filters)
@@ -89,16 +100,16 @@ class FlxKeyFrame
                 return;
             }
         }
+    }
+    public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+    {
+        var curFrame = curFrame - index;
+        
+        update(curFrame);
 
         for (element in _elements)
         {
-            if (element.symbol == null) continue;
-            
-            if (element.symbol._renderDirty || element.symbol._layerDirty)
-            {
-                _renderDirty = true;
-                return;
-            }
+            element.updateRender(elapsed, curFrame, dictionary);
         }
     }
     public function add(element:EitherType<FlxElement, Function>)
@@ -224,6 +235,15 @@ class FlxKeyFrame
             _parent._labels.set(name, this);
         }
         return this.name = name;
+    }
+    function set_classicTween(value:Bool)
+    {
+        classicTween = value;
+        
+        if (_parent != null)
+            _tFrame = (!classicTween) ? null : _parent._keyframes[_parent._keyframes.indexOf(this) + 1];
+
+        return value;
     }
     public static function fromJSON(frame:Frame)
     {

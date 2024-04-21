@@ -3,14 +3,10 @@ package flxanimate.motion;
 import openfl.Vector;
 
 /**
- * Exact port of the actual class [`fl.motion.DynamicMatrix`](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/motion/DynamicMatrix.html).
- * 
- * ----------------------------------------------------------------------------
- * 
  * The DynamicMatrix class calculates and stores a matrix based on given values.
  * This class supports the ColorMatrixFilter and can be extended by the ColorMatrix class.
- * @see flxanimate.motion.AdjustColor
- * @see [flash.filters.ColorMatrixFilter](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/filters/ColorMatrixFilter.html)
+ * @see [flxanimate.motion.AdjustColor]
+ * @see [openfl.filters.ColorMatrixFilter](https://api.openfl.org/openfl/filters/ColorMatrixFilter.html)
  */
 class DynamicMatrix
 {
@@ -52,10 +48,6 @@ class DynamicMatrix
         }
     }
 
-    function destroy()
-    {
-        m_matrix = null;
-    }
     /**
      * Returns the number of columns in the current matrix. 
      * @return The number of columns.
@@ -76,10 +68,9 @@ class DynamicMatrix
     public function getValue(row:Int, col:Int)
     {
         var value:Float = 0;
-        if (row >= 0 && row < m_height && col >= 0 && col <= m_width)
-        {
-            value = m_matrix[row][col];
-        }
+
+        value = m_matrix[row][col];
+        
         return value;
     }
     /**
@@ -91,13 +82,11 @@ class DynamicMatrix
     public function setValue(row:Int, col:Int, value:Float)
     {
         if (row >= 0 && row < m_height && col >= 0 && col <= m_width)
-        {
             m_matrix[row][col] = value;
-        }
     }
     /**
      * Sets the current matrix to an identity matrix.
-     * @see [flash.geom.Matrix#identity](https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/geom/Matrix.html#identity())
+     * @see [openfl.geom.Matrix#identity](https://api.openfl.org/openfl/geom/Matrix.html#identity)
      */
     public function loadIdentity()
     {
@@ -118,9 +107,7 @@ class DynamicMatrix
     public function loadZeros()
     {
         if (m_matrix != null)
-        {
             multiplyNumber(0);
-        }
     }
     /**
      * Multiplies the current matrix with a specified matrix; and either
@@ -134,8 +121,8 @@ class DynamicMatrix
      * specified matrix (the `inMatrix` parameter) is null, or if the order is to append and the
      * current matrix's width is not the same as the supplied matrix's height; or if the order is to prepend
      * and the current matrix's height is not equal to the supplied matrix's width.
-     * @see #MATRIX_ORDER_PREPEND
-     * @see #MATRIX_ORDER_APPEND
+     * @see `DynamicMatrix.MATRIX_ORDER_PREPEND`
+     * @see `DynamicMatrix.MATRIX_ORDER_APPEND`
      */
     public function multiply(inMatrix:DynamicMatrix, order:Int = 0)
     {
@@ -168,7 +155,8 @@ class DynamicMatrix
             }
         }
 
-        destroy();
+        m_matrix = null;
+
         create(width, height);
 
         for (i in 0...inHeight)

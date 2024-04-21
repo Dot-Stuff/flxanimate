@@ -12,6 +12,7 @@ import openfl.geom.ColorTransform;
  */
 class FlxColorEffect
 {
+    @:allow(flxanimate.FlxAnimate)
     /**
      * Represents when to process the new values into `c_Transform`.
      */

@@ -1,5 +1,8 @@
 package flxanimate.animate;
 
+import flixel.math.FlxRect;
+import flixel.graphics.FlxGraphic;
+import openfl.geom.Rectangle;
 import flixel.FlxObject;
 import flxanimate.display.FlxAnimateFilterRenderer;
 import flixel.math.FlxMatrix;
@@ -12,14 +15,28 @@ import haxe.extern.EitherType;
 import flxanimate.data.AnimationData.Frame;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flxanimate.data.AnimationData.Layers;
+import flxanimate.interfaces.IFilterable;
+import flxanimate.motion.easing.*;
 
-class FlxLayer extends FlxObject
+class FlxLayer extends FlxObject implements IFilterable
 {
     @:allow(flxanimate.FlxAnimate)
     var _filterCamera:FlxCamera;
 
+    /**
+     * 
+     * 
+     * @since `4.0.0`
+     */
+    public var onFrameUpdate:(prevFrame:FlxKeyFrame, curFrame:FlxKeyFrame)->Void;
+
+    var _mcMap:Map<String, Int>;
     @:allow(flxanimate.FlxAnimate)
     var _filterFrame:FlxFrame;
+    @:allow(flxanimate.FlxAnimate)
+    var _bmp1:BitmapData;
+    @:allow(flxanimate.FlxAnimate)
+    var _bmp2:BitmapData;
 
     @:allow(flxanimate.FlxAnimate)
     var _filterMatrix:FlxMatrix;
@@ -37,7 +54,15 @@ class FlxLayer extends FlxObject
     var _labels:Map<String, FlxKeyFrame>;
     
     public var type(default, set):LayerType;
+    
+    @:allow(flxanimate.animate.FlxKeyFrame)
     var _keyframes(default, null):Array<FlxKeyFrame>;
+
+    @:allow(flxanimate.FlxAnimate)
+    var _correctClip:Bool = false;
+
+    @:allow(flxanimate.FlxAnimate)
+    var _clipper:FlxLayer = null;
 
     public var length(get, null):Int;
 
@@ -52,6 +77,7 @@ class FlxLayer extends FlxObject
         _keyframes = (keyframes != null) ? keyframes : [];
         visible = true;
         _labels = [];
+        _mcMap = [];
         _filterMatrix = new FlxMatrix();
     }
 
@@ -65,6 +91,47 @@ class FlxLayer extends FlxObject
     }
     override public function destroy()
     {
+    }
+
+    public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+    {
+        update(elapsed);
+        var _prevFrame = _currFrame;
+        _setCurFrame(curFrame);
+        if (_clipper == null && type.getName() == "Clipped")
+        {
+            if (_parent != null)
+            {
+                var l = _parent.get(type.getParameters()[0]);
+                if (l != null)
+                {
+                    l._correctClip = true;
+                    
+                    _clipper = l;
+                }
+            }
+        }
+        else if (_clipper != null)
+        {
+            if (_clipper._currFrame._renderDirty)
+            {
+                _currFrame._renderDirty = true;
+            }
+        }
+
+        if (_currFrame != null)
+        {
+            if (_correctClip)
+                _currFrame._cacheAsBitmap = true;
+            if (_prevFrame != _currFrame)
+            {
+                _currFrame._renderDirty = true;
+                _prevFrame = _currFrame;
+            }
+            _currFrame.updateRender(elapsed, curFrame, dictionary);
+        }
+        
+
     }
     public function get(frame:EitherType<String, Int>)
     {
@@ -94,6 +161,8 @@ class FlxLayer extends FlxObject
         else
         {
             index = frame;
+            if (index < 0 || index == Math.NaN)
+                index = 0;
             if (index > length) return null;
         }
 
@@ -104,6 +173,8 @@ class FlxLayer extends FlxObject
                 return keyframe;
             }
         }
+        
+        
         return null;
     }
     
@@ -159,6 +230,7 @@ class FlxLayer extends FlxObject
     }
     public function rename(name:String = "")
     {
+        _correctClip = false;
         if (["", null].indexOf(name) != -1 && ["", null].indexOf(this.name) != -1)
         {
             name = 'Layer ${(_parent != null) ? _parent.getList().length : 1}';
@@ -197,17 +269,22 @@ class FlxLayer extends FlxObject
     @:allow(flxanimate.FlxAnimate)
     function _setCurFrame(frame:Int)
     {
+        
         if (length == 0 || frame > length)
         {
             _currFrame = null;
             return;
         }
         
+        trace(_currFrame);
+        
         if (_currFrame != null)
         {
             if (frame >= _currFrame.index && frame < _currFrame.duration) return;
 
             var i = _keyframes.indexOf(_currFrame);
+
+            var prevFrame = _currFrame;
 
             if (frame >= _currFrame.index + _currFrame.duration)
             {
@@ -233,9 +310,46 @@ class FlxLayer extends FlxObject
 
                 _currFrame = keyframe;
             }
+            if (onFrameUpdate != null)
+                onFrameUpdate(prevFrame, _currFrame);
         }
         else
             _currFrame = get(frame);
+    }
+
+    @:allow(flxanimate.FlxAnimate)
+    function updateBitmaps(rect:Rectangle)
+    {
+        if (_filterFrame == null || (rect.width > _filterFrame.parent.bitmap.width || rect.height > _filterFrame.parent.bitmap.height))
+        {
+            var wid = (_filterFrame == null || rect.width > _filterFrame.parent.width) ? rect.width * 1.25 : _filterFrame.parent.width;
+            var hei = (_filterFrame == null || rect.height > _filterFrame.parent.height) ? rect.height * 1.25 : _filterFrame.parent.height;
+            if (_filterFrame != null)
+            {
+                _filterFrame.parent.destroy();
+                _bmp1.dispose();
+                _bmp2.dispose();
+            }
+            else
+            {
+                @:privateAccess
+                _filterFrame = new FlxFrame(null);
+            }
+            _filterFrame.parent = FlxGraphic.fromBitmapData(new BitmapData(Math.ceil(wid), Math.ceil(hei),0), true);
+            _bmp1 = new BitmapData(Math.ceil(wid), Math.ceil(hei));
+            _bmp2 = new BitmapData(Math.ceil(wid), Math.ceil(hei));
+            _filterFrame.frame = new FlxRect(0, 0, wid, hei);
+            _filterFrame.sourceSize.set(rect.width, rect.height);
+            @:privateAccess
+            _filterFrame.cacheFrameMatrix();
+        }
+        else
+        {
+            _filterFrame.parent.bitmap.fillRect(_filterFrame.parent.bitmap.rect, 0);
+            _bmp1.fillRect(_bmp1.rect, 0);
+            _bmp2.fillRect(_bmp2.rect, 0);
+        }
+        
     }
 
     public static function fromJSON(layer:Layers)
@@ -245,7 +359,7 @@ class FlxLayer extends FlxObject
         var l = new FlxLayer(layer.LN);
         if (layer.LT != null || layer.Clpb != null)
         {
-            l.type = (layer.LT != null) ? Clipper : Clipped(layer.Clpb); 
+            l.type = (layer.LT != null) ? Clipper : Clipped(layer.Clpb);
         }
         if (layer.FR != null)
         {

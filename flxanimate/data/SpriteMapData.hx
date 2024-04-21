@@ -1,5 +1,7 @@
 package flxanimate.data;
 
+import flxanimate.data.AnimationData.OneOfTwo;
+
 typedef AnimateAtlas =
 {
 	var ATLAS:AnimateSprites;
@@ -36,8 +38,32 @@ abstract Meta({var app:String; var version:String; var image:String; var format:
 	}
 }
 
+// Unrelated to Spritemap, but different spritesheet formats that Adobe Animate supports o
 typedef Size =
 {
 	var w:Int;
 	var h:Int;
+}
+
+typedef JSJson =
+{
+	var images:Array<String>;
+	var frames:Array<Array<Int>>;
+}
+
+typedef FlxSpriteMap = OneOfTwo<String, AnimateAtlas>;
+typedef FlxSparrow = OneOfTwo<String, Xml>;
+typedef FlxJson = OneOfTwo<String, JsonNormal>;
+typedef FlxPropertyList = OneOfTwo<String, Plist>;
+
+typedef JsonNormal =
+{
+	frames:Dynamic,
+	meta:Meta
+}
+
+typedef Plist =
+{
+	frames:Dynamic,
+	metadata:Dynamic
 }
