@@ -276,7 +276,6 @@ class FlxLayer extends FlxObject implements IFilterable
             return;
         }
         
-        
         if (_currFrame != null)
         {
             if (frame >= _currFrame.index && frame < _currFrame.duration) return;
