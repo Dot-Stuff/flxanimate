@@ -292,7 +292,7 @@ class FlxAnim implements IFlxDestroyable
 	}
 	function get_curFrame()
 	{
-		return (curSymbol != null) ? curSymbol.curFrame : null;
+		return (curSymbol != null) ? curSymbol.curFrame : 0;
 	}
 	function set_curFrame(Value:Int)
 	{
