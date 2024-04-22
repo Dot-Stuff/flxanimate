@@ -101,7 +101,11 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		for (sprite in json.ATLAS.SPRITES)
 		{
 			var limb = sprite.SPRITE;
-			sliceFrame(limb.name, limb.rotated, FlxRect.get(limb.x, limb.y, limb.w, limb.h), frames);
+			var rect = FlxRect.get(limb.x, limb.y, limb.w, limb.h);
+			if (limb.rotated)
+				rect.setSize(rect.height, rect.width);
+			
+			sliceFrame(limb.name, limb.rotated, rect, frames);
 		}
 		
 
