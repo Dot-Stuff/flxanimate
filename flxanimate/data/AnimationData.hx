@@ -582,7 +582,6 @@ abstract SymbolInstance({}) from {}
 	function get_FF()
 	{
 		var ff = AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
-		trace(ff);
 		return (ff == null) ? 0 : ff;
 	}
 

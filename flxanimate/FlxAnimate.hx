@@ -85,7 +85,7 @@ class FlxAnimate extends FlxSprite
 	{
 		super(X, Y);
 		anim = new FlxAnim(this);
-		showPivot = #if debug false #else false #end;
+		showPivot = false;
 		if (Path != null)
 			loadAtlas(Path);
 		if (Settings != null)
