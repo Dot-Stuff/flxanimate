@@ -1,5 +1,6 @@
 package flxanimate.display;
 
+import openfl.utils.ByteArray;
 import flxanimate.filters.MaskShader;
 import openfl.filters.ShaderFilter;
 import flixel.FlxCamera;
@@ -197,43 +198,42 @@ class FlxAnimateFilterRenderer
 		return bitmap;
 	}
 
-	// var bmp = new BitmapData(Math.ceil(1280) , Math.ceil(720), 0);
-    public function graphicstoBitmapData(gfx:Graphics) // TODO!: Turn from CPU based to GPU based
+    public function graphicstoBitmapData(gfx:Graphics, ?target:BitmapData = null) // TODO!: Support for CPU based games (Cairo/Canvas only renderers)
     {
 		if (gfx.__bounds == null) return null;
+		
 		var cacheRTT = renderer.__context3D.__state.renderToTexture;
 		var cacheRTTDepthStencil = renderer.__context3D.__state.renderToTextureDepthStencil;
 		var cacheRTTAntiAlias = renderer.__context3D.__state.renderToTextureAntiAlias;
 		var cacheRTTSurfaceSelector = renderer.__context3D.__state.renderToTextureSurfaceSelector;
 		
-		// var bounds = gfx.__owner.getBounds(null);
-
-		// trace(renderer.__context3D.backBufferWidth);
-		// // var divisor = 1;
-		// // if (FlxG.keys.pressed.X)
-		// // 	divisor = 2;
-		// bmp.fillRect(bmp.rect, 0);
-		// var renderBuffer = bmp.getTexture(renderer.__context3D);
-		// renderer.__defaultRenderTarget = bmp;
-		// renderer.__context3D.setRenderToTexture(renderBuffer);
-		
-		// renderer.__worldTransform.translate(-Math.floor(bounds.x), -Math.floor(bounds.y));
-		// // // renderer.__worldTransform.scale(1.255, 1.255);
-		// renderer.setViewport();
-		// Context3DGraphics.debugSHIT = true;
-		// Context3DGraphics.render(gfx, renderer);
-		// Context3DGraphics.debugSHIT = false;
-		GfxRenderer.render(gfx, cast renderer.__softwareRenderer);
-		var bmp = gfx.__bitmap;
-
-		// var gl = renderer.__gl;
-		// @:privateAccess
-		// gl.readPixels(0, 0, bmp.width, bmp.height, renderBuffer.__format, gl.UNSIGNED_BYTE, bmp.image.data);
-		// bmp.image.version = 0;
-		// @:privateAccess
-		// bmp.__textureVersion = -1;
+		var bounds = gfx.__owner.getBounds(null);
 
 		
+		var bmp = (target == null) ? new BitmapData(Math.ceil(bounds.width), Math.ceil(bounds.height), true, 0) : target;
+		
+		renderer.__worldTransform.translate(-bounds.x, -bounds.y);
+
+		// GfxRenderer.render(gfx, cast renderer.__softwareRenderer);
+		// var bmp = gfx.__bitmap;
+
+		var context = renderer.__context3D;
+
+		renderer.__setRenderTarget(bmp);
+		context.setRenderToTexture(bmp.getTexture(context));
+
+		Context3DGraphics.render(gfx, renderer);
+
+		renderer.__worldTransform.identity();
+
+
+
+		var gl = renderer.__gl;
+		var renderBuffer = bmp.getTexture(context);
+
+		@:privateAccess
+		gl.readPixels(0, 0, Math.round(bmp.width), Math.round(bmp.height), renderBuffer.__format, gl.UNSIGNED_BYTE, bmp.image.data);
+
 
 		if (cacheRTT != null)
 		{
@@ -243,7 +243,6 @@ class FlxAnimateFilterRenderer
 		{
 			renderer.__context3D.setRenderToBackBuffer();
 		}
-		renderer.__worldTransform.identity();
 
         return bmp;
     }
