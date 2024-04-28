@@ -294,9 +294,7 @@ class FlxSymbol
                 if (element.symbol == null)
                     continue;
 
-                var instance = (element.symbol.instance == "") ? element.symbol.name : element.symbol.instance;
-
-                if (instance == name) 
+                if (element.symbol.name == name || element.symbol.instance == name) 
                     return element;
                 else
                     continue;
@@ -315,9 +313,7 @@ class FlxSymbol
                     if (element.symbol == null)
                         continue;
 
-                    var instance = (element.symbol.instance == "") ? element.symbol.name : element.symbol.instance;
-
-                    if (instance == name)
+                    if (element.symbol.name == name || element.symbol.instance == name) 
                         return element;
                     else
                         continue;
