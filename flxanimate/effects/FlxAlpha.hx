@@ -6,8 +6,9 @@ class FlxAlpha extends FlxColorEffect
     
     public function new(alpha:Float)
     {
-        super();
         this.alpha = alpha;
+        
+        super();
     }
 
     override function process() 

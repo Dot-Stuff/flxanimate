@@ -12,12 +12,13 @@ import openfl.geom.ColorTransform;
  */
 class FlxColorEffect
 {
-    @:allow(flxanimate.FlxAnimate)
+    @:allow(flxanimate.animate.SymbolParameters)
     /**
      * Represents when to process the new values into `c_Transform`.
      */
     var renderDirty:Bool = true;
     
+    @:allow(flxanimate.FlxAnimate)
     /**
      * Represents the colorTransform variable
      */
@@ -26,7 +27,12 @@ class FlxColorEffect
     /**
      * Creates an instance of `FlxColorEffect`.
      */
-    public function new() {}
+    public function new() 
+    {
+        c_Transform = new ColorTransform();
+        
+        process();
+    }
 
     /**
      * The function where the whole color effect makes it's processing.
@@ -40,12 +46,9 @@ class FlxColorEffect
     @:noCompletion function __create()
     {
         if (!renderDirty) return c_Transform;
-
-        if (c_Transform == null)
-            c_Transform = new ColorTransform();
-        
         
         process();
+
         renderDirty = false;
 
 

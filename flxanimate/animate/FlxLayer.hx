@@ -1,5 +1,7 @@
 package flxanimate.animate;
 
+import flixel.FlxG;
+import flixel.util.FlxDestroyUtil;
 import flixel.math.FlxRect;
 import flixel.graphics.FlxGraphic;
 import openfl.geom.Rectangle;
@@ -91,6 +93,24 @@ class FlxLayer extends FlxObject implements IFilterable
     }
     override public function destroy()
     {
+        super.destroy();
+        if (_filterFrame != null)
+        {
+            FlxG.bitmap.remove(_filterFrame.parent);
+        }
+        _filterFrame = FlxDestroyUtil.destroy(_filterFrame);
+        _filterCamera = FlxDestroyUtil.destroy(_filterCamera);
+        _filterMatrix = null;
+        FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+        _bmp1 = FlxDestroyUtil.dispose(_bmp1);
+        FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+        _bmp2 = FlxDestroyUtil.dispose(_bmp2);
+
+        for (keyframe in _keyframes)
+        {
+            keyframe.destroy();
+        }
+        _keyframes = null;
     }
 
     public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
@@ -325,17 +345,19 @@ class FlxLayer extends FlxObject implements IFilterable
             if (_filterFrame != null)
             {
                 _filterFrame.parent.destroy();
-                _bmp1.dispose();
-                _bmp2.dispose();
+                FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+                FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
             }
             else
             {
                 @:privateAccess
                 _filterFrame = new FlxFrame(null);
             }
-            _filterFrame.parent = FlxGraphic.fromBitmapData(new BitmapData(Math.ceil(wid), Math.ceil(hei),0), true);
-            _bmp1 = new BitmapData(Math.ceil(wid), Math.ceil(hei));
-            _bmp2 = new BitmapData(Math.ceil(wid), Math.ceil(hei));
+            _filterFrame.parent = FlxG.bitmap.add(new BitmapData(Math.ceil(wid), Math.ceil(hei),0), true);
+            _bmp1 = new BitmapData(Math.ceil(wid), Math.ceil(hei), 0);
+            FlxGraphic.fromBitmapData(_bmp1, true);
+            _bmp2 = new BitmapData(Math.ceil(wid), Math.ceil(hei), 0);
+            FlxGraphic.fromBitmapData(_bmp2, true);
             _filterFrame.frame = new FlxRect(0, 0, wid, hei);
             _filterFrame.sourceSize.set(rect.width, rect.height);
             @:privateAccess

@@ -35,7 +35,28 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	{
 		var frames:FlxAnimateFrames = new FlxAnimateFrames();
 
-		var texts = Assets.list(TEXT).filter((text) -> StringTools.startsWith(text, '$Path/spritemap'));
+		var texts = Assets.list(TEXT).filter((text) -> StringTools.startsWith(text, '$Path/sprite'));
+		
+		var texts = [];
+		var isDone = false;
+
+		if (Assets.exists('$Path/spritemap.json'))
+		{
+			texts.push('$Path/spritemap.json');
+			isDone = true;
+		}
+
+		var i = 1;
+		while (!isDone)
+		{
+			if (Assets.exists('$Path/spritemap$i.json'))
+				texts.push('$Path/spritemap$i.json');
+
+			else
+				isDone = true;
+
+			i++;
+		}
 
 		for (text in texts)
 		{
@@ -76,13 +97,16 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		else
 			json = Path;
 
+
 		if (json == null)
 			return null;
 
 		if (Image == null)
 		{
 			if (Path is String)
+			{
 				Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + json.meta.image;
+			}
 			else
 				return null;
 		}
@@ -147,8 +171,11 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		}
 
 		var realData = data.toString();
-		realData.split("w=\"").join("width=\"");
-		realData.split("h=\"").join("height=\"");
+		if (realData.split("w=\"").length > 1)
+		{
+			realData.split("w=\"").join("width=\"");
+			realData.split("h=\"").join("height=\"");
+		}
 
 		return FlxAtlasFrames.fromSparrow(Image, realData);
 	}

@@ -109,8 +109,6 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 
     
             symbol.update(curFF);
-            if (symbol.name == "Cyborg")
-                trace(symbol._curFrame);
             @:privateAccess
             if ((symbol._renderDirty || symbol._layerDirty) && _parent != null && _parent._cacheAsBitmap)
             {
@@ -135,6 +133,17 @@ class FlxElement extends FlxObject implements IFlxDestroyable
                 case movieclip, "movieclip": MovieClip;
                 case button, "button": Button;
                 default: Graphic;
+            }
+            if (StringTools.contains(params.instance, "_bl"))
+            {
+                var _bl = params.instance.indexOf("_bl");
+
+                if (_bl != -1)
+                    _bl += 3;
+
+                var end = params.instance.indexOf("_", _bl);
+                params.blendMode = cast Std.parseInt(params.instance.substring(_bl, end));
+
             }
             var lp:LoopType = (element.SI.LP == null) ? loop : element.SI.LP.split("R")[0];
             params.loop = switch (lp) // remove the reverse sufix

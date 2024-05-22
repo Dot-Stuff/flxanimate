@@ -27,9 +27,10 @@ class FlxTint extends FlxColorEffect
      */
     public function new(tint:FlxColor, multiplier:Float)
     {
-        super();
         this.multiplier = multiplier;
         this.tint = tint;
+        
+        super();
     }
     override public function process() 
     {

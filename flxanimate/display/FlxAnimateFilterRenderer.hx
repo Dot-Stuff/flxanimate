@@ -227,7 +227,6 @@ class FlxAnimateFilterRenderer
 		renderer.__worldTransform.identity();
 
 
-
 		var gl = renderer.__gl;
 		var renderBuffer = bmp.getTexture(context);
 

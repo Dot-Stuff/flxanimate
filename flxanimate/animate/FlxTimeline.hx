@@ -1,10 +1,11 @@
 package flxanimate.animate;
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import haxe.extern.EitherType;
 import flxanimate.data.AnimationData.SymbolData;
 import flixel.FlxG;
 import flxanimate.data.AnimationData.Timeline;
 
-class FlxTimeline
+class FlxTimeline implements IFlxDestroyable
 {
     @:allow(flxanimate.animate.FlxSymbol)
     var _parent:FlxSymbol;
@@ -176,6 +177,14 @@ class FlxTimeline
                 _length = length;
         }
         return _length;
+    }
+    public function destroy()
+    {
+        for (layer in _layers)
+        {
+            layer.destroy();
+        }
+        _layers = null;
     }
     /**
      * Creates a `FlxTimeline` instance from the Animation file.

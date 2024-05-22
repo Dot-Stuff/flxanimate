@@ -1,5 +1,6 @@
 package flxanimate.animate;
 
+import flixel.util.FlxDestroyUtil;
 import flxanimate.display.FlxAnimateFilterRenderer;
 import openfl.filters.BitmapFilter;
 import openfl.display.BitmapData;
@@ -12,7 +13,7 @@ import flixel.math.FlxMatrix;
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
 
-class FlxSymbol
+class FlxSymbol implements IFlxDestroyable
 {
     @:allow(flxanimate.animate.FlxElement)
     var filterPool:Map<Array<BitmapFilter>, BitmapData> = [];
@@ -148,6 +149,12 @@ class FlxSymbol
         }
         label.removeCallbacks();
         return true;
+    }
+    public function destroy()
+    {
+        name = "";
+        
+        timeline.destroy();
     }
     public function getNextToFrameLabel(label:String, ?layer:EitherType<Int, String> = null)
     {

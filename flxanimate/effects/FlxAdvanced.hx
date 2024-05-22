@@ -18,6 +18,15 @@ class FlxAdvanced extends FlxColorEffect
     }
     function set_colorTransform(value:ColorTransform)
     {
-        return c_Transform = value;
+        c_Transform.redMultiplier = value.redMultiplier;
+		c_Transform.greenMultiplier = value.greenMultiplier;
+		c_Transform.blueMultiplier = value.blueMultiplier;
+		c_Transform.alphaMultiplier = value.alphaMultiplier;
+
+		c_Transform.redOffset = value.redOffset;
+		c_Transform.greenOffset = value.greenOffset;
+		c_Transform.blueOffset = value.blueOffset;
+		c_Transform.alphaOffset = value.alphaOffset;
+        return value;
     }
 }

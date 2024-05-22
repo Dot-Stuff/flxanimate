@@ -16,6 +16,7 @@ import flixel.math.FlxPoint;
 import openfl.geom.ColorTransform;
 import flxanimate.data.AnimationData;
 import flxanimate.effects.FlxColorEffect;
+import flixel.FlxG;
 
 /**
  * `SymbolParameters` defines and separates from what a `FlxElement` considered as a `Shape` and a `FlxElement` considered as a `Symbol`.
@@ -155,6 +156,17 @@ class SymbolParameters implements IFilterable
         name = null;
         colorEffect = null;
         transformationPoint = null;
+
+        if (_filterFrame != null)
+            FlxG.bitmap.remove(_filterFrame.parent);
+
+        _filterFrame = FlxDestroyUtil.destroy(_filterFrame);
+        _filterCamera = FlxDestroyUtil.destroy(_filterCamera);
+        _filterMatrix = null;
+        FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+        _bmp1 = FlxDestroyUtil.dispose(_bmp1);
+        FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+        _bmp2 = FlxDestroyUtil.dispose(_bmp2);
     }
 
     function set_type(type:SymbolT)
@@ -182,6 +194,10 @@ class SymbolParameters implements IFilterable
             _renderDirty = true;
             _curFrame = frame;
         }
+
+        @:privateAccess
+        if (colorEffect != null && colorEffect.renderDirty)
+            colorEffect.process();
 
         if (filters == null || filters.length == 0 || _renderDirty) return;
 
@@ -275,9 +291,11 @@ class SymbolParameters implements IFilterable
                 _renderDirty = true;
             else if (_filterFrame != null)
             {
-                _filterFrame.parent = FlxDestroyUtil.destroy(_filterFrame.parent);
+                FlxG.bitmap.remove(_filterFrame.parent);
                 _filterFrame = FlxDestroyUtil.destroy(_filterFrame);
+                FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
                 _bmp1 = FlxDestroyUtil.dispose(_bmp1);
+                FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
                 _bmp2 = FlxDestroyUtil.dispose(_bmp2);
             }
         }
@@ -287,6 +305,9 @@ class SymbolParameters implements IFilterable
 
     function set_blendMode(value:BlendMode)
     {
+        if (value == null)
+            value = NORMAL;
+        
         if (type == Graphic) return blendMode = NORMAL;
 
         if (blendMode != value) 
@@ -316,20 +337,25 @@ class SymbolParameters implements IFilterable
             var hei = (_filterFrame == null || rect.height > _filterFrame.parent.height) ? rect.height * 1.25 : _filterFrame.parent.height;
             if (_filterFrame != null)
             {
-                _filterFrame.parent.destroy();
-                _bmp1.dispose();
+                FlxG.bitmap.remove(_filterFrame.parent);
+                FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
                 if (_needSecondBmp)
-                    _bmp2.dispose();
+                    FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
             }
             else
             {
                 @:privateAccess
                 _filterFrame = new FlxFrame(null);
             }
-            _filterFrame.parent = FlxGraphic.fromBitmapData(new BitmapData(Math.ceil(wid), Math.ceil(hei), 0));
-            _bmp1 = new BitmapData(Math.ceil(wid), Math.ceil(hei));
+
+            _filterFrame.parent = FlxG.bitmap.add(new BitmapData(Math.ceil(wid), Math.ceil(hei),0), true);
+            _bmp1 = new BitmapData(Math.ceil(wid), Math.ceil(hei), 0);
+            FlxGraphic.fromBitmapData(_bmp1, true);
             if (_needSecondBmp)
-                _bmp2 = new BitmapData(Math.ceil(wid), Math.ceil(hei));
+            {
+                _bmp2 = new BitmapData(Math.ceil(wid), Math.ceil(hei), 0);
+                FlxGraphic.fromBitmapData(_bmp2, true);
+            }
             
             _filterFrame.frame = new FlxRect(0, 0, wid, hei);
             _filterFrame.sourceSize.set(rect.width, rect.height);
@@ -344,7 +370,7 @@ class SymbolParameters implements IFilterable
                 _bmp2.fillRect(_bmp2.rect, 0);
             else if (_bmp2 != null)
             {
-                _bmp2.dispose();
+                FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
                 _bmp2 = null;
             }
 

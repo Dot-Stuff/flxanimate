@@ -83,6 +83,7 @@ class AnimationData
 	{
 		return Std.parseInt( "0x" + color.substring(1));
 	}
+	
 	/**
 	 * Parses a filter from a JSON file into a `BitmapFilter`
 	 * @param filters The JSON field.

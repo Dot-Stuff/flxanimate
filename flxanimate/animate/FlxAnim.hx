@@ -210,14 +210,24 @@ class FlxAnim implements IFlxDestroyable
 		resume();
 	}
 
-	public function playElement(element:FlxElement)
+	public function playElement(element:FlxElement, ?Force:Bool = false, ?Reverse:Bool = false, ?Frame:Int = 0)
 	{
-		if (element == null || curInstance == element) return;
+		if (finished || curInstance != element)
+			Force = true;
+
+		if (curInstance == element && !Force) return;
 
 		pause();
 
-		curInstance = element;
-		curFrame = 0;
+		if (element != null)
+			curInstance = element;
+		else
+		{
+			curInstance = stageInstance;
+		}
+		
+		if (Force)
+			curFrame = (!Reverse) ? Frame : length - 1 - Frame;
 		
 		resume();
 	}
@@ -237,6 +247,14 @@ class FlxAnim implements IFlxDestroyable
 	{
 		pause();
 		curFrame = 0;
+	}
+
+	public function finish()
+	{
+		stop();
+		
+		if (!reversed)
+			curFrame = length - 1;
 	}
 
 	/**
@@ -556,6 +574,10 @@ class FlxAnim implements IFlxDestroyable
 		metadata = null;
 		swfRender = false;
 		_parent = null;
+		for (symbol in symbolDictionary.iterator())
+		{
+			symbol.destroy();
+		}
 		symbolDictionary = null;
 	}
 }
@@ -570,11 +592,14 @@ class FlxMetaData
 	 * The frame rate the animation was exported in the texture atlas in the beginning.
 	 */
 	public var frameRate:Float;
+
+	public var showHiddenLayers:Bool;
 	
 	public function new(name:String, frameRate:Float) 
 	{
 		this.name = name;
 		this.frameRate = frameRate;
+		showHiddenLayers = true;
 	}
 	public function destroy()
 	{

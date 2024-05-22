@@ -61,7 +61,7 @@ class AdjustColor
         if (m_brightnessMatrix == null)
             m_brightnessMatrix = new ColorMatrix();
 
-        m_brightnessMatrix.setBrightnessMatrix(value);
+        m_brightnessMatrix.setBrightnessMatrix(value * 2);
 
         return value;
     }

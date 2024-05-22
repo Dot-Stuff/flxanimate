@@ -6,8 +6,10 @@ class FlxBrightness extends FlxColorEffect
 
     public function new(brightness:Float)
     {
-        super();
         this.brightness = brightness;
+
+        
+        super();
     }
     override function process() 
     {

@@ -189,11 +189,11 @@ class FlxKeyFrame
 
     public function destroy() 
     {
+        _parent = null;
         name = null;
         index = 0;
         duration = 0;
         callbacks = null;
-        _parent = null;
         colorEffect = null;
         for (element in _elements)
         {
@@ -231,7 +231,8 @@ class FlxKeyFrame
     {
         if (_parent != null)
         {
-            _parent._labels.remove(this.name);
+            if (_parent._labels[this.name] == this)
+                _parent._labels.remove(this.name);
             _parent._labels.set(name, this);
         }
         return this.name = name;
