@@ -47,24 +47,24 @@ import openfl.display._internal.CairoGraphics as GfxRenderer;
 @:access(openfl.display3D.Context3D)
 class FlxAnimateFilterRenderer
 {
-    var renderer:OpenGLRenderer;
+	var renderer:OpenGLRenderer;
 	var context:Context3D;
 	@:privateAccess
 	var maskShader:flxanimate.filters.MaskShader;
 
 	var maskFilter:ShaderFilter;
 
-    public function new()
-    {
+	public function new()
+	{
 		// context = new openfl.display3D.Context3D(null);
-        renderer = new OpenGLRenderer(FlxG.game.stage.context3D);
+		renderer = new OpenGLRenderer(FlxG.game.stage.context3D);
 		renderer.__worldTransform = new Matrix();
 		renderer.__worldColorTransform = new ColorTransform();
 		maskShader = new MaskShader();
 		maskFilter = new ShaderFilter(maskShader);
-    }
-    
-    @:noCompletion function setRenderer(renderer:DisplayObjectRenderer, rect:Rectangle)
+	}
+
+	@:noCompletion function setRenderer(renderer:DisplayObjectRenderer, rect:Rectangle)
 	{
 		@:privateAccess
 		if (true)
@@ -75,7 +75,7 @@ class FlxAnimateFilterRenderer
 			var offsetX = rect.x > 0 ? Math.ceil(rect.x) : Math.floor(rect.x);
 			var offsetY = rect.y > 0 ? Math.ceil(rect.y) : Math.floor(rect.y);
 			if (renderer.__worldTransform == null)
-			{	
+			{
 				renderer.__worldTransform = new Matrix();
 				renderer.__worldColorTransform = new ColorTransform();
 			}
@@ -89,7 +89,7 @@ class FlxAnimateFilterRenderer
 
 			renderer.__worldTransform.identity();
 			renderer.__worldTransform.invert();
-			renderer.__worldTransform.concat(new Matrix());
+			//renderer.__worldTransform.concat(new Matrix());
 			renderer.__worldTransform.tx -= offsetX;
 			renderer.__worldTransform.ty -= offsetY;
 
@@ -119,9 +119,9 @@ class FlxAnimateFilterRenderer
 
 		var bitmap:BitmapData = target;
 		var bitmap2 = target1;
-		
+
 		var bitmap3 = target2;
-		
+
 
 		bmp.__renderTransform.translate(Math.abs(rect.x), Math.abs(rect.y));
 		renderer.__setRenderTarget(bitmap);
@@ -147,10 +147,10 @@ class FlxAnimateFilterRenderer
 					renderer.__setRenderTarget(bitmap);
 					renderer.__renderFilterPass(bitmap2, renderer.__defaultDisplayShader, filter.__smooth);
 				}
-				
+
 				filter.__renderDirty = false;
 			}
-			
+
 			if (mask != null)
 				filters.pop();
 
@@ -177,7 +177,7 @@ class FlxAnimateFilterRenderer
 		#else
 		var renderer = new CairoRenderer(new Cairo(bmp.getSurface()));
 		#end
-		
+
 		// setRenderer(renderer, bmp.rect);
 
 		var m = new Matrix();
@@ -187,7 +187,7 @@ class FlxAnimateFilterRenderer
 		renderer.__worldTransform = m;
 		renderer.__worldAlpha = 1;
 		renderer.__worldColorTransform = c;
-		
+
 		renderer.__setBlendMode(blend);
 		#if (js && html5)
 		bmp.__drawCanvas(bitmap, renderer);
@@ -198,20 +198,20 @@ class FlxAnimateFilterRenderer
 		return bitmap;
 	}
 
-    public function graphicstoBitmapData(gfx:Graphics, ?target:BitmapData = null) // TODO!: Support for CPU based games (Cairo/Canvas only renderers)
-    {
+	public function graphicstoBitmapData(gfx:Graphics, ?target:BitmapData = null) // TODO!: Support for CPU based games (Cairo/Canvas only renderers)
+	{
 		if (gfx.__bounds == null) return null;
-		
+
 		var cacheRTT = renderer.__context3D.__state.renderToTexture;
 		var cacheRTTDepthStencil = renderer.__context3D.__state.renderToTextureDepthStencil;
 		var cacheRTTAntiAlias = renderer.__context3D.__state.renderToTextureAntiAlias;
 		var cacheRTTSurfaceSelector = renderer.__context3D.__state.renderToTextureSurfaceSelector;
-		
+
 		var bounds = gfx.__owner.getBounds(null);
 
-		
+
 		var bmp = (target == null) ? new BitmapData(Math.ceil(bounds.width), Math.ceil(bounds.height), true, 0) : target;
-		
+
 		renderer.__worldTransform.translate(-bounds.x, -bounds.y);
 
 		// GfxRenderer.render(gfx, cast renderer.__softwareRenderer);
@@ -243,6 +243,6 @@ class FlxAnimateFilterRenderer
 			renderer.__context3D.setRenderToBackBuffer();
 		}
 
-        return bmp;
-    }
+		return bmp;
+	}
 }

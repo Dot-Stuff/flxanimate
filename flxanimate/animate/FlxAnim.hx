@@ -71,7 +71,7 @@ class FlxAnim implements IFlxDestroyable
 		Checks whether MovieClips should move or not.
 	**/
 	public var swfRender:Bool = false;
-	
+
 	var buttonMap:Map<String, ButtonSettings> = new Map();
 	/**
 	 * When ever the animation is playing.
@@ -96,14 +96,14 @@ class FlxAnim implements IFlxDestroyable
 	 * The frame the animation is currently.
 	 */
 	public var curFrame(get, set):Int;
-	
+
 	var animsMap:Map<String, SymbolStuff> = new Map();
-	
-	
-	
+
+
+
 	/**
 	 *  The looping method of `curSymbol`.
-	 * 
+	 *
 	 * _Made public since `4.0.0`_
 	 */
 	public var loopType(get, set):Loop;
@@ -147,7 +147,7 @@ class FlxAnim implements IFlxDestroyable
 	{
 		symbolDictionary = [];
 		stageInstance = null;
-		
+
 		if (animationFile == null) return;
 		setSymbols(animationFile);
 
@@ -156,7 +156,7 @@ class FlxAnim implements IFlxDestroyable
 		curInstance = stageInstance;
 
 		curFrame = stageInstance.symbol.firstFrame;
-		
+
 		_parent.origin.copyFrom(stageInstance.symbol.transformationPoint);
 		metadata = new FlxMetaData(animationFile.AN.N, animationFile.MD.FRT);
 		framerate = metadata.frameRate;
@@ -194,19 +194,19 @@ class FlxAnim implements IFlxDestroyable
 
 
 				framerate = (curThing.frameRate == 0) ? metadata.frameRate : curThing.frameRate;
-				
+
 				Force = (Force || curInstance != curThing.instance);
-				
+
 				curInstance = curThing.instance;
 			}
 		}
-		
+
 
 		if (Force)
 			curFrame = (Reverse) ? Frame - length : Frame;
 
 		reversed = Reverse;
-		
+
 		resume();
 	}
 
@@ -225,10 +225,10 @@ class FlxAnim implements IFlxDestroyable
 		{
 			curInstance = stageInstance;
 		}
-		
+
 		if (Force)
 			curFrame = (!Reverse) ? Frame : length - 1 - Frame;
-		
+
 		resume();
 	}
 
@@ -252,7 +252,7 @@ class FlxAnim implements IFlxDestroyable
 	public function finish()
 	{
 		stop();
-		
+
 		if (!reversed)
 			curFrame = length - 1;
 	}
@@ -264,20 +264,20 @@ class FlxAnim implements IFlxDestroyable
 	{
 		isPlaying = true;
 	}
-	
+
 	function setSymbols(Anim:AnimAtlas)
 	{
 		symbolDictionary.set(Anim.AN.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(Anim.AN.SN), FlxTimeline.fromJSON(Anim.AN.TL)));
-		
+
 		if (Anim.SD != null)
 		{
 			for (symbol in Anim.SD.S)
-			{	
+			{
 				symbolDictionary.set(symbol.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(symbol.SN), FlxTimeline.fromJSON(symbol.TL)));
 			}
 		}
 	}
-	
+
 	public function update(elapsed:Float)
 	{
 		if (curInstance != null)
@@ -287,21 +287,21 @@ class FlxAnim implements IFlxDestroyable
 		_tick += elapsed;
 
 		while (_tick > frameDelay)
-        {
-            (reversed) ? curFrame-- : curFrame++;
+		{
+			(reversed) ? curFrame-- : curFrame++;
 			curSymbol.fireCallbacks();
-            _tick -= frameDelay;
-        }
+			_tick -= frameDelay;
+		}
 
-		
+
 		if (loopType != SingleFrame && curFrame == (reversed ? 0 : length - 1))
 		{
 			if (loopType == PlayOnce)
 				pause();
-			
+
 			if (onComplete != null)
 				onComplete();
-			
+
 		}
 	}
 	function get_finished()
@@ -326,8 +326,8 @@ class FlxAnim implements IFlxDestroyable
 
 		if (symbolType == MovieClip && !swfRender)
 			curSymbol.curFrame = 0;
-		
-		
+
+
 		return curSymbol.curFrame;
 	}
 	/**
@@ -375,7 +375,7 @@ class FlxAnim implements IFlxDestroyable
 	{
 		addBySymbolIndices(Name, stageInstance.symbol.name, Indices, FrameRate, stageInstance.symbol.loop == Loop, 0,0);
 	}
-	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0) 
+	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
 		if (symbolDictionary == null)
 		{
@@ -389,7 +389,7 @@ class FlxAnim implements IFlxDestroyable
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce), new FlxMatrix(1,0,0,1,X,Y));
 		var timeline = new FlxTimeline();
 		timeline.add("Layer 1");
-		
+
 		for (index in 0...Indices.length)
 		{
 			var i = Indices[index];
@@ -402,7 +402,7 @@ class FlxAnim implements IFlxDestroyable
 		}
 		var symbol = new FlxSymbol(Name, timeline);
 		params.symbol.name = symbol.name;
-		
+
 		symbolDictionary.set(symbol.name, symbol);
 
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
@@ -416,7 +416,7 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * This adds a new animation by adding a custom timeline, obviously taking as a reference the timeline syntax!
 	 * **WARNING**: I, *CheemsAndFriends*, do **NOT** recommend this unless you're using an extern json file to do this!
-	 * if you wanna make a custom symbol to play around and is separated from the texture atlas, go ahead! but if you wanna just make a new symbol, 
+	 * if you wanna make a custom symbol to play around and is separated from the texture atlas, go ahead! but if you wanna just make a new symbol,
 	 * just do it in Flash directly
 	 * @param Name The name of the new Symbol.
 	 * @param Timeline The timeline which will have the symbol.
@@ -473,7 +473,7 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * Links a callback into a label.
 	 * @param label the name of the label.
-	 * @param callback the callback you're going to add 
+	 * @param callback the callback you're going to add
 	 */
 	public function addCallbackTo(label:String, callback:()->Void)
 	{
@@ -530,7 +530,7 @@ class FlxAnim implements IFlxDestroyable
 		if (frame == null) frame = curFrame;
 
 		var symbol:FlxSymbol = null;
-		
+
 		var layers = (layer == null) ? curSymbol.timeline.getList() : [curSymbol.timeline.get(layer)];
 		for (layer in layers)
 		{
@@ -538,7 +538,7 @@ class FlxAnim implements IFlxDestroyable
 			var elements = layer.get(frame);
 
 			if (elements == null) continue;
-			
+
 			for (element in elements.getList())
 			{
 				if (element.symbol == null) continue;
@@ -594,8 +594,8 @@ class FlxMetaData
 	public var frameRate:Float;
 
 	public var showHiddenLayers:Bool;
-	
-	public function new(name:String, frameRate:Float) 
+
+	public function new(name:String, frameRate:Float)
 	{
 		this.name = name;
 		this.frameRate = frameRate;

@@ -8,7 +8,7 @@ import haxe.xml.Fast as Access;
 
 /**
  * The Apple's propietary XML parser
- * 
+ *
  * @author noonat
  */
 class PropertyList

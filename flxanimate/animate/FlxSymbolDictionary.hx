@@ -6,87 +6,87 @@ import haxe.io.Path;
 
 class FlxSymbolDictionary
 {
-    var _parent:FlxAnim;
+	var _parent:FlxAnim;
 
-    var _mcFrame:Map<String, Int> = [];
+	var _mcFrame:Map<String, Int> = [];
 
-    var _symbols:Map<String, FlxSymbol> = [];
+	var _symbols:Map<String, FlxSymbol> = [];
 
-    public var length(default, null):Int;
+	public var length(default, null):Int;
 
-    public function new()
-    {
-        _symbols = [];
-    }
+	public function new()
+	{
+		_symbols = [];
+	}
 
-    
-    public function getLibrary(library:String)
-    {
-        var path = Path.directory(Path.addTrailingSlash(library));
 
-        var libraries:Map<String, FlxSymbol> = [];
-        for (instance in _symbols.keys())
-        {
-            if (path == instance)
-                libraries.set(path, _symbols.get(path));
-        }
+	public function getLibrary(library:String)
+	{
+		var path = Path.directory(Path.addTrailingSlash(library));
 
-        return libraries;
-    }
+		var libraries:Map<String, FlxSymbol> = [];
+		for (instance in _symbols.keys())
+		{
+			if (path == instance)
+				libraries.set(path, _symbols.get(path));
+		}
 
-    public function existsSymbol(symbol:String)
-    {
-        return _symbols.exists(symbol);
-    }
+		return libraries;
+	}
 
-    public function getSymbol(symbol:String)
-    {
-        return _symbols.get(symbol);
-    }
+	public function existsSymbol(symbol:String)
+	{
+		return _symbols.exists(symbol);
+	}
 
-    public function addSymbol(symbol:FlxSymbol, ?overrideSymbol:Bool = false)
-    {
-        if (_symbols.exists(symbol.name) && !overrideSymbol)
-        {
-            symbol.name += " Copy";
-        }
+	public function getSymbol(symbol:String)
+	{
+		return _symbols.get(symbol);
+	}
 
-            _symbols.set(symbol.name, symbol);
+	public function addSymbol(symbol:FlxSymbol, ?overrideSymbol:Bool = false)
+	{
+		if (_symbols.exists(symbol.name) && !overrideSymbol)
+		{
+			symbol.name += " Copy";
+		}
 
-        length++;
-    }
+			_symbols.set(symbol.name, symbol);
 
-    public function addLibrary(library:Map<String, FlxSymbol>, ?overrideSymbol:Bool = false)
-    {
-        for (symbol in library)
-        {
-            addSymbol(symbol, overrideSymbol);
-        }
-    }
+		length++;
+	}
 
-    public function removeLibrary(library:String)
-    {
-        var bool:Bool = false;
+	public function addLibrary(library:Map<String, FlxSymbol>, ?overrideSymbol:Bool = false)
+	{
+		for (symbol in library)
+		{
+			addSymbol(symbol, overrideSymbol);
+		}
+	}
 
-        var library = getLibrary(library);
-        
-        for (symbol in library)
-        {
-            if (removeSymbol(symbol))
-                bool = true;
-        }
+	public function removeLibrary(library:String)
+	{
+		var bool:Bool = false;
 
-        return bool;
-    }
-    public function removeSymbol(symbol:EitherType<FlxSymbol, String>)
-    {
-        var bool:Bool = false;
+		var library = getLibrary(library);
 
-        bool = _symbols.remove((Std.isOfType(symbol, FlxSymbol)) ? symbol.name : symbol);
+		for (symbol in library)
+		{
+			if (removeSymbol(symbol))
+				bool = true;
+		}
 
-        if (bool)
-            length--;
+		return bool;
+	}
+	public function removeSymbol(symbol:EitherType<FlxSymbol, String>)
+	{
+		var bool:Bool = false;
 
-        return bool;
-    }
+		bool = _symbols.remove((Std.isOfType(symbol, FlxSymbol)) ? symbol.name : symbol);
+
+		if (bool)
+			length--;
+
+		return bool;
+	}
 }

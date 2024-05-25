@@ -12,7 +12,7 @@ class AnimationData
 {
 
 	// public static var internalParam:EReg = ~/_FA{/;
-	
+
 	// public static var bracketReg:EReg = ~/(\{([^{}]|(?R))*\})/s;.
 
 	/**
@@ -52,7 +52,7 @@ class AnimationData
 		var colorEffect = None;
 
 		if (effect == null) return colorEffect;
-		
+
 		switch (effect.M)
 		{
 			case Tint, "Tint":
@@ -83,15 +83,15 @@ class AnimationData
 	{
 		return Std.parseInt( "0x" + color.substring(1));
 	}
-	
+
 	/**
 	 * Parses a filter from a JSON file into a `BitmapFilter`
 	 * @param filters The JSON field.
 	 */
-	public static function fromFilterJson(filters:Filters = null) 
+	public static function fromFilterJson(filters:Filters = null)
 	{
 		if (filters == null) return null;
-		
+
 		var bitmapFilter:Array<BitmapFilter> = [];
 
 		for (filter in Reflect.fields(filters))
@@ -121,7 +121,7 @@ class AnimationData
 				case "ACF", "AdjustColorFilter":
 				{
 					var adjustColor:AdjustColorFilter = Reflect.field(filters, filter);
-					
+
 					var colorAdjust = new AdjustColor();
 
 					colorAdjust.hue = adjustColor.H;
@@ -131,7 +131,7 @@ class AnimationData
 
 					bitmapFilter.unshift(new openfl.filters.ColorMatrixFilter(colorAdjust.calculateFinalFlatArray()));
 				}
-				
+
 				case "GGF", "GradientGlowFilter":
 				{
 					var gradient:GradientFilter = Reflect.field(filters, filter);
@@ -146,7 +146,7 @@ class AnimationData
 						ratios.push(Std.int(entry.R * 255));
 					}
 
-					
+
 					bitmapFilter.unshift(new flxanimate.filters.GradientGlowFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK));
 				}
 				case "GBF", "GradientBevelFilter":
@@ -163,7 +163,7 @@ class AnimationData
 						ratios.push(Math.round(entry.R * 255));
 					}
 
-					
+
 					bitmapFilter.unshift(new flxanimate.filters.GradientBevelFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK));
 				}
 			}
@@ -178,19 +178,20 @@ class AnimationData
 	public static function parseColorEffect(colorEffect:ColorEffect = None)
 	{
 		var CT = null;
-        
-        if ([None, null].indexOf(colorEffect) == -1)
-        {
-            var params = colorEffect.getParameters();
-            CT = switch (colorEffect.getName())
-            {
-                case "Tint": new FlxTint(params[0], params[1]);
-                case "Alpha": new FlxAlpha(params[0]);
-                case "Brightness": new FlxBrightness(params[0]);
-                case "Advanced": new FlxAdvanced(params[0]);
+
+		//if ([None, null].indexOf(colorEffect) == -1)
+		if(colorEffect != None && colorEffect != null)
+		{
+			var params = colorEffect.getParameters();
+			CT = switch (colorEffect.getName())
+			{
+				case "Tint": new FlxTint(params[0], params[1]);
+				case "Alpha": new FlxAlpha(params[0]);
+				case "Brightness": new FlxBrightness(params[0]);
+				case "Advanced": new FlxAdvanced(params[0]);
 				default: new FlxColorEffect();
-            }
-        }
+			}
+		}
 
 
 		return CT;
@@ -201,11 +202,11 @@ class AnimationData
  */
 enum ColorEffect
 {
-    None;
-    Brightness(Bright:Float);
-    Tint(Color:flixel.util.FlxColor, Opacity:Float);
-    Alpha(Alpha:Float);
-    Advanced(transform:ColorTransform);
+	None;
+	Brightness(Bright:Float);
+	Tint(Color:flixel.util.FlxColor, Opacity:Float);
+	Alpha(Alpha:Float);
+	Advanced(transform:ColorTransform);
 }
 /**
  * The looping method for the current symbol.
@@ -285,7 +286,7 @@ abstract SymbolDictionary({}) from {}
 }
 @:forward
 /**
- * 
+ *
  */
 abstract Animation(SymbolData) from {}
 {
@@ -312,7 +313,7 @@ abstract Animation(SymbolData) from {}
  * The main position how the symbol you exported was set, Acting almost identically as an `Element`, with the exception of not having an Atlas Sprite to call (not that I'm aware of).
  * **WARNING:** This may depend on how you exported your texture atlas, Meaning that this can be `null`
  */
-abstract StageInstance({}) 
+abstract StageInstance({})
 {
 	/**
 	 * The instance of the Element flagged as a `Symbol`.
@@ -339,7 +340,7 @@ abstract SymbolData({}) from {}
 	 */
 	public var TL(get, never):Timeline;
 
-	function get_SN():String 
+	function get_SN():String
 	{
 		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
@@ -415,12 +416,12 @@ abstract Layers({}) from {}
  */
 abstract MetaData({}) from {}
 {
-	
+
 	/**
 	 * The framerate.
 	 */
 	public var FRT(get, never):Float;
-	
+
 	function get_FRT()
 	{
 		return AnimationData.setFieldBool(this, ["FRT", "framerate"]);
@@ -791,7 +792,7 @@ abstract BlurFilter({})
 }
 
 @:forward
-abstract GlowFilter(BlurFilter) 
+abstract GlowFilter(BlurFilter)
 {
 	public var C(get, never):String;
 	public var A(get, never):Float;
@@ -822,7 +823,7 @@ abstract GlowFilter(BlurFilter)
 }
 
 @:forward
-abstract DropShadowFilter(GlowFilter) 
+abstract DropShadowFilter(GlowFilter)
 {
 	public var HO(get, never):Bool;
 	public var AL(get, never):Float;
@@ -843,7 +844,7 @@ abstract DropShadowFilter(GlowFilter)
 }
 
 @:forward
-abstract BevelFilter(BlurFilter) 
+abstract BevelFilter(BlurFilter)
 {
 	public var SC(get, never):String;
 	public var SA(get, never):Float;
@@ -995,12 +996,12 @@ abstract AtlasSymbolInstance(Bitmap) from {}
 	}
 }
 
-typedef Matrix3D = 
+typedef Matrix3D =
 {
-	var m00:Float; 
-	var m01:Float; 
-	var m02:Float; 
-	var m03:Float; 
+	var m00:Float;
+	var m01:Float;
+	var m02:Float;
+	var m03:Float;
 	var m10:Float;
 	var m11:Float;
 	var m12:Float;
@@ -1017,7 +1018,7 @@ typedef Matrix3D =
 /**
  * Position Stuff
  */
-typedef TransformationPoint = 
+typedef TransformationPoint =
 {
 	var x:Float;
 	var y:Float;

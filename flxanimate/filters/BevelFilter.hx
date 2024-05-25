@@ -9,16 +9,16 @@ import openfl.display.DisplayObjectRenderer;
 import openfl.display.BitmapData;
 
 /**
-	The BevelFilter class lets you add a bevel effect to display objects. 
-	A bevel effect gives objects such as buttons a three-dimensional look. 
-	You can customize the look of the bevel with different highlight and 
-	shadow colors, the amount of blur on the bevel, the angle of the bevel, 
-	the placement of the bevel, and a knockout effect. You can apply the 
-	filter to any display object (that is, objects that inherit from the 
-	DisplayObject class), such as MovieClip, SimpleButton, TextField, 
-	and Video objects, as well as to BitmapData objects. 
+	The BevelFilter class lets you add a bevel effect to display objects.
+	A bevel effect gives objects such as buttons a three-dimensional look.
+	You can customize the look of the bevel with different highlight and
+	shadow colors, the amount of blur on the bevel, the angle of the bevel,
+	the placement of the bevel, and a knockout effect. You can apply the
+	filter to any display object (that is, objects that inherit from the
+	DisplayObject class), such as MovieClip, SimpleButton, TextField,
+	and Video objects, as well as to BitmapData objects.
 
-	To create a new filter, use the constructor `new BevelFilter()`. 
+	To create a new filter, use the constructor `new BevelFilter()`.
 	The use of filters depends on the object to which you apply the filter:
 
 	* To apply filters to display objects use the `filters`
@@ -58,65 +58,65 @@ import openfl.display.BitmapData;
 #end
 @:access(openfl.filters.BitmapFilterType)
 @:access(openfl.filters.GlowFilter)
-class BevelFilter extends BitmapFilter 
+class BevelFilter extends BitmapFilter
 {
 	@:noCompletion private static var __fullCombineShader = new FullCombineShader();
 	@:noCompletion private static var __innerCombineShader = new InnerCombineShader();
 	@:noCompletion private static var __combineShader = new CombineShader();
 
 	/**
-		The angle of the bevel. Valid values are from 0 to 360°. 
-        The default value is 45°.
+		The angle of the bevel. Valid values are from 0 to 360°.
+		The default value is 45°.
 
-        The angle value represents the angle of the theoretical 
-        light source falling on the object and determines 
-        the placement of the effect relative to the object. 
-        If the distance property is set to 0, the effect is not 
-        offset from the object and, therefore, 
-        the angle property has no effect.
+		The angle value represents the angle of the theoretical
+		light source falling on the object and determines
+		the placement of the effect relative to the object.
+		If the distance property is set to 0, the effect is not
+		offset from the object and, therefore,
+		the angle property has no effect.
 	**/
 	public var angle(get, set):Float;
 
 	/**
-		The amount of horizontal blur, in pixels. Valid values are from 0 to 255 (floating point). 
-        The default value is 4. Values that are a power of 2 (such as 2, 4, 8, 16, and 32) 
-        are optimized to render more quickly than other values. 
+		The amount of horizontal blur, in pixels. Valid values are from 0 to 255 (floating point).
+		The default value is 4. Values that are a power of 2 (such as 2, 4, 8, 16, and 32)
+		are optimized to render more quickly than other values.
 	**/
 	public var blurX(get, set):Float;
 
 	/**
-		The amount of vertical blur, in pixels. Valid values are from 0 to 255 (floating point). 
-        The default value is 4. Values that are a power of 2 (such as 2, 4, 8, 16, and 32) 
-        are optimized to render more quickly than other values. 
+		The amount of vertical blur, in pixels. Valid values are from 0 to 255 (floating point).
+		The default value is 4. Values that are a power of 2 (such as 2, 4, 8, 16, and 32)
+		are optimized to render more quickly than other values.
 	**/
 	public var blurY(get, set):Float;
 
-    /**
+	/**
 		The offset distance for the bevel, in pixels. The default value is 4.0
 		(floating point).
 	**/
 	public var distance(get, set):Float;
 
-    /**
-        The alpha transparency value of the highlight color. 
-        The value is specified as a normalized value from 0 to 1. For example, .25 sets a transparency value of 25%. 
-        The default value is 1. 
-    **/
-    public var highlightAlpha(get, set):Float;
-    
-    /**
-        The highlight color of the bevel. Valid values are in hexadecimal format, 0xRRGGBB. The default is 0xFFFFFF. 
-    **/
-    public var highlightColor(get, set):Int;
+	/**
+		The alpha transparency value of the highlight color.
+		The value is specified as a normalized value from 0 to 1. For example, .25 sets a transparency value of 25%.
+		The default value is 1.
+	**/
+	public var highlightAlpha(get, set):Float;
 
-    /**
+	/**
+		The highlight color of the bevel. Valid values are in hexadecimal format, 0xRRGGBB. The default is 0xFFFFFF.
+	**/
+	public var highlightColor(get, set):Int;
+
+	/**
 		Applies a knockout effect(`true`), which effectively makes the
 		object's fill transparent and reveals the background color of the
 		document. The default is `false`(no knockout).
 	**/
 	public var knockout(get, set):Bool;
 
-    /**
+	/**
 		The number of times to apply the filter. The default value is
 		`BitmapFilterQuality.LOW`, which is equivalent to applying the
 		filter once. The value `BitmapFilterQuality.MEDIUM` applies the
@@ -132,51 +132,51 @@ class BevelFilter extends BitmapFilter
 	**/
 	public var quality(get, set):Int;
 
-    /**
-        The alpha transparency value of the shadow color. 
-        The value is specified as a normalized value from 0 to 1. For example, .25 sets a transparency value of 25%. 
-        The default value is 1. 
-    **/
-    public var shadowAlpha(get, set):Float;
-    
-    /**
-        The shadow color of the bevel. Valid values are in hexadecimal format, 0xRRGGBB. The default is 0xFFFFFF. 
-    **/
-    public var shadowColor(get, set):Int;
+	/**
+		The alpha transparency value of the shadow color.
+		The value is specified as a normalized value from 0 to 1. For example, .25 sets a transparency value of 25%.
+		The default value is 1.
+	**/
+	public var shadowAlpha(get, set):Float;
 
-    /**
+	/**
+		The shadow color of the bevel. Valid values are in hexadecimal format, 0xRRGGBB. The default is 0xFFFFFF.
+	**/
+	public var shadowColor(get, set):Int;
+
+	/**
 		The strength of the imprint or spread. The higher the value, the more
 		color is imprinted and the stronger the contrast between the shadow and
 		the background. Valid values are from 0 to 255.0. The default is 1.0.
 	**/
 	public var strength(get, set):Float;
 
-    /**
-        The placement of the bevel on the object. Inner and outer bevels are placed on the inner or outer edge; a full bevel is placed on the entire object. Valid values are the BitmapFilterType constants:
+	/**
+		The placement of the bevel on the object. Inner and outer bevels are placed on the inner or outer edge; a full bevel is placed on the entire object. Valid values are the BitmapFilterType constants:
 
-            - `BitmapFilterType.INNER`
-            - `BitmapFilterType.OUTER`
-            - `BitmapFilterType.FULL`
-    **/
-    public var type(get, set):String;
+			- `BitmapFilterType.INNER`
+			- `BitmapFilterType.OUTER`
+			- `BitmapFilterType.FULL`
+	**/
+	public var type(get, set):String;
 
 	@:noCompletion private var __angle:Float;
 	@:noCompletion private var __blurX:Float;
 	@:noCompletion private var __blurY:Float;
 	@:noCompletion private var __distance:Float;
-    @:noCompletion private var __highlightAlpha:Float;
-    @:noCompletion private var __highlightColor:Int;
+	@:noCompletion private var __highlightAlpha:Float;
+	@:noCompletion private var __highlightColor:Int;
 	@:noCompletion private var __knockout:Bool;
 	@:noCompletion private var __quality:Int;
-    @:noCompletion private var __shadowAlpha:Float;
-    @:noCompletion private var __shadowColor:Int;
+	@:noCompletion private var __shadowAlpha:Float;
+	@:noCompletion private var __shadowColor:Int;
 	@:noCompletion private var __strength:Float;
-    @:noCompletion private var __type:String;
+	@:noCompletion private var __type:String;
 	@:noCompletion private var __horizontalPasses:Int;
 	@:noCompletion private var __offsetX:Float;
 	@:noCompletion private var __offsetY:Float;
 	@:noCompletion private var __verticalPasses:Int;
-	
+
 	#if openfljs
 	@:noCompletion private static function __init__()
 	{
@@ -232,70 +232,70 @@ class BevelFilter extends BitmapFilter
 		});
 	}
 	#end
-    
-    /**
-        Initializes a new BevelFilter instance with the specified parameters.
 
-        @param distance The offset distance of the bevel, in pixels (floating point).
+	/**
+		Initializes a new BevelFilter instance with the specified parameters.
 
-        @param angle The angle of the bevel, from 0 to 360 degrees. 
+		@param distance The offset distance of the bevel, in pixels (floating point).
 
-        @param highlightColor The highlight color of the bevel, 0xRRGGBB. 
+		@param angle The angle of the bevel, from 0 to 360 degrees.
 
-        @param highlightAlpha The alpha transparency value of the highlight color. 
-                              Valid values are 0.0 to 1.0. For example, 
-                              .25 sets a transparency value of 25%.
+		@param highlightColor The highlight color of the bevel, 0xRRGGBB.
 
-        @param shadowColor The shadow color of the bevel, 0xRRGGBB.
+		@param highlightAlpha The alpha transparency value of the highlight color.
+							  Valid values are 0.0 to 1.0. For example,
+							  .25 sets a transparency value of 25%.
 
-        @param shadowAlpha The alpha transparency value of the shadow color. Valid 
-                           values are 0.0 to 1.0. For example, 
-                           .25 sets a transparency value of 25%. 
+		@param shadowColor The shadow color of the bevel, 0xRRGGBB.
 
-        @param blurX The amount of horizontal blur in pixels. Valid values are 0 to 255.0
-                     (floating point). 
+		@param shadowAlpha The alpha transparency value of the shadow color. Valid
+						   values are 0.0 to 1.0. For example,
+						   .25 sets a transparency value of 25%.
 
-        @param blurY The amount of vertical blur in pixels. Valid values are 0 to 255.0
-                     (floating point). 
+		@param blurX The amount of horizontal blur in pixels. Valid values are 0 to 255.0
+					 (floating point).
 
-        @param strength The strength of the imprint or spread. The higher the value, 
-                        the more color is imprinted and the stronger the contrast 
-                        between the bevel and the background. Valid values are 0 to 255.0. 
-                        
-        @param quality The quality of the bevel. Valid values are 0 to 15, 
-                       but for most applications, 
-                       you can use `BitmapFilterQuality` constants: 
+		@param blurY The amount of vertical blur in pixels. Valid values are 0 to 255.0
+					 (floating point).
 
-                        - `BitmapFilterQuality.LOW`
-                        - `BitmapFilterQuality.MEDIUM`
-                        - `BitmapFilterQuality.HIGH`
+		@param strength The strength of the imprint or spread. The higher the value,
+						the more color is imprinted and the stronger the contrast
+						between the bevel and the background. Valid values are 0 to 255.0.
 
-                        Filters with lower values render faster. You can use the other 
-                        available numeric values to achieve different effects.
+		@param quality The quality of the bevel. Valid values are 0 to 15,
+					   but for most applications,
+					   you can use `BitmapFilterQuality` constants:
 
-        @param type The type of bevel. Valid values are `BitmapFilterType` constants: 
-                    `BitmapFilterType.INNER`, `BitmapFilterType.OUTER`, 
-                    or `BitmapFilterType.FULL`. 
+						- `BitmapFilterQuality.LOW`
+						- `BitmapFilterQuality.MEDIUM`
+						- `BitmapFilterQuality.HIGH`
 
-        @param knockout Applies a knockout effect (`true`), 
-                        which effectively makes the object's fill transparent and 
-                        reveals the background color of the document. 
-        
-        @see `BitmapFilterQuality`
-        @see `BitmapFilterType`
-     */
-    public function new(distance:Float = 4, angle:Float = 45, highlightColor:Int = 0xFFFFFF, highlightAlpha:Float = 1, shadowColor:Int = 0x000000, shadowAlpha:Float = 1, blurX:Float = 4, blurY:Float = 4, strength:Float = 1, quality:Int = 1, type:String = "inner", knockout:Bool = false)
-    {
-        super();
+						Filters with lower values render faster. You can use the other
+						available numeric values to achieve different effects.
 
-        __offsetX = 0;
-        __offsetY = 0;
+		@param type The type of bevel. Valid values are `BitmapFilterType` constants:
+					`BitmapFilterType.INNER`, `BitmapFilterType.OUTER`,
+					or `BitmapFilterType.FULL`.
 
-        __distance = distance;
+		@param knockout Applies a knockout effect (`true`),
+						which effectively makes the object's fill transparent and
+						reveals the background color of the document.
+
+		@see `BitmapFilterQuality`
+		@see `BitmapFilterType`
+	 */
+	public function new(distance:Float = 4, angle:Float = 45, highlightColor:Int = 0xFFFFFF, highlightAlpha:Float = 1, shadowColor:Int = 0x000000, shadowAlpha:Float = 1, blurX:Float = 4, blurY:Float = 4, strength:Float = 1, quality:Int = 1, type:String = "inner", knockout:Bool = false)
+	{
+		super();
+
+		__offsetX = 0;
+		__offsetY = 0;
+
+		__distance = distance;
 		__angle = angle;
 		__highlightColor = highlightColor;
 		__highlightAlpha = highlightAlpha;
-        __shadowColor = shadowColor;
+		__shadowColor = shadowColor;
 		__shadowAlpha = shadowAlpha;
 		__blurX = blurX;
 		__blurY = blurY;
@@ -304,21 +304,21 @@ class BevelFilter extends BitmapFilter
 		__type = type;
 		__knockout = knockout;
 
-        __updateSize();
+		__updateSize();
 
-        __needSecondBitmapData = true;
+		__needSecondBitmapData = true;
 		__preserveObject = true;
 		__renderDirty = true;
-    }
-    public override function clone():BitmapFilter
-    {
-        return new BevelFilter(__distance, __angle, __highlightColor, __highlightAlpha, __shadowColor, __shadowAlpha, __blurX, __blurY, __strength, __quality, __type, __knockout);
-    }
+	}
+	public override function clone():BitmapFilter
+	{
+		return new BevelFilter(__distance, __angle, __highlightColor, __highlightAlpha, __shadowColor, __shadowAlpha, __blurX, __blurY, __strength, __quality, __type, __knockout);
+	}
 	// TODO: Implement __applyFilter
 
-	
-    @:noCompletion private override function __initShader(renderer:DisplayObjectRenderer, pass:Int, sourceBitmapData:BitmapData):Shader
-    {
+
+	@:noCompletion private override function __initShader(renderer:DisplayObjectRenderer, pass:Int, sourceBitmapData:BitmapData):Shader
+	{
 		#if !macro
 		if (pass < __horizontalPasses + __verticalPasses)
 		{
@@ -348,7 +348,7 @@ class BevelFilter extends BitmapFilter
 			case BitmapFilterType.FULL: __fullCombineShader;
 			default: null;
 		}
-		
+
 		if (shader != null)
 		{
 			shader.sourceBitmap.input = sourceBitmapData;
@@ -372,8 +372,8 @@ class BevelFilter extends BitmapFilter
 		#else
 		return null;
 		#end
-    }
-    @:noCompletion private function __updateSize():Void
+	}
+	@:noCompletion private function __updateSize():Void
 	{
 		__offsetX = Std.int(__distance * Math.cos(__angle * Math.PI / 180));
 		__offsetY = Std.int(__distance * Math.sin(__angle * Math.PI / 180));
@@ -384,14 +384,14 @@ class BevelFilter extends BitmapFilter
 		__calculateNumShaderPasses();
 	}
 
-    @:noCompletion private function __calculateNumShaderPasses():Void
+	@:noCompletion private function __calculateNumShaderPasses():Void
 	{
 		__horizontalPasses = (__blurX <= 0) ? 0 : Math.round(__blurX * (__quality / 4)) + 1;
 		__verticalPasses = (__blurY <= 0) ? 0 : Math.round(__blurY * (__quality / 4)) + 1;
 		__numShaderPasses = __horizontalPasses + __verticalPasses + 1;
 	}
 
-    @:noCompletion private function get_angle():Float
+	@:noCompletion private function get_angle():Float
 	{
 		return __angle;
 	}
@@ -439,7 +439,7 @@ class BevelFilter extends BitmapFilter
 		return value;
 	}
 
-    @:noCompletion private function get_distance():Float
+	@:noCompletion private function get_distance():Float
 	{
 		return __distance;
 	}
@@ -455,18 +455,18 @@ class BevelFilter extends BitmapFilter
 		return value;
 	}
 
-    @:noCompletion private function get_highlightAlpha():Float
-    {
-        return __highlightAlpha;
-    }
+	@:noCompletion private function get_highlightAlpha():Float
+	{
+		return __highlightAlpha;
+	}
 
-    @:noCompletion private function set_highlightAlpha(value:Float):Float
+	@:noCompletion private function set_highlightAlpha(value:Float):Float
 	{
 		if (value != __highlightAlpha) __renderDirty = true;
 		return __highlightAlpha = value;
 	}
 
-    @:noCompletion private function get_highlightColor():Int
+	@:noCompletion private function get_highlightColor():Int
 	{
 		return __highlightColor;
 	}
@@ -477,7 +477,7 @@ class BevelFilter extends BitmapFilter
 		return __highlightColor = value;
 	}
 
-    @:noCompletion private function get_knockout():Bool
+	@:noCompletion private function get_knockout():Bool
 	{
 		return __knockout;
 	}
@@ -488,7 +488,7 @@ class BevelFilter extends BitmapFilter
 		return __knockout = value;
 	}
 
-    @:noCompletion private function get_quality():Int
+	@:noCompletion private function get_quality():Int
 	{
 		return __quality;
 	}
@@ -499,18 +499,18 @@ class BevelFilter extends BitmapFilter
 		return __quality = value;
 	}
 
-    @:noCompletion private function get_shadowAlpha():Float
-    {
-        return __shadowAlpha;
-    }
+	@:noCompletion private function get_shadowAlpha():Float
+	{
+		return __shadowAlpha;
+	}
 
-    @:noCompletion private function set_shadowAlpha(value:Float):Float
+	@:noCompletion private function set_shadowAlpha(value:Float):Float
 	{
 		if (value != __shadowAlpha) __renderDirty = true;
 		return __shadowAlpha = value;
 	}
 
-    @:noCompletion private function get_shadowColor():Int
+	@:noCompletion private function get_shadowColor():Int
 	{
 		return __shadowColor;
 	}
@@ -521,7 +521,7 @@ class BevelFilter extends BitmapFilter
 		return __shadowColor = value;
 	}
 
-    @:noCompletion private function get_strength():Float
+	@:noCompletion private function get_strength():Float
 	{
 		return __strength;
 	}
@@ -532,7 +532,7 @@ class BevelFilter extends BitmapFilter
 		return __strength = value;
 	}
 
-    @:noCompletion private function get_type():String
+	@:noCompletion private function get_type():String
 	{
 		return __type;
 	}
@@ -540,11 +540,11 @@ class BevelFilter extends BitmapFilter
 	@:noCompletion private function set_type(value:String):String
 	{
 		if (value != __type)
-        { 
-            __type = value;
-            __renderDirty = true;
-            __updateSize();
-        }
+		{
+			__type = value;
+			__renderDirty = true;
+			__updateSize();
+		}
 		return value;
 	}
 }
@@ -575,7 +575,7 @@ private class BevelShader extends BitmapFilterShader
 
 		SA = clamp(SA, 0., 1.);
 		HA = clamp(HA, 0., 1.);
-		
+
 
 		vec4 bevel = ((uColorS * SA) + (uColorH * HA));
 
@@ -613,7 +613,7 @@ private class FullCombineShader extends BevelShader
 		void main(void) {
 
 			#pragma body
-			
+
 			if (knockout == 0)
 				gl_FragColor = src + bevel;
 			else
@@ -635,7 +635,7 @@ private class InnerCombineShader extends BevelShader
 		#pragma header
 
 		void main(void) {
-			
+
 			#pragma body
 
 			if (knockout == 0)
@@ -660,7 +660,7 @@ private class CombineShader extends BevelShader
 		#pragma header
 
 		void main(void) {
-			
+
 			#pragma body
 
 			if (knockout == 0)
