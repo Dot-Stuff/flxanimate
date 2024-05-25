@@ -12,46 +12,44 @@ import openfl.geom.ColorTransform;
  */
 class FlxColorEffect
 {
-    @:allow(flxanimate.animate.SymbolParameters)
-    /**
-     * Represents when to process the new values into `c_Transform`.
-     */
-    var renderDirty:Bool = true;
-    
-    @:allow(flxanimate.FlxAnimate)
-    /**
-     * Represents the colorTransform variable
-     */
-    var c_Transform:ColorTransform = null;
+	@:allow(flxanimate.animate.SymbolParameters)
+	/**
+	 * Represents when to process the new values into `c_Transform`.
+	 */
+	var renderDirty:Bool = true;
 
-    /**
-     * Creates an instance of `FlxColorEffect`.
-     */
-    public function new() 
-    {
-        c_Transform = new ColorTransform();
-        
-        process();
-    }
+	@:allow(flxanimate.FlxAnimate)
+	/**
+	 * Represents the colorTransform variable
+	 */
+	var c_Transform:ColorTransform = null;
 
-    /**
-     * The function where the whole color effect makes it's processing.
-     */
-    public function process() {}
+	/**
+	 * Creates an instance of `FlxColorEffect`.
+	 */
+	public function new()
+	{
+		c_Transform = new ColorTransform();
 
-    /**
-     * Internal, used to put the color Effect easily.
-     */
-    @:allow(flxanimate.FlxAnimate)
-    @:noCompletion function __create()
-    {
-        if (!renderDirty) return c_Transform;
-        
-        process();
+		process();
+	}
 
-        renderDirty = false;
+	/**
+	 * The function where the whole color effect makes it's processing.
+	 */
+	public function process() {}
 
+	/**
+	 * Internal, used to put the color Effect easily.
+	 */
+	@:allow(flxanimate.FlxAnimate)
+	@:noCompletion function __create()
+	{
+		if (renderDirty) {
+			process();
+			renderDirty = false;
+		}
 
-        return c_Transform;
-    }
+		return c_Transform;
+	}
 }

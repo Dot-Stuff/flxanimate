@@ -1,10 +1,10 @@
 package flxanimate.motion;
 
-class TweenManager 
+class TweenManager
 {
-    public var 
-    public function new()
-    {
+	public var
+	public function new()
+	{
 
-    }
+	}
 }
