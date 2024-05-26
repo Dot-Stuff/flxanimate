@@ -403,18 +403,18 @@ class FlxAnimate extends FlxSprite
 		}
 	}
 
-	function atlasSetting(Path:String):AnimAtlas
+	function atlasSetting(Path:String)
 	{
-		var jsontxt:AnimAtlas = null;
+		var jsontxt:String = null;
 		if (haxe.io.Path.extension(Path) == "zip")
 		{
 			var thing = Zip.readZip(Assets.getBytes(Path));
-			
+
 			for (list in Zip.unzip(thing))
 			{
 				if (list.fileName.indexOf("Animation.json") != -1)
 				{
-					jsontxt = haxe.Json.parse(list.data.toString());
+					jsontxt = list.data.toString();
 					thing.remove(list);
 					continue;
 				}
@@ -423,9 +423,7 @@ class FlxAnimate extends FlxSprite
 			FlxAnimateFrames.zip = thing;
 		}
 		else
-		{
-			jsontxt = haxe.Json.parse(openfl.Assets.getText('$Path/Animation.json'));
-		}
+			jsontxt = openfl.Assets.getText('$Path/Animation.json');
 
 		return jsontxt;
 	}
