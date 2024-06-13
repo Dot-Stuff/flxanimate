@@ -103,8 +103,8 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 				default: symbol.firstFrame;
 			}
 
-			// if (symbol.type == MovieClip)
-			// 	curFF = 0;
+			if (symbol.type == MovieClip)
+				curFF = 0;
 
 
 			symbol.update(curFF);
