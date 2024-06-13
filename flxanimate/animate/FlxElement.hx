@@ -93,7 +93,6 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 
 		if (symbol != null && dictionary.exists(symbol.name))
 		{
-
 			var length = dictionary[symbol.name].length;
 			var curFF = curFrame + symbol.firstFrame;
 
@@ -143,6 +142,8 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 
 				var end = params.instance.indexOf("_", _bl);
 				params.blendMode = cast Std.parseInt(params.instance.substring(_bl, end));
+
+				params.instance = params.instance.substring(end + 1);
 
 			}
 			var lp:LoopType = (element.SI.LP == null) ? loop : element.SI.LP.split("R")[0];
