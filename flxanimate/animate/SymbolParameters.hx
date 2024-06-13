@@ -108,8 +108,6 @@ class SymbolParameters implements IFilterable
 	var _renderDirty:Bool = false;
 
 	@:allow(flxanimate.animate.FlxKeyFrame)
-	@:allow(flxanimate.FlxAnimate)
-	var _layerDirty:Bool = false;
 
 	@:allow(flxanimate.FlxAnimate)
 	@:allow(flxanimate.animate.FlxAnim)
@@ -227,7 +225,7 @@ class SymbolParameters implements IFilterable
 		if (type == Graphic && firstFrame != value)
 		{
 			firstFrame = value;
-			_layerDirty = true;
+			_renderDirty = true;
 		}
 
 		return value;
@@ -337,7 +335,7 @@ class SymbolParameters implements IFilterable
 			var hei = (_filterFrame == null || rect.height > _filterFrame.parent.height) ? rect.height * 1.25 : _filterFrame.parent.height;
 			if (_filterFrame != null)
 			{
-				FlxG.bitmap.remove(_filterFrame.parent);
+				_filterFrame.parent.destroy();
 				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
 				if (_needSecondBmp)
 					FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
@@ -348,13 +346,13 @@ class SymbolParameters implements IFilterable
 				_filterFrame = new FlxFrame(null);
 			}
 
-			_filterFrame.parent = FlxG.bitmap.add(new BitmapData(Math.ceil(wid), Math.ceil(hei),0), true);
+			_filterFrame.parent = FlxG.bitmap.add(new BitmapData(Math.ceil(wid), Math.ceil(hei),0));
 			_bmp1 = new BitmapData(Math.ceil(wid), Math.ceil(hei), 0);
-			FlxGraphic.fromBitmapData(_bmp1, true);
+			FlxGraphic.fromBitmapData(_bmp1);
 			if (_needSecondBmp)
 			{
 				_bmp2 = new BitmapData(Math.ceil(wid), Math.ceil(hei), 0);
-				FlxGraphic.fromBitmapData(_bmp2, true);
+				FlxGraphic.fromBitmapData(_bmp2);
 			}
 
 			_filterFrame.frame = new FlxRect(0, 0, wid, hei);
@@ -364,8 +362,8 @@ class SymbolParameters implements IFilterable
 		}
 		else
 		{
-			_filterFrame.parent.bitmap.fillRect(_filterFrame.parent.bitmap.rect, 0);
 			_bmp1.fillRect(_bmp1.rect, 0);
+			_filterFrame.parent.bitmap.fillRect(_filterFrame.parent.bitmap.rect, 0);
 			if (_needSecondBmp)
 				_bmp2.fillRect(_bmp2.rect, 0);
 			else if (_bmp2 != null)
