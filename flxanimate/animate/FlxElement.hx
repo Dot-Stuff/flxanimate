@@ -103,16 +103,15 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 				default: symbol.firstFrame;
 			}
 
-			if (symbol.type == MovieClip)
-				curFF = 0;
+			// if (symbol.type == MovieClip)
+			// 	curFF = 0;
 
 
 			symbol.update(curFF);
 			@:privateAccess
-			if ((symbol._renderDirty || symbol._layerDirty) && _parent != null && _parent._cacheAsBitmap)
+			if (symbol._renderDirty && _parent != null && _parent._cacheAsBitmap)
 			{
 				symbol._renderDirty = false;
-				symbol._layerDirty = false;
 				_parent._renderDirty = true;
 			}
 			dictionary[symbol.name].updateRender(elapsed, curFF, dictionary, swfRender);
