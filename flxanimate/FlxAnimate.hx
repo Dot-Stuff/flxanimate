@@ -574,7 +574,7 @@ class FlxAnimate extends FlxSprite
 				if (!limbOnScreen(limb, matrix, camera))
 					continue;
 			}
-			camera.drawPixels(limb, null, matrix, colorTransform, blendMode, (!filterin) ? antialiasing : true, null);
+			camera.drawPixels(limb, null, matrix, colorTransform, blendMode, (!filterin) ? antialiasing : true, this.shader);
 		}
 
 		width = rect.width;
