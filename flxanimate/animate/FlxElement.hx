@@ -153,7 +153,7 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 				default: Loop;
 			}
 			params.reverse = (element.SI.LP == null) ? false : StringTools.contains(element.SI.LP, "R");
-			params.firstFrame = element.SI.FF;
+			params.firstFrame = element.SI.FF ?? 0;
 			params.colorEffect = AnimationData.fromColorJson(element.SI.C);
 			params.name = element.SI.SN;
 			params.transformationPoint = FlxPoint.weak(element.SI.TRP.x, element.SI.TRP.y);
