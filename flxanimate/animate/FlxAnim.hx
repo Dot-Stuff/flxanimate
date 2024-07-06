@@ -383,6 +383,21 @@ class FlxAnim implements IFlxDestroyable
 	{
 		addBySymbolIndices(Name, stageInstance.symbol.name, Indices, FrameRate, stageInstance.symbol.loop == Loop, 0,0);
 	}
+
+	/**
+	 * Creates an animation based on a frame label's starting frame and duration.0
+	 * @param Name The name of the animation to add.
+	 * @param FrameLabel The frame label to use as the starting frame.
+	 * @param FrameRate The framerate of the animation to use.
+	 * @param Looped Whether the animation should loop or not.
+	 * @param X A x offset to apply to the animation.
+	 * @param Y A y offset to apply to the animation.
+	 */
+	public function addByFrameLabel(Name:String, FrameLabel:String, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0) {
+		var keyFrame = getFrameLabel(FrameLabel);
+		addBySymbolIndices(Name, stageInstance.symbol.name, keyFrame.getFrameIndices(), FrameRate, Looped, X, Y);
+	}
+
 	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
 		if (symbolDictionary == null)
@@ -430,7 +445,7 @@ class FlxAnim implements IFlxDestroyable
 	 * @param Timeline The timeline which will have the symbol.
 	 * @param FrameRate The framerate it'll go, by default is 30.
 	 */
-	public function addByCustomTimeline(Name:String, Timeline:FlxTimeline, FrameRate:Float = 0, Looped:Bool = true)
+	public function addByCustomTimeline(Name:String, Timeline:FlxTimeline, FrameRate:Float = 0, Looped:Bool = true):Void
 	{
 		symbolDictionary.set(Name, new FlxSymbol(haxe.io.Path.withoutDirectory(Name), Timeline));
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce));
