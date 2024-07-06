@@ -437,16 +437,17 @@ class FlxAnim implements IFlxDestroyable
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
 
-	public function get_length()
+	public function get_length():Int
 	{
 		return curSymbol.length;
 	}
 
-	public function getFrameLabel(name:String, ?layer:EitherType<Int, String>)
+	public function getFrameLabel(name:String, ?layer:EitherType<Int, String>):FlxKeyFrame
 	{
 		return curSymbol.getFrameLabel(name, layer);
 	}
-	public function toString()
+
+	public function toString():String
 	{
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("symbolDictionary", symbolDictionary),
@@ -457,7 +458,7 @@ class FlxAnim implements IFlxDestroyable
 	 * Redirects the frame into a frame with a frame label of that type.
 	 * @param name the name of the label.
 	 */
-	public function goToFrameLabel(name:String, ?layer:EitherType<Int, String>)
+	public function goToFrameLabel(name:String, ?layer:EitherType<Int, String>):Void
 	{
 		pause();
 
@@ -483,52 +484,53 @@ class FlxAnim implements IFlxDestroyable
 	 * @param label the name of the label.
 	 * @param callback the callback you're going to add
 	 */
-	public function addCallbackTo(label:String, callback:()->Void)
+	public function addCallbackTo(label:String, callback:()->Void):Bool
 	{
 		return curSymbol.addCallbackTo(label, callback);
 	}
 
-	public function removeCallbackFrom(label:String, callback:()->Void)
+	public function removeCallbackFrom(label:String, callback:()->Void):Bool
 	{
 		return curSymbol.removeCallbackFrom(label, callback);
 	}
 
-	public function removeAllCallbacksFrom(label:String)
+	public function removeAllCallbacksFrom(label:String):Bool
 	{
 		return curSymbol.removeAllCallbacksFrom(label);
 	}
 
-	public function getFrameLabels(?layer:EitherType<Int, String>)
+	public function getFrameLabels(?layer:EitherType<Int, String>):Array<FlxKeyFrame>
 	{
 		return curSymbol.getFrameLabels(layer);
 	}
 
-	function get_loopType()
+	function get_loopType():Loop
 	{
 		return curInstance.symbol.loop;
 	}
 
-	function set_loopType(type:Loop)
+	function set_loopType(type:Loop):Loop
 	{
 		return curInstance.symbol.loop = type;
 	}
-	function get_symbolType()
+	function get_symbolType():SymbolT
 	{
 		return curInstance.symbol.type;
 	}
-	function set_symbolType(type:SymbolT)
+	function set_symbolType(type:SymbolT):SymbolT
 	{
 		return curInstance.symbol.type = type;
 	}
-	function get_reversed()
+	function get_reversed():Bool
 	{
 		return curInstance.symbol.reverse;
 	}
-	function set_reversed(value:Bool)
+	function set_reversed(value:Bool):Bool
 	{
 		return curInstance.symbol.reverse = value;
 	}
-	public function getByName(name:String)
+
+	public function getByName(name:String):SymbolStuff
 	{
 		return animsMap.get(name);
 	}
