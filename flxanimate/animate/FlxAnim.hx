@@ -6,6 +6,8 @@ import haxe.extern.EitherType;
 import flxanimate.animate.SymbolParameters;
 import flixel.util.FlxStringUtil;
 import openfl.geom.ColorTransform;
+import flixel.util.FlxSignal;
+import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.FlxG;
 import flixel.math.FlxMatrix;
@@ -77,10 +79,18 @@ class FlxAnim implements IFlxDestroyable
 	 * When ever the animation is playing.
 	 */
 	public var isPlaying(default, null):Bool;
+
 	/**
-	 * The callback when the animation's over.
+	 * A signal dispatched when the animation's over,
+	 * when the current frame is equal to the current symbol's length.
 	 */
-	public var onComplete:()->Void;
+	public var onComplete:FlxSignal = new FlxSignal();
+
+	/**
+	 * A signal dispatched when the animation advances one frame.
+	 * @param frame The current frame number.
+	 */
+	public var onFrame:FlxTypedSignal<Int->Void> = new FlxTypedSignal();
 
 	/**
 	 * The framerate of the current animation.
@@ -98,8 +108,6 @@ class FlxAnim implements IFlxDestroyable
 	public var curFrame(get, set):Int;
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
-
-
 
 	/**
 	 *  The looping method of `curSymbol`.
@@ -290,6 +298,8 @@ class FlxAnim implements IFlxDestroyable
 		{
 			(reversed) ? curFrame-- : curFrame++;
 			curSymbol.fireCallbacks();
+			onFrame.dispatch(curFrame);
+
 			_tick -= frameDelay;
 		}
 
@@ -299,9 +309,7 @@ class FlxAnim implements IFlxDestroyable
 			if (loopType == PlayOnce)
 				pause();
 
-			if (onComplete != null)
-				onComplete();
-
+			onComplete.dispatch();
 		}
 	}
 	function get_finished()
