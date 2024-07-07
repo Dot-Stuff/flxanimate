@@ -509,10 +509,13 @@ class FlxAnimate extends FlxSprite
 		return frame;
 	}
 	var _mat:FlxMatrix = new FlxMatrix();
-	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform = null, filterin:Bool = false, blendMode:BlendMode = NORMAL, ?scrollFactor:FlxPoint = null, cameras:Array<FlxCamera> = null)
+	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform = null, filterin:Bool = false, ?blendMode:BlendMode, ?scrollFactor:FlxPoint = null, cameras:Array<FlxCamera> = null)
 	{
 		if (colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
 			return;
+
+		if (blendMode == null)
+			blendMode = BlendMode.NORMAL;
 
 		if (cameras == null)
 			cameras = this.cameras;
@@ -574,7 +577,7 @@ class FlxAnimate extends FlxSprite
 				if (!limbOnScreen(limb, matrix, camera))
 					continue;
 			}
-			camera.drawPixels(limb, null, matrix, colorTransform, blendMode, (!filterin) ? antialiasing : true, null);
+			camera.drawPixels(limb, null, matrix, colorTransform, blendMode, (!filterin) ? antialiasing : true, this.shader);
 		}
 
 		width = rect.width;
@@ -681,7 +684,7 @@ class FlxAnimate extends FlxSprite
 			if (Settings.FrameRate != null)
 				anim.framerate = (Settings.FrameRate > 0) ? anim.metadata.frameRate : Settings.FrameRate;
 			if (Settings.OnComplete != null)
-				anim.onComplete = Settings.OnComplete;
+				anim.onComplete.add(Settings.OnComplete);
 			if (Settings.ShowPivot != null)
 				showPivot = Settings.ShowPivot;
 			if (Settings.Antialiasing != null)

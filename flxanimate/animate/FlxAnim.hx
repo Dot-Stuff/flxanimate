@@ -6,6 +6,8 @@ import haxe.extern.EitherType;
 import flxanimate.animate.SymbolParameters;
 import flixel.util.FlxStringUtil;
 import openfl.geom.ColorTransform;
+import flixel.util.FlxSignal;
+import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.FlxG;
 import flixel.math.FlxMatrix;
@@ -77,10 +79,18 @@ class FlxAnim implements IFlxDestroyable
 	 * When ever the animation is playing.
 	 */
 	public var isPlaying(default, null):Bool;
+
 	/**
-	 * The callback when the animation's over.
+	 * A signal dispatched when the animation's over,
+	 * when the current frame is equal to the current symbol's length.
 	 */
-	public var onComplete:()->Void;
+	public var onComplete:FlxSignal = new FlxSignal();
+
+	/**
+	 * A signal dispatched when the animation advances one frame.
+	 * @param frame The current frame number.
+	 */
+	public var onFrame:FlxTypedSignal<Int->Void> = new FlxTypedSignal();
 
 	/**
 	 * The framerate of the current animation.
@@ -98,8 +108,6 @@ class FlxAnim implements IFlxDestroyable
 	public var curFrame(get, set):Int;
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
-
-
 
 	/**
 	 *  The looping method of `curSymbol`.
@@ -290,6 +298,8 @@ class FlxAnim implements IFlxDestroyable
 		{
 			(reversed) ? curFrame-- : curFrame++;
 			curSymbol.fireCallbacks();
+			onFrame.dispatch(curFrame);
+
 			_tick -= frameDelay;
 		}
 
@@ -299,9 +309,7 @@ class FlxAnim implements IFlxDestroyable
 			if (loopType == PlayOnce)
 				pause();
 
-			if (onComplete != null)
-				onComplete();
-
+			onComplete.dispatch();
 		}
 	}
 	function get_finished()
@@ -375,6 +383,21 @@ class FlxAnim implements IFlxDestroyable
 	{
 		addBySymbolIndices(Name, stageInstance.symbol.name, Indices, FrameRate, stageInstance.symbol.loop == Loop, 0,0);
 	}
+
+	/**
+	 * Creates an animation based on a frame label's starting frame and duration.0
+	 * @param Name The name of the animation to add.
+	 * @param FrameLabel The frame label to use as the starting frame.
+	 * @param FrameRate The framerate of the animation to use.
+	 * @param Looped Whether the animation should loop or not.
+	 * @param X A x offset to apply to the animation.
+	 * @param Y A y offset to apply to the animation.
+	 */
+	public function addByFrameLabel(Name:String, FrameLabel:String, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0) {
+		var keyFrame = getFrameLabel(FrameLabel);
+		addBySymbolIndices(Name, stageInstance.symbol.name, keyFrame.getFrameIndices(), FrameRate, Looped, X, Y);
+	}
+
 	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
 		if (symbolDictionary == null)
@@ -422,23 +445,24 @@ class FlxAnim implements IFlxDestroyable
 	 * @param Timeline The timeline which will have the symbol.
 	 * @param FrameRate The framerate it'll go, by default is 30.
 	 */
-	public function addByCustomTimeline(Name:String, Timeline:FlxTimeline, FrameRate:Float = 0, Looped:Bool = true)
+	public function addByCustomTimeline(Name:String, Timeline:FlxTimeline, FrameRate:Float = 0, Looped:Bool = true):Void
 	{
 		symbolDictionary.set(Name, new FlxSymbol(haxe.io.Path.withoutDirectory(Name), Timeline));
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce));
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
 
-	public function get_length()
+	public function get_length():Int
 	{
 		return curSymbol.length;
 	}
 
-	public function getFrameLabel(name:String, ?layer:EitherType<Int, String>)
+	public function getFrameLabel(name:String, ?layer:EitherType<Int, String>):FlxKeyFrame
 	{
 		return curSymbol.getFrameLabel(name, layer);
 	}
-	public function toString()
+
+	public function toString():String
 	{
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("symbolDictionary", symbolDictionary),
@@ -449,7 +473,7 @@ class FlxAnim implements IFlxDestroyable
 	 * Redirects the frame into a frame with a frame label of that type.
 	 * @param name the name of the label.
 	 */
-	public function goToFrameLabel(name:String, ?layer:EitherType<Int, String>)
+	public function goToFrameLabel(name:String, ?layer:EitherType<Int, String>):Void
 	{
 		pause();
 
@@ -475,52 +499,53 @@ class FlxAnim implements IFlxDestroyable
 	 * @param label the name of the label.
 	 * @param callback the callback you're going to add
 	 */
-	public function addCallbackTo(label:String, callback:()->Void)
+	public function addCallbackTo(label:String, callback:()->Void):Bool
 	{
 		return curSymbol.addCallbackTo(label, callback);
 	}
 
-	public function removeCallbackFrom(label:String, callback:()->Void)
+	public function removeCallbackFrom(label:String, callback:()->Void):Bool
 	{
 		return curSymbol.removeCallbackFrom(label, callback);
 	}
 
-	public function removeAllCallbacksFrom(label:String)
+	public function removeAllCallbacksFrom(label:String):Bool
 	{
 		return curSymbol.removeAllCallbacksFrom(label);
 	}
 
-	public function getFrameLabels(?layer:EitherType<Int, String>)
+	public function getFrameLabels(?layer:EitherType<Int, String>):Array<FlxKeyFrame>
 	{
 		return curSymbol.getFrameLabels(layer);
 	}
 
-	function get_loopType()
+	function get_loopType():Loop
 	{
 		return curInstance.symbol.loop;
 	}
 
-	function set_loopType(type:Loop)
+	function set_loopType(type:Loop):Loop
 	{
 		return curInstance.symbol.loop = type;
 	}
-	function get_symbolType()
+	function get_symbolType():SymbolT
 	{
 		return curInstance.symbol.type;
 	}
-	function set_symbolType(type:SymbolT)
+	function set_symbolType(type:SymbolT):SymbolT
 	{
 		return curInstance.symbol.type = type;
 	}
-	function get_reversed()
+	function get_reversed():Bool
 	{
 		return curInstance.symbol.reverse;
 	}
-	function set_reversed(value:Bool)
+	function set_reversed(value:Bool):Bool
 	{
 		return curInstance.symbol.reverse = value;
 	}
-	public function getByName(name:String)
+
+	public function getByName(name:String):SymbolStuff
 	{
 		return animsMap.get(name);
 	}

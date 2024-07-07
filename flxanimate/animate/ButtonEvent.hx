@@ -1,6 +1,6 @@
 package flxanimate.animate;
 
-import flixel.system.FlxSound;
+import flixel.sound.FlxSound;
 
 class ButtonEvent
 {
