@@ -1,19 +1,23 @@
 package flxanimate.frames;
 
-import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
-import openfl.geom.Rectangle;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;
+import flixel.graphics.frames.FlxFrame.FlxFrameAngle;
+import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.frames.FlxFramesCollection;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flxanimate.data.SpriteMapData;
 import flxanimate.format.PropertyList;
-import openfl.Assets;
 import haxe.xml.Access;
+import openfl.Assets;
+import openfl.geom.Rectangle;
 
+/**
+ * 
+ */
 class FlxAnimateFrames extends FlxAtlasFrames
 {
 	public function new()
@@ -54,7 +58,6 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		{
 			if (Assets.exists('$Path/spritemap$i.json'))
 				texts.push('$Path/spritemap$i.json');
-
 			else
 				isDone = true;
 
@@ -93,37 +96,24 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
 		if (Path is String)
 		{
-			var str:String = cast (Path, String).split("\\").join("/");
+			var str:String = cast(Path, String).split("\\").join("/");
 			var text = (StringTools.contains(str, "/")) ? Assets.getText(str) : str;
 			json = haxe.Json.parse(text.split(String.fromCharCode(0xFEFF)).join(""));
 		}
 		else
 			json = Path;
 
-
 		if (json == null)
 			return null;
 
-		if (Image == null)
-		{
-			if (Path is String)
-			{
-				Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + json.meta.image;
-			}
-			else
-				return null;
-		}
+		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + json.meta.image);
 
-		var graphic:FlxGraphic = FlxG.bitmap.add(Image);
-		if (graphic == null)
+		if (f.crash == true)
 			return null;
+		else if (f.frames != null)
+			return f.frames;
 
-		// No need to parse data again
-		var frames:FlxAtlasFrames = FlxAtlasFrames.findFrame(graphic);
-		if (frames != null)
-			return frames;
-
-		frames = new FlxAtlasFrames(graphic);
+		var frames = new FlxAtlasFrames(f.graphic);
 
 		for (sprite in json.ATLAS.SPRITES)
 		{
@@ -134,7 +124,6 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
 			sliceFrame(limb.name, limb.rotated, rect, frames);
 		}
-
 
 		return frames;
 	}
@@ -157,7 +146,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	 * a `Sparrow` spritesheet enhancer, providing for the 'add only the XML Path' workflow while adding support to Sparrow v1.
 	 * @param Path The direction of the Xml you want to parse.
 	 * @param Image (Optional) the image of the Xml.
-	 * @return A new instance of `FlxAtlasFrames`
+	 * @return A new `FlxAtlasFrames` instance.
 	 */
 	public static function fromSparrow(Path:FlxSparrow, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
@@ -165,51 +154,35 @@ class FlxAnimateFrames extends FlxAtlasFrames
 			return null;
 
 		var data:Xml = (Path is String) ? Xml.parse(Assets.getText(Path)).firstElement() : Path.firstElement();
-		if (Image == null)
-		{
-			if (Path is String)
-				Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.get("imagePath");
-			else
-				return null;
-		}
+		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.get("imagePath"));
 
-		for(node in data.elements()) {
-			if(node.nodeName == "SubTexture") {
-				if(node.exists("w")) {
-					node.set("width", node.get("w"));
-					node.remove("w");
-				}
-				if(node.exists("h")) {
-					node.set("height", node.get("h"));
-					node.remove("h");
-				}
+		if (f.crash == true)
+			return null;
+		else if (f.frames != null)
+			return f.frames;
+
+		for (node in data.elements())
+		{
+			if (node.exists("w"))
+			{
+				node.set("width", node.get("w"));
+				node.remove("w");
+			}
+			if (node.exists("h"))
+			{
+				node.set("height", node.get("h"));
+				node.remove("h");
 			}
 		}
 
-		//var realData = data.toString();
-		//if (realData.split("w=\"").length > 1)
-		//{
-		//	realData.split("w=\"").join("width=\"");
-		//	realData.split("h=\"").join("height=\"");
-		//}
-
-		return fromSparrowDirect(Image, data);
+		return fromSparrowDirect(f.graphic, data);
 	}
 
-	public static function fromSparrowDirect(source:FlxGraphicAsset, xml:Xml):FlxAtlasFrames
+	// in reality its a blend between the Sparrow and Starling, but im too lazy to separate them lol
+	// its not like it matters much anyway so ¯\_(ツ)_/¯
+	private static function fromSparrowDirect(source:FlxGraphic, xml:Xml):FlxAtlasFrames
 	{
-		var graphic:FlxGraphic = FlxG.bitmap.add(source);
-		if (graphic == null)
-			return null;
-		// No need to parse data again
-		var frames:FlxAtlasFrames = FlxAtlasFrames.findFrame(graphic);
-		if (frames != null)
-			return frames;
-
-		if (xml == null)
-			return null;
-
-		frames = new FlxAtlasFrames(graphic);
+		var frames = new FlxAtlasFrames(source);
 
 		var data:Access = new Access(xml);
 
@@ -220,7 +193,8 @@ class FlxAnimateFrames extends FlxAtlasFrames
 			var rotated = (texture.has.rotated && texture.att.rotated == "true");
 			var flipX = (texture.has.flipX && texture.att.flipX == "true");
 			var flipY = (texture.has.flipY && texture.att.flipY == "true");
-
+			var pivotX = (texture.has.pivotX ? Std.parseFloat(texture.att.pivotX) : 0);
+			var pivotY = (texture.has.pivotY ? Std.parseFloat(texture.att.pivotY) : 0);
 			var rect = FlxRect.get(Std.parseFloat(texture.att.x), Std.parseFloat(texture.att.y), Std.parseFloat(texture.att.width),
 				Std.parseFloat(texture.att.height));
 
@@ -239,6 +213,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 			var offset = FlxPoint.get(-size.left, -size.top);
 			var sourceSize = FlxPoint.get(size.width, size.height);
 
+			offset.subtract(pivotX, pivotY);
 			if (rotated && !trimmed)
 				sourceSize.set(size.height, size.width);
 
@@ -259,26 +234,53 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		if (Path is String && !Assets.exists(Path))
 			return null;
 		var data:JsonNormal = (Path is String) ? haxe.Json.parse(Assets.getText(Path)) : Path;
-		if (Image == null)
-		{
-			if (Path is String)
-				Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.meta.image;
-			else
-				return null;
-		}
+
+		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.meta.image);
+
+		if (f.crash == true)
+			return null;
+		else if (f.frames != null)
+			return f.frames;
 
 		return FlxAtlasFrames.fromTexturePackerJson(Image, data);
 	}
 
 	/**
+	 * Compiles a sequence of images into one
+	 * @param Path 
+	 * @param ext 
+	 */
+	public static function fromSequence(Path:String, ?ext:String = "png")
+	{
+		var i = 1;
+
+		var imgs:Array<FlxGraphic> = [];
+		while (Assets.exists(Path + Std.string(10000 + i).substring(1) + '.$ext'))
+		{
+			imgs.push(FlxG.bitmap.add(Path + Std.string(10000 + i).substring(1) + '.$ext'));
+			i++;
+		}
+
+		var frames = new FlxAtlasFrames(null);
+		for (img in imgs)
+		{
+			var frame = img.imageFrame.frame;
+			frame.name = haxe.io.Path.withoutDirectory(Path) + Std.string(10000 + imgs.indexOf(img)).substring(1);
+			frames.pushFrame(frame);
+		}
+
+		return frames;
+	}
+
+	/**
 	 * Edge Animate
-	 * @param Path the Path of the .eas
+	 * @param Path the Path of the .eask
 	 * @param Image (Optional) the Image
 	 * @return Cute little Frames to use ;)
 	 */
 	public static inline function fromEdgeAnimate(Path:String, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-		return fromJson((StringTools.startsWith(Path, "{")) ? haxe.Json.parse(Path) : Path, Image);
+		return fromJson(Path, Image);
 	}
 
 	/**
@@ -287,45 +289,9 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	 * @param Image (Optional) the Image
 	 * @return Some recently cooked Frames for you ;)
 	 */
-	public static function fromStarling(Path:FlxPropertyList, ?Image:FlxGraphicAsset):FlxAtlasFrames
+	public static function fromStarling(Path:FlxSparrow, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-		if (Path is String && !Assets.exists(Path))
-			return null;
-		var data:Plist = (Path is String) ? PropertyList.parse(Assets.getText(Path)) : Path;
-		if (Image == null)
-		{
-			if (Path is String)
-				Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.metadata.textureFileName;
-			else
-				return null;
-		}
-
-		var graphic:FlxGraphic = FlxG.bitmap.add(Image, false);
-		if (graphic == null)
-			return null;
-
-		// No need to parse data again
-		var frames:FlxAtlasFrames = FlxAtlasFrames.findFrame(graphic);
-		if (frames != null)
-			return frames;
-
-		frames = new FlxAtlasFrames(graphic);
-
-		for (name in Reflect.fields(data.frames))
-		{
-			var data = Reflect.field(data.frames, name);
-
-			var dimensions = FlxRect.get(Std.parseFloat(data.frame[0]), Std.parseFloat(data.frame[1]), Std.parseFloat(data.frame[2]),
-			Std.parseFloat(data.frame[3]));
-
-			var sourceSize = FlxPoint.get(Std.parseFloat(data.sourceSize[0]), Std.parseFloat(data.sourceSize[1]));
-
-			var offset = FlxPoint.get(Std.parseFloat(data.offset[0]), Std.parseFloat(data.offset[1]));
-
-			sliceFrame(name, data.rotated, dimensions, sourceSize, offset, frames);
-		}
-
-		return frames;
+		return fromSparrow(Path, Image);
 	}
 
 	/**
@@ -340,46 +306,51 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		if (!Assets.exists(Path))
 			return null;
 		var data:Plist = PropertyList.parse(Assets.getText(Path));
-		if (data.metadata.format == 2)
+
+		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.metadata.target.name);
+
+		if (f.crash == true)
+			return null;
+		else if (f.frames != null)
+			return f.frames;
+
+		var frames = new FlxAtlasFrames(f.graphic);
+
+		var ver2 = data.metadata.format == 2;
+
+		for (name in Reflect.fields(data.frames))
 		{
-			return fromStarling(Path, Image);
-		}
-		else
-		{
-			if (Image == null)
+			var data = Reflect.field(data.frames, name);
+
+			var frame = data.textureRect;
+			var source = data.spriteSourceSize;
+			var offset = data.spriteOffset;
+			var rotated = data.textureRotated;
+
+			if (ver2)
 			{
-				if (Path is String)
-					Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.metadata.target.name;
-				else
-					return null;
-			}
-			var graphic:FlxGraphic = FlxG.bitmap.add(Image);
-			if (graphic == null)
-				return null;
-
-			// No need to parse data again
-			var frames:FlxAtlasFrames = FlxAtlasFrames.findFrame(graphic);
-			if (frames != null)
-				return frames;
-
-			frames = new FlxAtlasFrames(graphic);
-
-			for (name in Reflect.fields(data.frames))
-			{
-				var data = Reflect.field(data.frames, name);
-
-				var dimensions = FlxRect.get(Std.parseFloat(data.frame[0]), Std.parseFloat(data.frame[1]), Std.parseFloat(data.frame[2]),
-				Std.parseFloat(data.frame[3]));
-
-				var sourceSize = FlxPoint.get(Std.parseFloat(data.spriteSourceSize[0]), Std.parseFloat(data.spriteSourceSize[1]));
-
-				var offset = FlxPoint.get(Std.parseFloat(data.spriteOffset[0]), Std.parseFloat(data.spriteOffset[1]));
-
-				sliceFrame(name, data.textureRotated, dimensions, sourceSize, offset, frames);
+				frame = data.frame;
+				source = data.sourceSize;
+				offset = data.offset;
+				rotated = data.rotated;
 			}
 
-			return frames;
+			var dimensions = FlxRect.get(Std.parseFloat(frame[0]), Std.parseFloat(frame[1]), Std.parseFloat(frame[2]), Std.parseFloat(frame[3]));
+
+			var sourceSize = FlxPoint.get(Std.parseFloat(source[0]), Std.parseFloat(source[1]));
+
+			var offset = FlxPoint.get(Std.parseFloat(offset[0]), Std.parseFloat(offset[1]));
+
+			if (rotated)
+			{
+				dimensions.setSize(dimensions.height, dimensions.width);
+				sourceSize.set(sourceSize.x, sourceSize.y);
+			}
+
+			sliceFrame(name, rotated, dimensions, sourceSize, offset, frames);
 		}
+
+		return frames;
 	}
 
 	/**
@@ -420,8 +391,8 @@ class FlxAnimateFrames extends FlxAtlasFrames
 			var initialFrame = [json.frames[0][5], json.frames[0][6]];
 			for (frame in json.frames)
 			{
-				sliceFrame(name, false, FlxRect.get(frame[0], frame[1], frame[2], frame[3]), null,
-				FlxPoint.get(frame[5] - initialFrame[0], frame[6] - initialFrame[1]), frames);
+				sliceFrame(name + Std.string(10000 + times).substring(1), false, FlxRect.get(frame[0], frame[1], frame[2], frame[3]), null,
+					FlxPoint.get(frame[5] - initialFrame[0], frame[6] - initialFrame[1]), frames);
 				times++;
 			}
 			hugeFrames.addAtlas(frames);
@@ -436,5 +407,29 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
 		Frames.addAtlasFrame(dimensions, (sourceSize != null) ? sourceSize : FlxPoint.get(dimensions.x, dimensions.y),
 			(offset != null) ? offset.negate() : FlxPoint.get(), name, (rotated) ? ANGLE_NEG_90 : ANGLE_0);
+	}
+
+	/**
+	 * Helper function to cache the image and check for already made frames with it.
+	 * @param Image 
+	 * @param Path 
+	 */
+	public static function findImage(Image:FlxGraphicAsset, Path:String):{crash:Bool, ?graphic:FlxGraphic, ?frames:FlxAtlasFrames}
+	{
+		if (Image == null)
+		{
+			if (Path != null)
+				Image = Path;
+			else
+				return {crash: true};
+		}
+		var graphic:FlxGraphic = FlxG.bitmap.add(Image);
+		if (graphic == null)
+			return {crash: true};
+
+		// No need to parse data again
+		var frames:FlxAtlasFrames = FlxAtlasFrames.findFrame(graphic);
+
+		return {crash: false, graphic: graphic, frames: frames};
 	}
 }
