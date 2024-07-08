@@ -595,11 +595,14 @@ class FlxMetaData
 
 	public var showHiddenLayers:Bool;
 
+	public var skipFilters:Bool;
+
 	public function new(name:String, frameRate:Float)
 	{
 		this.name = name;
 		this.frameRate = frameRate;
 		showHiddenLayers = true;
+		skipFilters = false;
 	}
 	public function destroy()
 	{

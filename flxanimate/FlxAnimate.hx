@@ -60,6 +60,8 @@ class FlxAnimate extends FlxSprite
 
 	var _symbols:Array<FlxSymbol>;
 
+	public var filters:Array<BitmapFilter> = null;
+
 	public var showPivot(default, set):Bool;
 
 	var _pivot:FlxFrame;
@@ -235,6 +237,8 @@ class FlxAnimate extends FlxSprite
 		var mainSymbol = instance == anim.curInstance;
 		var filterin = filterInstance != null;
 
+		var skipFilters = anim.metadata.skipFilters;
+
 		if (cameras == null)
 			cameras = this.cameras;
 
@@ -265,8 +269,9 @@ class FlxAnimate extends FlxSprite
 			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect, filterin, cameras);
 			return;
 		}
-
-		if (instance.symbol.cacheAsBitmap && (!filterin || filterin && filterInstance.instance != instance))
+		var cacheToBitmap = !skipFilters && (instance.symbol.cacheAsBitmap || this.filters != null && mainSymbol) && (!filterin || filterin && filterInstance.instance != instance);
+		
+		if (cacheToBitmap)
 		{
 			if (instance.symbol._renderDirty)
 			{
@@ -340,11 +345,13 @@ class FlxAnimate extends FlxSprite
 
 				var toBitmap = frame.filters != null || layer.type.getName() == "Clipped";
 
+				if (skipFilters)
+					toBitmap = false;
 				var coloreffect = new ColorTransform();
 				coloreffect.__copyFrom(colorEffect);
 				if (frame.colorEffect != null)
 					coloreffect.concat(frame.colorEffect.__create());
-
+				
 				if (toBitmap)
 				{
 					if (!frame._renderDirty && layer._filterFrame != null)
@@ -445,9 +452,9 @@ class FlxAnimate extends FlxSprite
 			Rectangle.__pool.release(extension);
 		}
 
-		renderer.applyFilter(filterInstance._bmp1, filterInstance._filterFrame.parent.bitmap, filterInstance._bmp1, filterInstance._bmp2, filters, rect, gfxMask, point);
+		renderer.applyFilter(gfx, filterInstance._filterFrame.parent.bitmap, filterInstance._bmp1, filterInstance._bmp2, filters, rect, gfxMask, point);
 		point = FlxDestroyUtil.put(point);
-
+		
 		filterInstance._filterMatrix.translate(Math.round((b.x + rect.x)), Math.round((b.y + rect.y)));
 		@:privateAccess
 		filterCamera.clearDrawStack();
