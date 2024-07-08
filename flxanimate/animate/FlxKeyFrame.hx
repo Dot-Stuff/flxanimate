@@ -87,6 +87,15 @@ class FlxKeyFrame
 		return filters = value;
 	}
 
+	/**
+	 * Get an array of the frame indices that this keyframe spans.
+	 * For example, if the keyframe spans from `10` to `15`, the array will be `[10, 11, 12, 13, 14, 15]`.
+	 * @return The integer array.
+	 */
+	public function getFrameIndices():Array<Int> {
+		return [for (i in index...(index + duration)) i];
+	}
+
 	public function update(frame:Int)
 	{
 		if (filters == null || filters.length == 0 || _renderDirty) return;
