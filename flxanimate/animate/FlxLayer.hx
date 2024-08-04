@@ -66,7 +66,7 @@ class FlxLayer extends FlxObject implements IFilterable
 	@:allow(flxanimate.FlxAnimate)
 	var _clipper:FlxLayer = null;
 
-	public var length(get, null):Int;
+	public var length(get, never):Int;
 
 	@:allow(flxanimate.FlxAnimate)
 	var _currFrame:FlxKeyFrame;

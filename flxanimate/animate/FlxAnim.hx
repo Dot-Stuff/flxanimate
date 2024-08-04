@@ -53,12 +53,12 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * The current symbol the instance is taking as a reference.
 	 */
-	public var curSymbol(get, null):FlxSymbol;
+	public var curSymbol(get, never):FlxSymbol;
 
 	/**
 	 * Whether the animation has finished or not.
 	 */
-	public var finished(get, null):Bool;
+	public var finished(get, never):Bool;
 	/**
 	 * a reverse option where the animation plays backwards or not.
 	 */
