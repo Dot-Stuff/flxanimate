@@ -60,6 +60,7 @@ class FlxLayer extends FlxObject implements IFilterable
 	@:allow(flxanimate.animate.FlxKeyFrame)
 	var _keyframes(default, null):Array<FlxKeyFrame>;
 
+	@:allow(flxanimate.FlxAnimate)
 	var maskCamera:FlxCamera;
 
 	@:allow(flxanimate.FlxAnimate)
@@ -120,31 +121,9 @@ class FlxLayer extends FlxObject implements IFilterable
 		update(elapsed);
 		var _prevFrame = _currFrame;
 		_setCurFrame(curFrame);
-		if (_clipper == null && type.getName() == "Clipped")
-		{
-			if (_parent != null)
-			{
-				var l = _parent.get(type.getParameters()[0]);
-				if (l != null)
-				{
-					l._correctClip = true;
-
-					_clipper = l;
-				}
-			}
-		}
-		else if (_clipper != null)
-		{
-			if (_clipper._currFrame._renderDirty)
-			{
-				_currFrame._renderDirty = true;
-			}
-		}
 
 		if (_currFrame != null)
 		{
-			if (_correctClip)
-				_currFrame._cacheAsBitmap = true;
 			if (_prevFrame != _currFrame)
 			{
 				_currFrame._renderDirty = true;
@@ -289,6 +268,7 @@ class FlxLayer extends FlxObject implements IFilterable
 				if (_parent != null && layer != null && layer.type.getName() == "Clipper")
 				{
 					layer._renderable = true;
+					_clipper = layer;
 				}
 			}
 			else if (tName == "Clipper")
