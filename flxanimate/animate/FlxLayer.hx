@@ -60,6 +60,8 @@ class FlxLayer extends FlxObject implements IFilterable
 	@:allow(flxanimate.animate.FlxKeyFrame)
 	var _keyframes(default, null):Array<FlxKeyFrame>;
 
+	var maskCamera:FlxCamera;
+
 	@:allow(flxanimate.FlxAnimate)
 	var _correctClip:Bool = false;
 
@@ -277,15 +279,23 @@ class FlxLayer extends FlxObject implements IFilterable
 	}
 	function set_type(value:LayerType)
 	{
-		if (type != null && type.getName() == "Clipped")
+		var tName = type.getName();
+		if (type != null)
 		{
-			var layers = _parent.getList();
-			var layer = layers[layers.indexOf(this) - 1];
-			if (_parent != null && layer != null && layer.type.getName() == "Clipper")
+			if (tname == "Clipped")
 			{
-				layer._renderable = true;
+				var layers = _parent.getList();
+				var layer = layers[layers.indexOf(this) - 1];
+				if (_parent != null && layer != null && layer.type.getName() == "Clipper")
+				{
+					layer._renderable = true;
+				}
 			}
+			else if (tname == "Clipper")
+				maskCamera = new FlxCamera();
 		}
+		else
+			type = Normal;
 		return type = value;
 	}
 	@:allow(flxanimate.FlxAnimate)
