@@ -345,10 +345,9 @@ class FlxAnimate extends FlxSprite
 
 				if (frame == null) continue;
 
-				var toBitmap = frame.filters != null;
+				var toBitmap = !skipFilters && frame.filters != null;
+				var isMasked = layer._clipper != null;
 
-				if (skipFilters)
-					toBitmap = false;
 				var coloreffect = new ColorTransform();
 				coloreffect.__copyFrom(colorEffect);
 				if (frame.colorEffect != null)
@@ -362,14 +361,14 @@ class FlxAnimate extends FlxSprite
 						mat.copyFrom(layer._filterMatrix);
 						mat.concat(matrix);
 
-						drawLimb(layer._filterFrame, mat, coloreffect, filterin, cameras);
+						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer.maskCamera] : cameras);
 						continue;
 					}
 					else if (layer._filterCamera == null)
 						layer._filterCamera = new FlxCamera();
 				}
 
-				renderLayer(frame, (toBitmap) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap) ? [layer._filterCamera] : cameras);
+				renderLayer(frame, (toBitmap) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap) ? [layer._filterCamera] : (isMasked) ? [layer.maskCamera] : cameras);
 
 				if (toBitmap)
 				{
@@ -383,7 +382,7 @@ class FlxAnimate extends FlxSprite
 					mat.copyFrom(layer._filterMatrix);
 					mat.concat(matrix);
 
-					drawLimb(layer._filterFrame, mat, coloreffect, filterin, cameras);
+					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer.maskCamera] : cameras);
 				}
 			}
 		}
