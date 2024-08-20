@@ -456,7 +456,11 @@ class FlxAnimate extends FlxSprite
 		renderer.applyFilter(gfx, filterInstance._filterFrame.parent.bitmap, filterInstance._bmp1, filterInstance._bmp2, filters, rect, gfxMask, point);
 		point = FlxDestroyUtil.put(point);
 
-		filterInstance._filterMatrix.translate(Math.round((b.x + rect.x)), Math.round((b.y + rect.y)));
+		if (filters != null && filters.length > 0)
+			filterInstance._filterMatrix.translate(Math.round((b.x + rect.x)), Math.round((b.y + rect.y)));
+		else
+			filterInstance._filterMatrix.translate(Math.round((rect.x)), Math.round(rect.y));
+
 		@:privateAccess
 		filterCamera.clearDrawStack();
 		filterCamera.canvas.graphics.clear();
