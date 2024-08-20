@@ -282,7 +282,7 @@ class FlxLayer extends FlxObject implements IFilterable
 		var tName = type.getName();
 		if (type != null)
 		{
-			if (tname == "Clipped")
+			if (tName == "Clipped")
 			{
 				var layers = _parent.getList();
 				var layer = layers[layers.indexOf(this) - 1];
@@ -291,7 +291,7 @@ class FlxLayer extends FlxObject implements IFilterable
 					layer._renderable = true;
 				}
 			}
-			else if (tname == "Clipper")
+			else if (tName == "Clipper")
 				maskCamera = new FlxCamera();
 		}
 		else
