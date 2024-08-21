@@ -258,17 +258,21 @@ class FlxLayer extends FlxObject implements IFilterable
 	}
 	function set_type(value:LayerType)
 	{
-		var tName = type.getName();
+		var tName = value.getName();
 		if (type != null)
 		{
 			if (tName == "Clipped")
 			{
-				var layers = _parent.getList();
-				var layer = layers[layers.indexOf(this) - 1];
-				if (_parent != null && layer != null && layer.type.getName() == "Clipper")
+				if (_parent != null)
 				{
-					layer._renderable = true;
-					_clipper = layer;
+					var layer = _parent.get(value.getParameters()[0]);
+
+
+					if (layer != null && layer.type.getName() == "Clipper")
+					{
+						layer._renderable = true;
+						_clipper = layer;
+					}
 				}
 			}
 			else if (tName == "Clipper")
