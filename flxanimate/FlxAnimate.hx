@@ -377,7 +377,7 @@ class FlxAnimate extends FlxSprite
 						continue;
 				}
 
-				renderLayer(frame, (toBitmap) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap || isMasker) ? [layer._filterCamera] : (isMasked) ? [layer._clipper.maskCamera] : cameras);
+				renderLayer(frame, (toBitmap || isMasker || isMasked) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap || isMasker) ? [layer._filterCamera] : (isMasked) ? [layer._clipper.maskCamera] : cameras);
 
 
 				if (toBitmap)
@@ -497,11 +497,11 @@ class FlxAnimate extends FlxSprite
 
 		var lMask = renderer.graphicstoBitmapData(mask.canvas.graphics, instance._bmp1, p);
 
-		instance._filterFrame.parent.bitmap.copyPixels(instance._bmp1, instance._bmp1.rect, instance._bmp1.rect.topLeft, instance._bmp2, instance._bmp2.rect.topLeft, true);
-		// renderer.applyFilter(instance._filterFrame.parent.bitmap, instance._filterFrame.parent.bitmap, instance._bmp1, null, null, instance._bmp2);
+		// instance._filterFrame.parent.bitmap.copyPixels(instance._bmp1, instance._bmp1.rect, instance._bmp1.rect.topLeft, instance._bmp2, instance._bmp2.rect.topLeft, true);
+		renderer.applyFilter(lMask, instance._filterFrame.parent.bitmap, lMask, null, null, mrBmp);
 
 
-		instance._filterMatrix.translate(-(Math.round(bounds.width * 1.25) * 0.5), -(Math.round(bounds.height * 1.25) * 0.5));
+		instance._filterMatrix.translate((Math.round(bounds.x)), (Math.round(bounds.y)));
 
 
 		@:privateAccess
