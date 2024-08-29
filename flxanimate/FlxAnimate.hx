@@ -347,13 +347,14 @@ class FlxAnimate extends FlxSprite
 
 				var toBitmap = !skipFilters && frame.filters != null;
 				var isMasked = layer._clipper != null;
+				var isMasker = layer.type == Clipper;
 
 				var coloreffect = new ColorTransform();
 				coloreffect.__copyFrom(colorEffect);
 				if (frame.colorEffect != null)
 					coloreffect.concat(frame.colorEffect.__create());
 
-				if (toBitmap)
+				if (toBitmap || isMasker)
 				{
 					if (!frame._renderDirty && layer._filterFrame != null)
 					{
@@ -361,14 +362,23 @@ class FlxAnimate extends FlxSprite
 						mat.copyFrom(layer._filterMatrix);
 						mat.concat(matrix);
 
-						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer.maskCamera] : cameras);
+						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer._clipper.maskCamera] : cameras);
 						continue;
 					}
 					else if (layer._filterCamera == null)
 						layer._filterCamera = new FlxCamera();
 				}
 
-				renderLayer(frame, (toBitmap) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap) ? [layer._filterCamera] : (isMasked) ? [layer.maskCamera] : cameras);
+				if (isMasked)
+				{
+					if (layer._clipper.maskCamera == null)
+						layer._clipper.maskCamera = new FlxCamera();
+					if (!frame._renderDirty)
+						continue;
+				}
+
+				renderLayer(frame, (toBitmap) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap || isMasker) ? [layer._filterCamera] : (isMasked) ? [layer._clipper.maskCamera] : cameras);
+
 
 				if (toBitmap)
 				{
@@ -382,7 +392,19 @@ class FlxAnimate extends FlxSprite
 					mat.copyFrom(layer._filterMatrix);
 					mat.concat(matrix);
 
-					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer.maskCamera] : cameras);
+					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer._clipper.maskCamera] : cameras);
+				}
+				if (isMasker)
+				{
+					layer._filterMatrix.identity();
+
+					renderMask(layer, renderer);
+
+					var mat = new FlxMatrix();
+					mat.copyFrom(layer._filterMatrix);
+					mat.concat(matrix);
+
+					drawLimb(layer._filterFrame, mat, coloreffect, filterin, cameras);
 				}
 			}
 		}
@@ -428,11 +450,6 @@ class FlxAnimate extends FlxSprite
 		if (gfx == null) return;
 
 		var gfxMask = null;
-		if (masking)
-		{
-			mask.render();
-			gfxMask = renderer.graphicstoBitmapData(mask.canvas.graphics);
-		}
 
 		var b = Rectangle.__pool.get();
 
@@ -440,18 +457,6 @@ class FlxAnimate extends FlxSprite
 		filterCamera.canvas.__getBounds(b, filterInstance._filterMatrix);
 
 		var point:FlxPoint = null;
-
-		@:privateAccess
-		if (masking && gfxMask != null)
-		{
-			var extension = Rectangle.__pool.get();
-
-			mask.canvas.__getBounds(extension, filterInstance._filterMatrix);
-
-			point = FlxPoint.get((extension.x) / b.width, (extension.y) / b.height);
-
-			Rectangle.__pool.release(extension);
-		}
 
 		renderer.applyFilter(gfx, filterInstance._filterFrame.parent.bitmap, filterInstance._bmp1, filterInstance._bmp2, filters, rect, gfxMask, point);
 		point = FlxDestroyUtil.put(point);
@@ -465,14 +470,49 @@ class FlxAnimate extends FlxSprite
 		filterCamera.clearDrawStack();
 		filterCamera.canvas.graphics.clear();
 
-		if (masking)
-		{
-			@:privateAccess
-			mask.clearDrawStack();
-			mask.canvas.graphics.clear();
-		}
-
 		Rectangle.__pool.release(b);
+	}
+
+	function renderMask(instance:FlxLayer, renderer:FlxAnimateFilterRenderer)
+	{
+		var masker = instance._filterCamera;
+		masker.render();
+
+		var bounds = masker.canvas.getBounds(null);
+
+		instance.updateBitmaps(bounds);
+
+		var mrBmp = renderer.graphicstoBitmapData(masker.canvas.graphics, instance._bmp2);
+
+		var mask = instance.maskCamera;
+
+		mask.render();
+		var mBounds = mask.canvas.getBounds(null);
+
+
+		var p = new FlxPoint(mBounds.x, mBounds.y);
+
+		p.x -= bounds.x;
+		p.y -= bounds.y;
+
+		var lMask = renderer.graphicstoBitmapData(mask.canvas.graphics, instance._bmp1, p);
+
+		instance._filterFrame.parent.bitmap.copyPixels(instance._bmp1, instance._bmp1.rect, instance._bmp1.rect.topLeft, instance._bmp2, instance._bmp2.rect.topLeft, true);
+		// renderer.applyFilter(instance._filterFrame.parent.bitmap, instance._filterFrame.parent.bitmap, instance._bmp1, null, null, instance._bmp2);
+
+
+		instance._filterMatrix.translate(-(Math.round(bounds.width * 1.25) * 0.5), -(Math.round(bounds.height * 1.25) * 0.5));
+
+
+		@:privateAccess
+		mask.clearDrawStack();
+		mask.canvas.graphics.clear();
+
+		@:privateAccess
+		masker.clearDrawStack();
+		masker.canvas.graphics.clear();
+
+
 	}
 
 	var pressed:Bool = false;

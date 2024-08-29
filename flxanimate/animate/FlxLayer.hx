@@ -128,6 +128,9 @@ class FlxLayer extends FlxObject implements IFilterable
 			{
 				_currFrame._renderDirty = true;
 				_prevFrame = _currFrame;
+
+				if (_clipper != null)
+					_clipper._currFrame._renderDirty = true;
 			}
 			_currFrame.updateRender(elapsed, curFrame, dictionary);
 		}
@@ -248,6 +251,18 @@ class FlxLayer extends FlxObject implements IFilterable
 	function set__parent(par:FlxTimeline)
 	{
 		_parent = par;
+		if (_parent != null && type.getName() == "Clipped")
+		{
+			trace(type.getParameters());
+			var layer = _parent.get(type.getParameters()[0]);
+
+
+			if (layer != null && layer.type == Clipper)
+			{
+				layer._renderable = true;
+				_clipper = layer;
+			}
+		}
 		rename();
 		return par;
 	}
@@ -265,10 +280,11 @@ class FlxLayer extends FlxObject implements IFilterable
 			{
 				if (_parent != null)
 				{
+					trace(value.getParameters());
 					var layer = _parent.get(value.getParameters()[0]);
 
 
-					if (layer != null && layer.type.getName() == "Clipper")
+					if (layer != null && layer.type == Clipper)
 					{
 						layer._renderable = true;
 						_clipper = layer;
@@ -276,7 +292,9 @@ class FlxLayer extends FlxObject implements IFilterable
 				}
 			}
 			else if (tName == "Clipper")
+			{
 				maskCamera = new FlxCamera();
+			}
 		}
 		else
 			type = Normal;
