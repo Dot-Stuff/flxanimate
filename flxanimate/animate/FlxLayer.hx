@@ -44,7 +44,7 @@ class FlxLayer extends FlxObject implements IFilterable
 	var _filterMatrix:FlxMatrix;
 
 	@:allow(flxanimate.FlxAnimate)
-	var _renderable:Bool = true;
+	var _renderable:Bool = false;
 
 	@:allow(flxanimate.animate.FlxTimeline)
 	var _parent(default, set):FlxTimeline;
@@ -130,7 +130,13 @@ class FlxLayer extends FlxObject implements IFilterable
 				_prevFrame = _currFrame;
 
 				if (_clipper != null)
+				{
+					if (_currFrame.getList().length <= 0)
+						_clipper._renderable = false;
+					else
+						_clipper._renderable = true;
 					_clipper._currFrame._renderDirty = true;
+				}
 			}
 			_currFrame.updateRender(elapsed, curFrame, dictionary);
 		}
@@ -148,10 +154,6 @@ class FlxLayer extends FlxObject implements IFilterable
 		{
 			var layers = _parent.getList();
 			var layer = layers[layers.indexOf(this) - 1];
-			if (_parent != null && layer != null && layer.type.getName() == "Clipper")
-			{
-				layer._renderable = false;
-			}
 		}
 		var index = 0;
 		if ((frame is String))
@@ -253,13 +255,11 @@ class FlxLayer extends FlxObject implements IFilterable
 		_parent = par;
 		if (_parent != null && type.getName() == "Clipped")
 		{
-			trace(type.getParameters());
 			var layer = _parent.get(type.getParameters()[0]);
 
 
 			if (layer != null && layer.type == Clipper)
 			{
-				layer._renderable = true;
 				_clipper = layer;
 			}
 		}
@@ -280,13 +280,11 @@ class FlxLayer extends FlxObject implements IFilterable
 			{
 				if (_parent != null)
 				{
-					trace(value.getParameters());
 					var layer = _parent.get(value.getParameters()[0]);
 
 
 					if (layer != null && layer.type == Clipper)
 					{
-						layer._renderable = true;
 						_clipper = layer;
 					}
 				}
@@ -376,6 +374,9 @@ class FlxLayer extends FlxObject implements IFilterable
 			_filterFrame.sourceSize.set(rect.width, rect.height);
 			@:privateAccess
 			_filterFrame.cacheFrameMatrix();
+			_bmp1.fillRect(_bmp1.rect, 0);
+			_filterFrame.parent.bitmap.fillRect(_filterFrame.parent.bitmap.rect, 0);
+			_bmp2.fillRect(_bmp2.rect, 0);
 		}
 		else
 		{

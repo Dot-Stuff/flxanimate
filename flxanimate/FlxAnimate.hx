@@ -365,8 +365,18 @@ class FlxAnimate extends FlxSprite
 						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer._clipper.maskCamera] : cameras);
 						continue;
 					}
-					else if (layer._filterCamera == null)
-						layer._filterCamera = new FlxCamera();
+					else
+					{
+						if (layer._filterCamera == null)
+							layer._filterCamera = new FlxCamera();
+						if (isMasker && layer._filterFrame != null && frame.getList().length == 0)
+							layer.updateBitmaps(layer._bmp1.rect);
+					}
+				}
+
+				if (isMasked && (layer._clipper == null || layer._clipper._currFrame == null || layer._clipper._currFrame.getList().length == 0))
+				{
+					isMasked = false;
 				}
 
 				if (isMasked)
@@ -377,7 +387,7 @@ class FlxAnimate extends FlxSprite
 						continue;
 				}
 
-				renderLayer(frame, (toBitmap || isMasker || isMasked) ? new FlxMatrix() : matrix, coloreffect, (toBitmap) ? {instance: null} : filterInstance, (toBitmap || isMasker) ? [layer._filterCamera] : (isMasked) ? [layer._clipper.maskCamera] : cameras);
+				renderLayer(frame, (toBitmap || isMasker || isMasked) ? new FlxMatrix() : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? {instance: null} : filterInstance, (toBitmap || isMasker) ? [layer._filterCamera] : (isMasked) ? [layer._clipper.maskCamera] : cameras);
 
 
 				if (toBitmap)
@@ -480,22 +490,41 @@ class FlxAnimate extends FlxSprite
 
 		var bounds = masker.canvas.getBounds(null);
 
-		instance.updateBitmaps(bounds);
+		if (bounds.width == 0)
+		{
+			@:privateAccess
+			masker.clearDrawStack();
+			masker.canvas.graphics.clear();
 
-		var mrBmp = renderer.graphicstoBitmapData(masker.canvas.graphics, instance._bmp2);
+			return;
+		}
+		instance.updateBitmaps(bounds);
 
 		var mask = instance.maskCamera;
 
 		mask.render();
 		var mBounds = mask.canvas.getBounds(null);
 
+		if (mBounds.width == 0)
+		{
+			@:privateAccess
+			masker.clearDrawStack();
+			masker.canvas.graphics.clear();
 
+			@:privateAccess
+			mask.clearDrawStack();
+			mask.canvas.graphics.clear();
+			return;
+		}
 		var p = new FlxPoint(mBounds.x, mBounds.y);
 
 		p.x -= bounds.x;
 		p.y -= bounds.y;
 
 		var lMask = renderer.graphicstoBitmapData(mask.canvas.graphics, instance._bmp1, p);
+		var mrBmp = renderer.graphicstoBitmapData(masker.canvas.graphics, instance._bmp2);
+
+
 
 		// instance._filterFrame.parent.bitmap.copyPixels(instance._bmp1, instance._bmp1.rect, instance._bmp1.rect.topLeft, instance._bmp2, instance._bmp2.rect.topLeft, true);
 		renderer.applyFilter(lMask, instance._filterFrame.parent.bitmap, lMask, null, null, mrBmp);
