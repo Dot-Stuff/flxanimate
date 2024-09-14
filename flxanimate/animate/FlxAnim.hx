@@ -542,7 +542,10 @@ class FlxAnim implements IFlxDestroyable
 	}
 	function set_reversed(value:Bool):Bool
 	{
-		return curInstance.symbol.reverse = value;
+		if (curInstance != null)
+			return curInstance.symbol.reverse = value;
+		else
+			return value;
 	}
 
 	public function getByName(name:String):SymbolStuff

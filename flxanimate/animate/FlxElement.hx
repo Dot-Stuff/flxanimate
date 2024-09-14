@@ -10,6 +10,8 @@ import flixel.math.FlxPoint;
 import flxanimate.data.AnimationData;
 import flixel.math.FlxMatrix;
 import openfl.geom.ColorTransform;
+import flixel.graphics.frames.FlxFrame;
+import flixel.FlxCamera;
 
 @:access(flxanimate.animate.SymbolParameters)
 class FlxElement extends FlxObject implements IFlxDestroyable
@@ -34,13 +36,18 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 	@:allow(flxanimate.FlxAnimate)
 	var _matrix:FlxMatrix = new FlxMatrix();
 
+	var _refMat:FlxMatrix = null;
+
 	@:allow(flxanimate.FlxAnimate)
 	var _color:ColorTransform = new ColorTransform();
 
 	@:allow(flxanimate.FlxAnimate)
 	var _scrollF:FlxPoint;
 
+	public var scaleX(default, set):Float = 1;
+	public var scaleY(default, set):Float = 1;
 
+	public var rotation:Float = 0;
 
 	/**
 	 * Creates a new `FlxElement` instance.
@@ -71,20 +78,6 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 			symbol.destroy();
 		bitmap = null;
 		matrix = null;
-	}
-
-	function set_bitmap(value:String)
-	{
-		if (value != bitmap && symbol != null && symbol.cacheAsBitmap)
-			symbol._renderDirty = true;
-
-		return bitmap = value;
-	}
-	function set_matrix(value:FlxMatrix)
-	{
-		(value == null) ? matrix.identity() : matrix = value;
-
-		return value;
 	}
 
 	public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
@@ -161,10 +154,26 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		}
 
 		var m3d = (symbol) ? element.SI.M3D : element.ASI.M3D;
-		var array = Reflect.fields(m3d);
-		if (!Std.isOfType(m3d, Array))
-			array.sort((a, b) -> Std.parseInt(a.substring(1)) - Std.parseInt(b.substring(1)));
-		var m:Array<Float> = (m3d is Array) ? m3d : [for (field in array) Reflect.field(m3d,field)];
+		var m:Array<Float> = [];
+
+		if (m3d == null)
+		{
+			// Initialize with identity matrix if m3d is null
+    	m = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+		}
+		else if (Std.isOfType(m3d, Array))
+		{
+    	m = cast m3d;
+		}
+		else
+		{
+    	// Assuming m3d is an object with properties m00, m01, m02, etc.
+			var rowColNames = ["00", "01", "02", "03", "10", "11", "12", "13", "20", "21", "22", "23", "30", "31", "32", "33"];
+			for (i in 0...16) {
+					var fieldName = 'm${rowColNames[i]}';
+					m[i] = Reflect.hasField(m3d, fieldName) ? Reflect.field(m3d, fieldName) : 0;
+			}
+		}
 
 		if (!symbol && m3d == null)
 		{
@@ -172,9 +181,42 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 			m[1] = m[4] = m[12] = m[13] = 0;
 		}
 
-		var pos = (symbol) ? element.SI.bitmap.POS : element.ASI.POS;
+		var pos = symbol ? element.SI.bitmap.POS : element.ASI.POS;
 		if (pos == null)
 			pos = {x: 0, y: 0};
 		return new FlxElement((symbol) ? element.SI.bitmap.N : element.ASI.N, params, new FlxMatrix(m[0], m[1], m[4], m[5], m[12] + pos.x, m[13] + pos.y));
+	}
+
+	function set_bitmap(value:String)
+	{
+		if (value != bitmap && symbol != null && symbol.cacheAsBitmap)
+			symbol._renderDirty = true;
+
+		return bitmap = value;
+	}
+	function set_matrix(value:FlxMatrix)
+	{
+		(value == null) ? matrix.identity() : matrix = value;
+
+		return value;
+	}
+
+	function set_scaleX(value:Float)
+	{
+		if (scaleX == value) return value;
+
+		matrix.a = value;
+		_refMat.a = value;
+
+		return scaleX = value;
+	}
+	function set_scaleY(value:Float)
+	{
+		if (scaleX == value) return value;
+
+		matrix.a = value;
+		_refMat.a = value;
+
+		return scaleX = value;
 	}
 }

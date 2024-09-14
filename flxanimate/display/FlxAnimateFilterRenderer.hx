@@ -98,12 +98,12 @@ class FlxAnimateFilterRenderer
 		}
 	}
 
-	public function applyFilter(bmp:BitmapData, target:BitmapData, target1:BitmapData, target2:BitmapData, filters:Array<BitmapFilter>, rect:Rectangle, ?mask:BitmapData, ?maskPos:FlxPoint)
+	public function applyFilter(bmp:BitmapData, target:BitmapData, target1:BitmapData, target2:BitmapData, filters:Array<BitmapFilter>, ?rect:Rectangle = null, ?mask:BitmapData, ?maskPos:FlxPoint)
 	{
 		if (mask != null)
 		{
-			maskShader.relativePos.value[0] = maskPos.x;
-			maskShader.relativePos.value[1] = maskPos.y;
+			maskShader.relativePos.value[0] = 0;
+			maskShader.relativePos.value[1] = 0;
 			maskShader.mainPalette.input = mask;
 			maskFilter.invalidate();
 			if (filters == null)
@@ -123,9 +123,13 @@ class FlxAnimateFilterRenderer
 		var bitmap3 = target2;
 
 
-		bmp.__renderTransform.translate(Math.abs(rect.x), Math.abs(rect.y));
+		if (rect != null)
+			bmp.__renderTransform.translate(Math.abs(rect.x), Math.abs(rect.y));
+
+
 		renderer.__setRenderTarget(bitmap);
-		renderer.__renderFilterPass(bmp, renderer.__defaultDisplayShader, true);
+		if (bmp != bitmap)
+			renderer.__renderFilterPass(bmp, renderer.__defaultDisplayShader, true);
 		bmp.__renderTransform.identity();
 
 		if (filters != null)
@@ -198,7 +202,7 @@ class FlxAnimateFilterRenderer
 		return bitmap;
 	}
 
-	public function graphicstoBitmapData(gfx:Graphics, ?target:BitmapData = null) // TODO!: Support for CPU based games (Cairo/Canvas only renderers)
+	public function graphicstoBitmapData(gfx:Graphics, ?target:BitmapData = null, point:FlxPoint = null) // TODO!: Support for CPU based games (Cairo/Canvas only renderers)
 	{
 		if (gfx.__bounds == null) return null;
 
@@ -213,6 +217,11 @@ class FlxAnimateFilterRenderer
 		var bmp = (target == null) ? new BitmapData(Math.ceil(bounds.width), Math.ceil(bounds.height), true, 0) : target;
 
 		renderer.__worldTransform.translate(-bounds.x, -bounds.y);
+
+		if (point != null)
+		{
+			renderer.__worldTransform.translate(point.x, point.y);
+		}
 
 		// GfxRenderer.render(gfx, cast renderer.__softwareRenderer);
 		// var bmp = gfx.__bitmap;
