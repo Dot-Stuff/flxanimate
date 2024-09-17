@@ -37,7 +37,7 @@
 
 	<haxelib name="flixel" />
 	<haxelib name="flixel-addons" />
-	<haxelib name="flxAnimate" />
+	<haxelib name="flxanimate" />
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
 
@@ -54,6 +54,9 @@
 
 	<!--Enable this for Nape release builds for a serious peformance improvement-->
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
+
+	<!--No need for the save system in a simple sample project.-->
+	<haxedef name="FLX_NO_SAVE"/>
 
 	<!-- _________________________________ Custom _______________________________ -->
 
