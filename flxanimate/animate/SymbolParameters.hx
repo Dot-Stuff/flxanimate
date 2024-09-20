@@ -161,9 +161,9 @@ class SymbolParameters implements IFilterable
 		_filterFrame = FlxDestroyUtil.destroy(_filterFrame);
 		_filterCamera = FlxDestroyUtil.destroy(_filterCamera);
 		_filterMatrix = null;
-		FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+		FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
 		_bmp1 = FlxDestroyUtil.dispose(_bmp1);
-		FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+		FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 		_bmp2 = FlxDestroyUtil.dispose(_bmp2);
 	}
 
@@ -291,9 +291,9 @@ class SymbolParameters implements IFilterable
 			{
 				FlxG.bitmap.remove(_filterFrame.parent);
 				_filterFrame = FlxDestroyUtil.destroy(_filterFrame);
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
 				_bmp1 = FlxDestroyUtil.dispose(_bmp1);
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 				_bmp2 = FlxDestroyUtil.dispose(_bmp2);
 			}
 		}
@@ -336,9 +336,9 @@ class SymbolParameters implements IFilterable
 			if (_filterFrame != null)
 			{
 				_filterFrame.parent.destroy();
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
 				if (_needSecondBmp)
-					FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+					FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 			}
 			else
 			{
@@ -368,7 +368,7 @@ class SymbolParameters implements IFilterable
 				_bmp2.fillRect(_bmp2.rect, 0);
 			else if (_bmp2 != null)
 			{
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 				_bmp2 = null;
 			}
 
