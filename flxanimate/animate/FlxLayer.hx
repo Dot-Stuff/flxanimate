@@ -104,9 +104,9 @@ class FlxLayer extends FlxObject implements IFilterable
 		_filterFrame = FlxDestroyUtil.destroy(_filterFrame);
 		_filterCamera = FlxDestroyUtil.destroy(_filterCamera);
 		_filterMatrix = null;
-		FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+		FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
 		_bmp1 = FlxDestroyUtil.dispose(_bmp1);
-		FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+		FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 		_bmp2 = FlxDestroyUtil.dispose(_bmp2);
 
 		for (keyframe in _keyframes)
@@ -357,8 +357,8 @@ class FlxLayer extends FlxObject implements IFilterable
 			if (_filterFrame != null)
 			{
 				_filterFrame.parent.destroy();
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 			}
 			else
 			{
