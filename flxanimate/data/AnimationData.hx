@@ -96,80 +96,100 @@ class AnimationData
 
 		for (filter in Reflect.fields(filters))
 		{
-			switch (filter.split("_")[0])
-			{
-				case "DSF", "DropShadowFilter":
-				{
-					var drop:DropShadowFilter = Reflect.field(filters, filter);
-					bitmapFilter.unshift(new openfl.filters.DropShadowFilter(drop.DST, drop.AL, colorFromString(drop.C), drop.A, drop.BLX, drop.BLY, drop.STR, drop.Q, drop.IN, drop.KK));
-				}
-				case "GF", "GlowFilter":
-				{
-					var glow:GlowFilter = Reflect.field(filters, filter);
-					bitmapFilter.unshift(new openfl.filters.GlowFilter(colorFromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK));
-				}
-				case "BF", "BevelFilter": // Friday Night Funkin reference ?!??!?!''1'!'?1'1''?1''
-				{
-					var bevel:BevelFilter = Reflect.field(filters, filter);
-					bitmapFilter.unshift(new flxanimate.filters.BevelFilter(bevel.DST, bevel.AL, colorFromString(bevel.HC), bevel.HA, colorFromString(bevel.SC), bevel.SA, bevel.BLX, bevel.BLY, bevel.STR, bevel.Q, bevel.TP, bevel.KK));
-				}
-				case "BLF", "BlurFilter":
-				{
-					var blur:BlurFilter = Reflect.field(filters, filter);
-					bitmapFilter.unshift(new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q));
-				}
-				case "ACF", "AdjustColorFilter":
-				{
-					var adjustColor:AdjustColorFilter = Reflect.field(filters, filter);
-
-					var colorAdjust = new AdjustColor();
-
-					colorAdjust.hue = adjustColor.H;
-					colorAdjust.brightness = adjustColor.BRT;
-					colorAdjust.contrast = adjustColor.CT;
-					colorAdjust.saturation = adjustColor.SAT;
-
-					bitmapFilter.unshift(new openfl.filters.ColorMatrixFilter(colorAdjust.calculateFinalFlatArray()));
-				}
-
-				case "GGF", "GradientGlowFilter":
-				{
-					var gradient:GradientFilter = Reflect.field(filters, filter);
-					var colors:Array<Int> = [];
-					var alphas:Array<Float> = [];
-					var ratios:Array<Int> = [];
-
-					for (entry in gradient.GE)
-					{
-						colors.push(colorFromString(entry.C));
-						alphas.push(entry.A);
-						ratios.push(Std.int(entry.R * 255));
-					}
-
-
-					bitmapFilter.unshift(new flxanimate.filters.GradientGlowFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK));
-				}
-				case "GBF", "GradientBevelFilter":
-				{
-					var gradient:GradientFilter = Reflect.field(filters, filter);
-					var colors:Array<Int> = [];
-					var alphas:Array<Float> = [];
-					var ratios:Array<Int> = [];
-
-					for (entry in gradient.GE)
-					{
-						colors.push(colorFromString(entry.C));
-						alphas.push(entry.A);
-						ratios.push(Math.round(entry.R * 255));
-					}
-
-
-					bitmapFilter.unshift(new flxanimate.filters.GradientBevelFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK));
-				}
-			}
+			bitmapFilter.unshift(filterFromString(filter.split("_")[0], Reflect.field(filters, filter)));
 		}
 
 		return bitmapFilter;
+	}
+	public static function fromFilterJsonEx(filters:Array<Dynamic> = null)
+	{
+		if (filters == null) return null;
+
+		var bitmapFilter:Array<BitmapFilter> = [];
+
+		for (filter in filters)
+		{
+			bitmapFilter.unshift(filterFromString(setFieldBool(filter, ["N", "name"]), filter));
+		}
+
+		return bitmapFilter;
+	}
+
+	static function filterFromString(field:String, value:Dynamic):BitmapFilter
+	{
+		switch (field)
+		{
+			case "DSF", "DropShadowFilter":
+			{
+				var drop:DropShadowFilter = value;
+				return new openfl.filters.DropShadowFilter(drop.DST, drop.AL, colorFromString(drop.C), drop.A, drop.BLX, drop.BLY, drop.STR, drop.Q, drop.IN, drop.KK);
+			}
+			case "GF", "GlowFilter":
+			{
+				var glow:GlowFilter = value;
+				return new openfl.filters.GlowFilter(colorFromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK);
+			}
+			case "BF", "BevelFilter": // Friday Night Funkin reference ?!??!?!''1'!'?1'1''?1''
+			{
+				var bevel:BevelFilter = value;
+				return new flxanimate.filters.BevelFilter(bevel.DST, bevel.AL, colorFromString(bevel.HC), bevel.HA, colorFromString(bevel.SC), bevel.SA, bevel.BLX, bevel.BLY, bevel.STR, bevel.Q, bevel.TP, bevel.KK);
+			}
+			case "BLF", "BlurFilter":
+			{
+				var blur:BlurFilter = value;
+				return new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q);
+			}
+			case "ACF", "AdjustColorFilter":
+			{
+				var adjustColor:AdjustColorFilter = value;
+
+				var colorAdjust = new AdjustColor();
+
+				colorAdjust.hue = adjustColor.H;
+				colorAdjust.brightness = adjustColor.BRT;
+				colorAdjust.contrast = adjustColor.CT;
+				colorAdjust.saturation = adjustColor.SAT;
+
+				return new openfl.filters.ColorMatrixFilter(colorAdjust.calculateFinalFlatArray());
+			}
+
+			case "GGF", "GradientGlowFilter":
+			{
+				var gradient:GradientFilter = value;
+				var colors:Array<Int> = [];
+				var alphas:Array<Float> = [];
+				var ratios:Array<Int> = [];
+
+				for (entry in gradient.GE)
+				{
+					colors.push(colorFromString(entry.C));
+					alphas.push(entry.A);
+					ratios.push(Std.int(entry.R * 255));
+				}
+
+
+				return new flxanimate.filters.GradientGlowFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK);
+			}
+			case "GBF", "GradientBevelFilter":
+			{
+				var gradient:GradientFilter = value;
+				var colors:Array<Int> = [];
+				var alphas:Array<Float> = [];
+				var ratios:Array<Int> = [];
+
+				for (entry in gradient.GE)
+				{
+					colors.push(colorFromString(entry.C));
+					alphas.push(entry.A);
+					ratios.push(Math.round(entry.R * 255));
+				}
+
+
+				return new flxanimate.filters.GradientBevelFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK);
+			}
+		}
+
+		return null;
 	}
 	/**
 	 * Transforms a `ColorEffect` into a `ColorTransform`.
@@ -421,10 +441,19 @@ abstract MetaData({}) from {}
 	 * The framerate.
 	 */
 	public var FRT(get, never):Float;
+	
+	/**
+	 * the current version of the exporter (Used in BetterTA)
+	 */
+	public var V(get, never):String;
 
 	function get_FRT()
 	{
 		return AnimationData.setFieldBool(this, ["FRT", "framerate"]);
+	}
+	function get_V()
+	{
+		return AnimationData.setFieldBool(this, ["V", "version"]);
 	}
 }
 /**
@@ -457,7 +486,7 @@ abstract Frame({}) from {}
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
 	 */
-	public var F(get, never):Filters;
+	public var F(get, never):OneOfTwo<Array<Dynamic>, Filters>;
 
 	function get_N():String
 	{
@@ -533,6 +562,8 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var bitmap(get, never):Bitmap;
 
+	public var B(get, never):String;
+
 	/**
 	 * this sets on which frame it's the symbol, Graphic only
 	 */
@@ -552,6 +583,12 @@ abstract SymbolInstance({}) from {}
 	 * The Matrix of the Symbol, Be aware from Neo! He can be anywhere!!! :fearful:
 	 */
 	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
+
+	/**
+	 * a 2D version of the matrix. (used only in BetterTA)
+	 */
+	public var MX(get, never):Array<Float>;
+	
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
@@ -560,7 +597,7 @@ abstract SymbolInstance({}) from {}
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
 	 */
-	public var F(get, never):Filters;
+	public var F(get, never):OneOfTwo<Array<Dynamic>, Filters>;
 
 	function get_SN()
 	{
@@ -581,6 +618,12 @@ abstract SymbolInstance({}) from {}
 	{
 		return AnimationData.setFieldBool(this, ["BM", "bitmap"]);
 	}
+
+	function get_B()
+	{
+		return AnimationData.setFieldBool(this, ["B", "blend"]);
+	}
+
 	function get_FF()
 	{
 		var ff:Null<Int> = AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
@@ -600,6 +643,11 @@ abstract SymbolInstance({}) from {}
 	function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
+	}
+
+	function get_MX()
+	{
+		return AnimationData.setFieldBool(this, ["MX", "Matrix"]);
 	}
 
 	function get_C()
@@ -990,9 +1038,19 @@ abstract AtlasSymbolInstance(Bitmap) from {}
 	 */
 	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
 
+	/**
+	 * a 2D version of the matrix. (used only in BetterTA)
+	 */
+	public var MX(get, never):Array<Float>;
+
 	function get_M3D()
 	{
 		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
+	}
+
+	function get_MX()
+	{
+		return AnimationData.setFieldBool(this, ["MX", "Matrix"]);
 	}
 }
 

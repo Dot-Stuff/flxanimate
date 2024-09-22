@@ -405,8 +405,12 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		if (rotated)
 			dimensions.setSize(dimensions.height, dimensions.width);
 
-		Frames.addAtlasFrame(dimensions, (sourceSize != null) ? sourceSize : FlxPoint.get(dimensions.x, dimensions.y),
-			(offset != null) ? offset.negate() : FlxPoint.get(), name, (rotated) ? ANGLE_NEG_90 : ANGLE_0);
+
+		if (dimensions.width == 0 || dimensions.height == 0)
+			Frames.addEmptyFrame(FlxRect.get(0, 0, 1, 1));
+		else
+			Frames.addAtlasFrame(dimensions, (sourceSize != null) ? sourceSize : FlxPoint.get(dimensions.x, dimensions.y),
+				(offset != null) ? offset.negate() : FlxPoint.get(), name, (rotated) ? ANGLE_NEG_90 : ANGLE_0);
 	}
 
 	/**

@@ -202,4 +202,16 @@ class FlxTimeline implements IFlxDestroyable
 
 		return new FlxTimeline(layers);
 	}
+
+	public static function fromJSONEx(timeline:Timeline)
+	{
+		if (timeline == null || timeline.L == null) return null;
+		var layers = [];
+		for (layer in timeline.L)
+		{
+			layers.push(FlxLayer.fromJSONEx(layer));
+		}
+
+		return new FlxTimeline(layers);
+	}
 }

@@ -273,4 +273,22 @@ class FlxKeyFrame
 
 		return keyframe;
 	}
+	public static function fromJSONEx(frame:Frame)
+	{
+		if (frame == null) return null;
+
+		var keyframe = new FlxKeyFrame(frame.I, frame.DU, frame.N);
+		keyframe.colorEffect = AnimationData.fromColorJson(frame.C);
+
+		if (frame.E != null)
+		{
+			for (element in frame.E)
+			{
+				keyframe.add(FlxElement.fromJSONEx(element));
+			}
+		}
+		keyframe.filters = AnimationData.fromFilterJsonEx(frame.F);
+
+		return keyframe;
+	}
 }

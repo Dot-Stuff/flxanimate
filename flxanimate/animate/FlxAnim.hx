@@ -157,9 +157,16 @@ class FlxAnim implements IFlxDestroyable
 		stageInstance = null;
 
 		if (animationFile == null) return;
-		setSymbols(animationFile);
 
-		stageInstance = (animationFile.AN.STI != null) ? FlxElement.fromJSON(cast animationFile.AN.STI) : new FlxElement(new SymbolParameters(animationFile.AN.SN));
+		var bta = animationFile.MD.V != null;
+
+		if (bta)
+			setSymbolsEx(animationFile);
+		else
+			setSymbols(animationFile);
+		
+
+		stageInstance = (animationFile.AN.STI != null) ? ((!bta) ? FlxElement.fromJSON(cast animationFile.AN.STI) : FlxElement.fromJSONEx(cast animationFile.AN.STI)) : new FlxElement(new SymbolParameters(animationFile.AN.SN));
 
 		curInstance = stageInstance;
 
@@ -168,6 +175,8 @@ class FlxAnim implements IFlxDestroyable
 		_parent.origin.copyFrom(stageInstance.symbol.transformationPoint);
 		metadata = new FlxMetaData(animationFile.AN.N, animationFile.MD.FRT);
 		framerate = metadata.frameRate;
+		if (bta)
+			metadata.version = animationFile.MD.V;
 	}
 	/**
 	 * Plays an animation.
@@ -275,6 +284,7 @@ class FlxAnim implements IFlxDestroyable
 
 	function setSymbols(Anim:AnimAtlas)
 	{
+
 		symbolDictionary.set(Anim.AN.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(Anim.AN.SN), FlxTimeline.fromJSON(Anim.AN.TL)));
 
 		if (Anim.SD != null)
@@ -282,6 +292,19 @@ class FlxAnim implements IFlxDestroyable
 			for (symbol in Anim.SD.S)
 			{
 				symbolDictionary.set(symbol.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(symbol.SN), FlxTimeline.fromJSON(symbol.TL)));
+			}
+		}
+	}
+
+	function setSymbolsEx(Anim:AnimAtlas)
+	{
+		symbolDictionary.set(Anim.AN.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(Anim.AN.SN), FlxTimeline.fromJSONEx(Anim.AN.TL)));
+
+		if (Anim.SD != null)
+		{
+			for (symbol in Anim.SD.S)
+			{
+				symbolDictionary.set(symbol.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(symbol.SN), FlxTimeline.fromJSONEx(symbol.TL)));
 			}
 		}
 	}
@@ -622,12 +645,20 @@ class FlxMetaData
 
 	public var skipFilters:Bool;
 
+	/**
+	 * The version the Texture Atlas has been exported. 
+	 * 
+	 * (used in BTA, if it's been exported with the default one, it will set to `"Generic Adobe Animate TA"`)
+	 */
+	public var version:String;
+
 	public function new(name:String, frameRate:Float)
 	{
 		this.name = name;
 		this.frameRate = frameRate;
 		showHiddenLayers = true;
 		skipFilters = false;
+		version = "Generic Adobe Animate TA";
 	}
 	public function destroy()
 	{

@@ -118,6 +118,7 @@ class FlxLayer extends FlxObject implements IFilterable
 		update(elapsed);
 		var _prevFrame = _currFrame;
 		_setCurFrame(curFrame);
+		/*
 		if (_clipper == null && type.getName() == "Clipped")
 		{
 			if (_parent != null)
@@ -138,11 +139,14 @@ class FlxLayer extends FlxObject implements IFilterable
 				_currFrame._renderDirty = true;
 			}
 		}
+		*/
 
 		if (_currFrame != null)
 		{
+			/*
 			if (_correctClip)
 				_currFrame._cacheAsBitmap = true;
+			*/
 			if (_prevFrame != _currFrame)
 			{
 				_currFrame._renderDirty = true;
@@ -388,6 +392,25 @@ class FlxLayer extends FlxObject implements IFilterable
 			for (frame in layer.FR)
 			{
 				l.add(FlxKeyFrame.fromJSON(frame));
+			}
+		}
+
+		return l;
+	}
+	public static function fromJSONEx(layer:Layers)
+	{
+		if (layer == null) return null;
+		var frames = [];
+		var l = new FlxLayer(layer.LN);
+		if (layer.LT != null || layer.Clpb != null)
+		{
+			l.type = (layer.LT != null) ? Clipper : Clipped(layer.Clpb);
+		}
+		if (layer.FR != null)
+		{
+			for (frame in layer.FR)
+			{
+				l.add(FlxKeyFrame.fromJSONEx(frame));
 			}
 		}
 

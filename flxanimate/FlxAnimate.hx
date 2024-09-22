@@ -318,24 +318,24 @@ class FlxAnimate extends FlxSprite
 			{
 				var layer = layers[layers.length - 1 - i];
 
-				if (!layer.visible && (!filterin && mainSymbol || !anim.metadata.showHiddenLayers) || layer.type == Clipper && layer._correctClip) continue;
+				if (!layer.visible && (!filterin && mainSymbol || !anim.metadata.showHiddenLayers)/* || layer.type == Clipper && layer._correctClip*/) continue;
 
-				if (layer._clipper != null)
-				{
-					var layer = layer._clipper;
-					layer._setCurFrame(firstFrame);
-					var frame = layer._currFrame;
-					if (layer._filterCamera == null)
-						layer._filterCamera = new FlxCamera();
-					if (frame._renderDirty)
-					{
-						renderLayer(frame, new FlxMatrix(), new ColorTransform(), {instance: null}, [layer._filterCamera]);
+				// if (layer._clipper != null)
+				// {
+				// 	var layer = layer._clipper;
+				// 	layer._setCurFrame(firstFrame);
+				// 	var frame = layer._currFrame;
+				// 	if (layer._filterCamera == null)
+				// 		layer._filterCamera = new FlxCamera();
+				// 	if (frame._renderDirty)
+				// 	{
+				// 		renderLayer(frame, new FlxMatrix(), new ColorTransform(), {instance: null}, [layer._filterCamera]);
 
-						layer._filterMatrix.identity();
+				// 		layer._filterMatrix.identity();
 
-						frame._renderDirty = false;
-					}
-				}
+				// 		frame._renderDirty = false;
+				// 	}
+				// }
 
 				layer._setCurFrame(firstFrame);
 
@@ -343,7 +343,7 @@ class FlxAnimate extends FlxSprite
 
 				if (frame == null) continue;
 
-				var toBitmap = frame.filters != null || layer.type.getName() == "Clipped";
+				var toBitmap = frame.filters != null /*|| layer.type.getName() == "Clipped"*/;
 
 				if (skipFilters)
 					toBitmap = false;
@@ -373,7 +373,7 @@ class FlxAnimate extends FlxSprite
 				{
 					layer._filterMatrix.identity();
 
-					renderFilter(layer, frame.filters, renderer, (layer._clipper != null) ? layer._clipper._filterCamera : null);
+					renderFilter(layer, frame.filters, renderer, /*(layer._clipper != null) ? layer._clipper._filterCamera :*/ null);
 
 					frame._renderDirty = false;
 
@@ -455,7 +455,10 @@ class FlxAnimate extends FlxSprite
 		renderer.applyFilter(gfx, filterInstance._filterFrame.parent.bitmap, filterInstance._bmp1, filterInstance._bmp2, filters, rect, gfxMask, point);
 		point = FlxDestroyUtil.put(point);
 		
-		filterInstance._filterMatrix.translate(Math.round((b.x + rect.x)), Math.round((b.y + rect.y)));
+		if (filters != null && filters.length > 0)
+			filterInstance._filterMatrix.translate(Math.round((b.x + rect.x)), Math.round((b.y + rect.y)));
+		else
+			filterInstance._filterMatrix.translate(Math.round((rect.x)), Math.round(rect.y));
 		@:privateAccess
 		filterCamera.clearDrawStack();
 		filterCamera.canvas.graphics.clear();

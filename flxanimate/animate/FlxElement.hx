@@ -103,9 +103,6 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 				default: symbol.firstFrame;
 			}
 
-			if (symbol.type == MovieClip)
-				curFF = 0;
-
 
 			symbol.update(curFF);
 			@:privateAccess
@@ -176,5 +173,59 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		if (pos == null)
 			pos = {x: 0, y: 0};
 		return new FlxElement((symbol) ? element.SI.bitmap.N : element.ASI.N, params, new FlxMatrix(m[0], m[1], m[4], m[5], m[12] + pos.x, m[13] + pos.y));
+	}
+	
+	public static function fromJSONEx(element:Element)
+	{
+
+		var symbol = element.SI != null;
+		var params:SymbolParameters = null;
+		if (symbol)
+		{
+			params = new SymbolParameters();
+			params.instance = element.SI.IN;
+			params.type = switch (element.SI.ST)
+			{
+				case movieclip, "movieclip": MovieClip;
+				case button, "button": Button;
+				default: Graphic;
+			}
+
+			params.blendMode = element.SI.B;
+			
+			var lp:LoopType = (element.SI.LP == null) ? loop : element.SI.LP.split("R")[0];
+			params.loop = switch (lp) // remove the reverse sufix
+			{
+				case playonce, "playonce": PlayOnce;
+				case singleframe, "singleframe": SingleFrame;
+				default: Loop;
+			}
+			params.reverse = (element.SI.LP == null) ? false : StringTools.contains(element.SI.LP, "R");
+			params.firstFrame = element.SI.FF ?? 0;
+			params.colorEffect = AnimationData.fromColorJson(element.SI.C);
+			params.name = element.SI.SN;
+			params.transformationPoint = FlxPoint.weak(element.SI.TRP.x, element.SI.TRP.y);
+			params.filters = AnimationData.fromFilterJsonEx(element.SI.F);
+		}
+
+		var m = [];
+		if (symbol && element.SI.MX != null || element.ASI.MX != null)
+		{
+			var mx = (symbol) ? element.SI.MX : element.ASI.MX;
+			m[0] = mx[0];
+			m[1] = mx[1];
+			m[4] = mx[2];
+			m[5] = mx[3];
+			m[12] = mx[4];
+			m[13] = mx[5];
+		}
+		else if (symbol && element.SI.M3D != null || element.ASI.M3D != null)
+		{
+			var m3d = (symbol) ? element.SI.M3D : element.ASI.M3D;
+			var array = Reflect.fields(m3d);
+			m = m3d;
+		}
+
+		return new FlxElement((symbol) ? element.SI.bitmap.N : element.ASI.N, params, new FlxMatrix(m[0], m[1], m[4], m[5], m[12], m[13]));
 	}
 }
