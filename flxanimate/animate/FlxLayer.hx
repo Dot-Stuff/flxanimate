@@ -44,7 +44,7 @@ class FlxLayer extends FlxObject implements IFilterable
 	var _filterMatrix:FlxMatrix;
 
 	@:allow(flxanimate.FlxAnimate)
-	var _renderable:Bool = true;
+	var _renderable:Bool = false;
 
 	@:allow(flxanimate.animate.FlxTimeline)
 	var _parent(default, set):FlxTimeline;
@@ -61,12 +61,15 @@ class FlxLayer extends FlxObject implements IFilterable
 	var _keyframes(default, null):Array<FlxKeyFrame>;
 
 	@:allow(flxanimate.FlxAnimate)
+	var maskCamera:FlxCamera;
+
+	@:allow(flxanimate.FlxAnimate)
 	var _correctClip:Bool = false;
 
 	@:allow(flxanimate.FlxAnimate)
 	var _clipper:FlxLayer = null;
 
-	public var length(get, null):Int;
+	public var length(get, never):Int;
 
 	@:allow(flxanimate.FlxAnimate)
 	var _currFrame:FlxKeyFrame;
@@ -101,9 +104,9 @@ class FlxLayer extends FlxObject implements IFilterable
 		_filterFrame = FlxDestroyUtil.destroy(_filterFrame);
 		_filterCamera = FlxDestroyUtil.destroy(_filterCamera);
 		_filterMatrix = null;
-		FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
+		FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
 		_bmp1 = FlxDestroyUtil.dispose(_bmp1);
-		FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+		FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 		_bmp2 = FlxDestroyUtil.dispose(_bmp2);
 
 		for (keyframe in _keyframes)
@@ -118,39 +121,22 @@ class FlxLayer extends FlxObject implements IFilterable
 		update(elapsed);
 		var _prevFrame = _currFrame;
 		_setCurFrame(curFrame);
-		/*
-		if (_clipper == null && type.getName() == "Clipped")
-		{
-			if (_parent != null)
-			{
-				var l = _parent.get(type.getParameters()[0]);
-				if (l != null)
-				{
-					l._correctClip = true;
-
-					_clipper = l;
-				}
-			}
-		}
-		else if (_clipper != null)
-		{
-			if (_clipper._currFrame._renderDirty)
-			{
-				_currFrame._renderDirty = true;
-			}
-		}
-		*/
 
 		if (_currFrame != null)
 		{
-			/*
-			if (_correctClip)
-				_currFrame._cacheAsBitmap = true;
-			*/
 			if (_prevFrame != _currFrame)
 			{
 				_currFrame._renderDirty = true;
 				_prevFrame = _currFrame;
+
+				if (_clipper != null)
+				{
+					if (_currFrame.getList().length <= 0)
+						_clipper._renderable = false;
+					else
+						_clipper._renderable = true;
+					_clipper._currFrame._renderDirty = true;
+				}
 			}
 			_currFrame.updateRender(elapsed, curFrame, dictionary);
 		}
@@ -168,10 +154,6 @@ class FlxLayer extends FlxObject implements IFilterable
 		{
 			var layers = _parent.getList();
 			var layer = layers[layers.indexOf(this) - 1];
-			if (_parent != null && layer != null && layer.type.getName() == "Clipper")
-			{
-				layer._renderable = false;
-			}
 		}
 		var index = 0;
 		if ((frame is String))
@@ -271,6 +253,16 @@ class FlxLayer extends FlxObject implements IFilterable
 	function set__parent(par:FlxTimeline)
 	{
 		_parent = par;
+		if (_parent != null && type.getName() == "Clipped")
+		{
+			var layer = _parent.get(type.getParameters()[0]);
+
+
+			if (layer != null && layer.type == Clipper)
+			{
+				_clipper = layer;
+			}
+		}
 		rename();
 		return par;
 	}
@@ -281,15 +273,29 @@ class FlxLayer extends FlxObject implements IFilterable
 	}
 	function set_type(value:LayerType)
 	{
-		if (type != null && type.getName() == "Clipped")
+		var tName = value.getName();
+		if (type != null)
 		{
-			var layers = _parent.getList();
-			var layer = layers[layers.indexOf(this) - 1];
-			if (_parent != null && layer != null && layer.type.getName() == "Clipper")
+			if (tName == "Clipped")
 			{
-				layer._renderable = true;
+				if (_parent != null)
+				{
+					var layer = _parent.get(value.getParameters()[0]);
+
+
+					if (layer != null && layer.type == Clipper)
+					{
+						_clipper = layer;
+					}
+				}
+			}
+			else if (tName == "Clipper")
+			{
+				maskCamera = new FlxCamera();
 			}
 		}
+		else
+			type = Normal;
 		return type = value;
 	}
 	@:allow(flxanimate.FlxAnimate)
@@ -351,8 +357,8 @@ class FlxLayer extends FlxObject implements IFilterable
 			if (_filterFrame != null)
 			{
 				_filterFrame.parent.destroy();
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp1)));
-				FlxG.bitmap.remove(FlxG.bitmap.get(FlxG.bitmap.findKeyForBitmap(_bmp2)));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp1));
+				FlxG.bitmap.removeByKey(FlxG.bitmap.findKeyForBitmap(_bmp2));
 			}
 			else
 			{
@@ -368,6 +374,9 @@ class FlxLayer extends FlxObject implements IFilterable
 			_filterFrame.sourceSize.set(rect.width, rect.height);
 			@:privateAccess
 			_filterFrame.cacheFrameMatrix();
+			_bmp1.fillRect(_bmp1.rect, 0);
+			_filterFrame.parent.bitmap.fillRect(_filterFrame.parent.bitmap.rect, 0);
+			_bmp2.fillRect(_bmp2.rect, 0);
 		}
 		else
 		{
@@ -397,6 +406,7 @@ class FlxLayer extends FlxObject implements IFilterable
 
 		return l;
 	}
+
 	public static function fromJSONEx(layer:Layers)
 	{
 		if (layer == null) return null;

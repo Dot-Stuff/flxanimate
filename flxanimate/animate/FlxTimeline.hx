@@ -15,11 +15,11 @@ class FlxTimeline implements IFlxDestroyable
 	/**
 	 * The total of layers the timeline has.
 	 */
-	public var length(get, null):Int;
+	public var length(get, never):Int;
 	/**
 	 * The total length of frames that the timeline has.
 	 */
-	public var totalFrames(get, null):Int;
+	public var totalFrames(get, never):Int;
 	/**
 	 * @param layers the amount of layers the timeline is set.
 	 */

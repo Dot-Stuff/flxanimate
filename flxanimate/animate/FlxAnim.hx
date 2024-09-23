@@ -53,12 +53,12 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * The current symbol the instance is taking as a reference.
 	 */
-	public var curSymbol(get, null):FlxSymbol;
+	public var curSymbol(get, never):FlxSymbol;
 
 	/**
 	 * Whether the animation has finished or not.
 	 */
-	public var finished(get, null):Bool;
+	public var finished(get, never):Bool;
 	/**
 	 * a reverse option where the animation plays backwards or not.
 	 */
@@ -565,7 +565,10 @@ class FlxAnim implements IFlxDestroyable
 	}
 	function set_reversed(value:Bool):Bool
 	{
-		return curInstance.symbol.reverse = value;
+		if (curInstance != null)
+			return curInstance.symbol.reverse = value;
+		else
+			return value;
 	}
 
 	public function getByName(name:String):SymbolStuff
