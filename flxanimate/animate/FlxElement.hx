@@ -63,7 +63,6 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		if (symbol != null)
 			symbol._parent = this;
 		this.matrix = (matrix == null) ? new FlxMatrix() : matrix;
-
 	}
 
 	override public function toString()
@@ -74,8 +73,10 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 	{
 		super.destroy();
 		_parent = null;
-		if (symbol != null)
+		if (symbol != null) {
 			symbol.destroy();
+			symbol = null;
+		}
 		bitmap = null;
 		matrix = null;
 	}
@@ -107,9 +108,11 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 			dictionary[symbol.name].updateRender(elapsed, curFF, dictionary, swfRender);
 		}
 	}
+
+	static var matrixNames = ["m00","m01","m10","m11","m30","m31"];
+
 	public static function fromJSON(element:Element)
 	{
-
 		var symbol = element.SI != null;
 		var params:SymbolParameters = null;
 		if (symbol)
@@ -122,18 +125,16 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 				case button, "button": Button;
 				default: Graphic;
 			}
-			if (StringTools.contains(params.instance, "_bl"))
-			{
-				var _bl = params.instance.indexOf("_bl");
 
-				if (_bl != -1)
-					_bl += 3;
+			var _bl = params.instance.indexOf("_bl");
+			if (_bl != -1)
+			{
+				_bl += 3;
 
 				var end = params.instance.indexOf("_", _bl);
 				params.blendMode = cast Std.parseInt(params.instance.substring(_bl, end));
 
 				params.instance = params.instance.substring(end + 1);
-
 			}
 			var lp:LoopType = (element.SI.LP == null) ? loop : element.SI.LP.split("R")[0];
 			params.loop = switch (lp) // remove the reverse sufix
@@ -156,37 +157,26 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		if (m3d == null)
 		{
 			// Initialize with identity matrix if m3d is null
-    	m = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+			m = [1, 0, 0, 1, 0, 0];
 		}
 		else if (Std.isOfType(m3d, Array))
 		{
-    	m = cast m3d;
+			m = [m3d[0], m3d[1], m3d[4], m3d[5], m3d[12], m3d[13]];
 		}
 		else
 		{
-    	// Assuming m3d is an object with properties m00, m01, m02, etc.
-			var rowColNames = ["00", "01", "02", "03", "10", "11", "12", "13", "20", "21", "22", "23", "30", "31", "32", "33"];
-			for (i in 0...16) {
-					var fieldName = 'm${rowColNames[i]}';
-					m[i] = Reflect.hasField(m3d, fieldName) ? Reflect.field(m3d, fieldName) : 0;
-			}
-		}
-
-		if (!symbol && m3d == null)
-		{
-			m[0] = m[5] = 1;
-			m[1] = m[4] = m[12] = m[13] = 0;
+			// Assuming m3d is an object with properties m00, m01, m02, etc.
+			m = [for(field in matrixNames) Reflect.field(m3d, field)];
 		}
 
 		var pos = symbol ? element.SI.bitmap.POS : element.ASI.POS;
 		if (pos == null)
 			pos = {x: 0, y: 0};
-		return new FlxElement((symbol) ? element.SI.bitmap.N : element.ASI.N, params, new FlxMatrix(m[0], m[1], m[4], m[5], m[12] + pos.x, m[13] + pos.y));
+		return new FlxElement((symbol) ? element.SI.bitmap.N : element.ASI.N, params, new FlxMatrix(m[0], m[1], m[2], m[3], m[4] + pos.x, m[5] + pos.y));
 	}
-	
+
 	public static function fromJSONEx(element:Element)
 	{
-
 		var symbol = element.SI != null;
 		var params:SymbolParameters = null;
 		if (symbol)
@@ -201,7 +191,7 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 			}
 
 			params.blendMode = element.SI.B;
-			
+
 			var lp:LoopType = (element.SI.LP == null) ? loop : element.SI.LP.split("R")[0];
 			params.loop = switch (lp) // remove the reverse sufix
 			{
@@ -231,7 +221,7 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		else if (symbol && element.SI.M3D != null || element.ASI.M3D != null)
 		{
 			var m3d = (symbol) ? element.SI.M3D : element.ASI.M3D;
-			var array = Reflect.fields(m3d);
+			//var array = Reflect.fields(m3d);
 			m = m3d;
 		}
 
