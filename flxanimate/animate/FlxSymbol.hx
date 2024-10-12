@@ -198,7 +198,7 @@ class FlxSymbol implements IFlxDestroyable
 		return frame;
 	}
 
-	public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+	public inline function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
 	{
 		timeline.updateRender(elapsed, curFrame, dictionary, swfRender);
 	}
