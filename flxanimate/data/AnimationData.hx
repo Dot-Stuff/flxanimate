@@ -399,15 +399,11 @@ abstract Timeline({}) from {}
 	/**
 	 * An `Array` that goes in a inverted order, from the bottom to the top.
 	 */
-	public var L(get, set):Array<Layers>;
+	public var L(get, never):Array<Layers>;
 
 	function get_L():Array<Layers>
 	{
 		return MacroAnimationData.getFieldBool(this, ["L", "LAYERS"]);
-	}
-	function set_L(value:Array<Layers>)
-	{
-		return AnimationData.setFieldBool(this, ["L", "LAYERS"], value);
 	}
 }
 /**
@@ -430,7 +426,7 @@ abstract Layers({}) from {}
 	/**
 	 * An `Array` of KeyFrames inside the layer.
 	 */
-	public var FR(get, set):Array<Frame>;
+	public var FR(get, never):Array<Frame>;
 
 	function get_LN():String
 	{
@@ -447,10 +443,6 @@ abstract Layers({}) from {}
 	function get_FR():Array<Frame>
 	{
 		return MacroAnimationData.getFieldBool(this, ["FR", "Frames"]);
-	}
-	function set_FR(value:Array<Frame>):Array<Frame>
-	{
-		return AnimationData.setFieldBool(this, ["FR", "Frames"], value);
 	}
 }
 /**
@@ -503,7 +495,7 @@ abstract Frame({}) from {}
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
-	public var C(get, set):ColorEffects;
+	public var C(get, never):ColorEffects;
 
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
@@ -529,10 +521,6 @@ abstract Frame({}) from {}
 	function get_C()
 	{
 		return MacroAnimationData.getFieldBool(this, ["C", "color"]);
-	}
-	function set_C(value:ColorEffects)
-	{
-		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
 
 	function get_F()
@@ -614,7 +602,7 @@ abstract SymbolInstance({}) from {}
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
-	public var C(get, set):ColorEffects;
+	public var C(get, never):ColorEffects;
 
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
@@ -675,10 +663,6 @@ abstract SymbolInstance({}) from {}
 	function get_C()
 	{
 		return MacroAnimationData.getFieldBool(this, ["C", "color"]);
-	}
-	function set_C(value:ColorEffects)
-	{
-		return AnimationData.setFieldBool(this, ["C", "color"], value);
 	}
 
 	function get_F()
