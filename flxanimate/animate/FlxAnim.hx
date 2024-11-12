@@ -224,7 +224,11 @@ class FlxAnim implements IFlxDestroyable
 
 		reversed = Reverse;
 
+
+
 		resume();
+
+		curSymbol.fireCallbacks();
 	}
 
 	public function playElement(element:FlxElement, ?Force:Bool = false, ?Reverse:Bool = false, ?Frame:Int = 0)
