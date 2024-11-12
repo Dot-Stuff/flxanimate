@@ -24,6 +24,8 @@ class FlxSymbol implements IFlxDestroyable
 	@:allow(flxanimate.FlxAnimate)
 	var activeCount:Int = 0;
 
+	var _parent:FlxSymbolDictionary = null;
+
 	var _sprites:Array<Sprite> = [];
 
 	public var timeline(default, null):FlxTimeline;
@@ -34,9 +36,12 @@ class FlxSymbol implements IFlxDestroyable
 	/**
 	 * The name of the symbol.
 	 */
-	public var name(default, null):String;
+	public var name(default, set):String;
+	
+	@:allow(flxanimate.animate.FlxSymbolDictionary)
+	public var location(default, null):String;
 	@:noCompletion
-	@:deprecated("")
+	@:deprecated("ASDONASDOn")
 	public var labels(default, null):Map<String, FlxLabel>;
 
 	/**
@@ -59,8 +64,7 @@ class FlxSymbol implements IFlxDestroyable
 
 	var _tick:Float;
 
-	@:allow(flxanimate.animate.FlxAnim)
-	function new(name:String, timeline:FlxTimeline)
+	public function new(name:String, timeline:FlxTimeline)
 	{
 		curFrame = 0;
 		this.timeline = timeline;
@@ -409,5 +413,21 @@ class FlxSymbol implements IFlxDestroyable
 	function set_curFrame(value:Int)
 	{
 		return _curFrame = value;
+	}
+	function set_name(value:String = "")
+	{
+		if (value == "")
+			return name;
+
+		if (_parent != null)
+		{
+			_parent.removeSymbol(this);
+
+			name = value;
+
+			_parent.addSymbol(this);
+		}
+		
+		return name = value;
 	}
 }

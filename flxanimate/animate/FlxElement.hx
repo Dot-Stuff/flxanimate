@@ -242,6 +242,47 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		return value;
 	}
 
+	/*
+	private function __setTransform(a:Float, b:Float, c:Float, d:Float, tx:Float, ty:Float):Void
+	{
+		var transform = matrix;
+		if (transform.a == a && transform.b == b && transform.c == c && transform.d == d && transform.tx == tx && transform.ty == ty)
+		{
+			return;
+		}
+
+		var scaleX = 0.0;
+		var scaleY = 0.0;
+
+		if (b == 0)
+		{
+			scaleX = a;
+		}
+		else
+		{
+			scaleX = Math.sqrt(a * a + b * b);
+		}
+
+		if (c == 0)
+		{
+			scaleY = d;
+		}
+		else
+		{
+			scaleY = Math.sqrt(c * c + d * d);
+		}
+
+		@:bypassAccessor
+		this.scaleX = scaleX;
+		@:bypassAccessor
+		this.scaleY = scaleY;
+
+		var rotation = (180 / Math.PI) * Math.atan2(d, c) - 90;
+
+		this.rotation = rotation;
+	}
+	*/
+
 	function set_scaleX(value:Float)
 	{
 		if (scaleX == value) return value;

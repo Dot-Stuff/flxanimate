@@ -1,12 +1,14 @@
 package flxanimate.animate;
 
-import flixel.FlxG;
+import flixel.graphics.frames.FlxFramesCollection;
+import flxanimate.data.AnimationData.AnimAtlas;
 import haxe.extern.EitherType;
 import haxe.io.Path;
 
 class FlxSymbolDictionary
 {
-	var _parent:FlxAnim;
+	@:allow(flxanimate.animate.FlxAnim)
+	var _parent:FlxAnim = null;
 
 	var _mcFrame:Map<String, Int> = [];
 
@@ -14,13 +16,16 @@ class FlxSymbolDictionary
 
 	public var length(default, null):Int;
 
+	public var frames:FlxFramesCollection;
+
 	public function new()
 	{
 		_symbols = [];
+		frames = null;
 	}
 
 
-	public function getLibrary(library:String)
+	public function getLibrary(library:String):Map<String, FlxSymbol>
 	{
 		var path = Path.directory(Path.addTrailingSlash(library));
 
@@ -34,12 +39,12 @@ class FlxSymbolDictionary
 		return libraries;
 	}
 
-	public function existsSymbol(symbol:String)
+	public function existsSymbol(symbol:String):Bool
 	{
 		return _symbols.exists(symbol);
 	}
 
-	public function getSymbol(symbol:String)
+	public function getSymbol(symbol:String):Null<FlxSymbol>
 	{
 		return _symbols.get(symbol);
 	}
@@ -51,7 +56,14 @@ class FlxSymbolDictionary
 			symbol.name += " Copy";
 		}
 
-			_symbols.set(symbol.name, symbol);
+
+		var name = haxe.io.Path.withoutDirectory(symbol.name);
+		var loc = haxe.io.Path.directory(symbol.name);
+
+		symbol.location = loc;
+		symbol.name = name;
+
+		_symbols.set(symbol.name, symbol);
 
 		length++;
 	}
@@ -82,11 +94,44 @@ class FlxSymbolDictionary
 	{
 		var bool:Bool = false;
 
-		bool = _symbols.remove((Std.isOfType(symbol, FlxSymbol)) ? symbol.name : symbol);
+		bool = _symbols.remove((Std.isOfType(symbol, FlxSymbol)) ? cast (symbol, FlxSymbol).name : symbol);
 
 		if (bool)
 			length--;
 
 		return bool;
+	}
+
+	public function getList()
+	{
+		return _symbols;
+	}
+
+	public function fromJSON(animation:AnimAtlas)
+	{
+		
+		addSymbol(new FlxSymbol(animation.AN.SN, FlxTimeline.fromJSON(animation.AN.TL)));
+
+		if (animation.SD != null)
+		{
+			for (symbol in animation.SD.S)
+			{
+				addSymbol(new FlxSymbol(symbol.SN, FlxTimeline.fromJSON(symbol.TL)));
+			}
+		}
+	}
+
+	public function fromJSONEx(animation:AnimAtlas)
+	{
+		trace(animation.AN.SN);
+		addSymbol(new FlxSymbol(animation.AN.SN, FlxTimeline.fromJSONEx(animation.AN.TL)));
+
+		if (animation.SD != null)
+		{
+			for (symbol in animation.SD.S)
+			{
+				addSymbol(new FlxSymbol(symbol.SN, FlxTimeline.fromJSONEx(symbol.TL)));
+			}
+		}
 	}
 }

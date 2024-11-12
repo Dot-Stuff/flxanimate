@@ -107,12 +107,22 @@ class FlxAnimate extends FlxSprite
 	 */
 	public function loadAtlas(Path:String)
 	{
-		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
+		var p = haxe.io.Path.removeTrailingSlashes(haxe.io.Path.normalize(Path));
+		if (!Assets.exists('$p/Animation.json') && haxe.io.Path.extension(p) != "zip")
 		{
-			FlxG.log.error('Animation file not found in specified path: "$Path", have you written the correct path?');
+			FlxG.log.error('Animation file not found in specified path: "${Path}", have you written the correct path?');
 			return;
 		}
-		loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
+		if (!Assets.exists('$p/metadata.json'))
+			loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
+		else
+		{
+
+			trace("ALAL");
+			loadSeparateAtlas(null, FlxAnimateFrames.fromTextureAtlas(Path));
+			
+			anim._loadExAtlas(Path);
+		}
 	}
 	/**
 	 * Function in handy to load atlases that share same animation/frames but dont necessarily mean it comes together.
@@ -184,9 +194,11 @@ class FlxAnimate extends FlxSprite
 			var json:AnimAtlas = haxe.Json.parse(animation);
 
 			anim._loadAtlas(json);
+
+			if (anim != null && anim.curInstance != null)
+				origin = anim.curInstance.symbol.transformationPoint;
+
 		}
-		if (anim != null)
-			origin = anim.curInstance.symbol.transformationPoint;
 	}
 
 	/**
@@ -531,7 +543,6 @@ class FlxAnimate extends FlxSprite
 
 
 		instance._filterMatrix.translate((Math.round(bounds.x)), (Math.round(bounds.y)));
-
 
 		@:privateAccess
 		mask.clearDrawStack();
