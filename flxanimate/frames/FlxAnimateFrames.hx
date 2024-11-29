@@ -96,7 +96,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
 		if (Path is String)
 		{
-			var str:String = cast(Path, String).split("\\").join("/");
+			var str:String = haxe.io.Path.normalize(cast(Path, String));
 			var text = (StringTools.contains(str, "/")) ? Assets.getText(str) : str;
 			json = haxe.Json.parse(text.split(String.fromCharCode(0xFEFF)).join(""));
 		}
