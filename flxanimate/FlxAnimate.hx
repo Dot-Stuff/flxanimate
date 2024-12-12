@@ -746,6 +746,9 @@ class FlxAnimate extends FlxSprite
 		_tmpMat = null;
 		_col = null;
 
+		_camArr = null;
+		_elemObj = null;
+
 		// #if FLX_SOUND_SYSTEM
 		// if (audio != null)
 		// 	audio.destroy();
