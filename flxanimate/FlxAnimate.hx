@@ -211,13 +211,13 @@ class FlxAnimate extends FlxSprite
 		{
 			_matrix.a *= -1;
 
-			_matrix.tx += width;
+			//_matrix.tx += width;
 
 		}
 		if (flipY)
 		{
 			_matrix.d *= -1;
-			_matrix.ty += height;
+			//_matrix.ty += height;
 		}
 
 		_flashRect.setEmpty();
