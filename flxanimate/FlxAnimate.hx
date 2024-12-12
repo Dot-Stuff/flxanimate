@@ -238,10 +238,10 @@ class FlxAnimate extends FlxSprite
 		if (showPivot)
 		{
 			_tmpMat.setTo(1, 0, 0, 1, origin.x - _pivot.frame.width * 0.5, origin.y - _pivot.frame.height * 0.5);
-			drawLimb(_pivot, _mat, cameras);
+			drawLimb(_pivot, _tmpMat, cameras);
 
 			_tmpMat.setTo(1, 0, 0, 1, -_indicator.frame.width * 0.5, -_indicator.frame.height * 0.5);
-			drawLimb(_indicator, _mat, cameras);
+			drawLimb(_indicator, _tmpMat, cameras);
 		}
 	}
 
