@@ -39,15 +39,15 @@ class FlxAnimateFrames extends FlxAtlasFrames
     /**
      * Helper function to parse several Spritemaps from a texture atlas via `fromSpritemap()`
      * 
-     * @param Path          The Path of the directory.
+     * @param directoryPath          The Path of the directory.
      * @return              a new instance of `FlxAnimateFrames`.
      * @see `fromSpriteMap()`
      */
-    public static function fromTextureAtlas(Path:String):FlxAtlasFrames
+    public static function fromTextureAtlas(directoryPath:String):FlxAtlasFrames
     {
         var frames:FlxAnimateFrames = new FlxAnimateFrames();
         
-        if (zip != null || haxe.io.Path.extension(Path) == "zip")
+        if (zip != null || haxe.io.Path.extension(directoryPath) == "zip")
         {
             #if html5
             FlxG.log.error("Zip Stuff isn't supported on Html5 since it can't transform bytes into an image");
@@ -55,7 +55,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
             #end
             var imagemap:Map<String, Bytes> = new Map();
             var jsonMap:Map<String, AnimateAtlas> = new Map();
-            var thing = (zip != null) ? zip :  Zip.unzip(Zip.readZip(Assets.getBytes(Path)));
+            var thing = (zip != null) ? zip :  Zip.unzip(Zip.readZip(Assets.getBytes(directoryPath)));
 			for (list in thing)
 			{
                 if (haxe.io.Path.extension(list.fileName) == "json")
@@ -86,7 +86,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
         }
         else
         {
-            var texts = Assets.list(TEXT).filter((text) -> StringTools.startsWith(text, '$Path/spritemap'));
+            var texts = Assets.list(TEXT).filter((text) -> StringTools.startsWith(text, '$directoryPath/spritemap'));
             if (texts.length > 1)
             {
                 texts.sort(function (a, b)
@@ -107,7 +107,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
                     txt = txt.substring(1);
                 var json:AnimateAtlas = haxe.Json.parse(txt);
 
-                spritemaps.push({image: Assets.getBitmapData('$Path/${json.meta.image}'), json: json});
+                spritemaps.push({image: Assets.getBitmapData('$directoryPath/${json.meta.image}'), json: json});
             }
             
             for (spritemap in spritemaps)
@@ -128,30 +128,30 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
     /**
      * Parses a spritemap, proceeding from a texture atlas export.
-     * @param Path 
-     * @param Image 
+     * @param spritemapPath Path to our spritemap.json file
+     * @param Image The image of our spritemap
      * @return FlxAtlasFrames
      */
-    public static function fromSpriteMap(Path:FlxSpriteMap, ?Image:FlxGraphicAsset):FlxAtlasFrames
+    public static function fromSpriteMap(spritemapPath:FlxSpriteMap, ?Image:FlxGraphicAsset):FlxAtlasFrames
     {
-        if (Path == null) return null;
+        if (spritemapPath == null) return null;
 
         var json:AnimateAtlas = null;
-        if (Path is String)
+        if (spritemapPath is String)
         {
-            var str:String = StringTools.replace(cast Path, "\\", "/");
+            var str:String = StringTools.replace(cast spritemapPath, "\\", "/");
             json = haxe.Json.parse((StringTools.contains(str, "/")) ? Assets.getText(str) : str);
         }
         else
-            json = Path;
+            json = spritemapPath;
 
         if (json == null) return null;
 
         if (Image == null)
         {
-            if (Path is String)
+            if (spritemapPath is String)
             {
-                Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + json.meta.image;
+                Image = haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(spritemapPath)) + json.meta.image;
             }
             else
                 return null;
@@ -191,21 +191,21 @@ class FlxAnimateFrames extends FlxAtlasFrames
     #end
     /**
      * Sparrow spritesheet format parser with support of both of the versions and making the image completely optional to you.
-     * @param Path The direction of the Xml you want to parse.
+     * @param sparrowPath The path to the .xml file you want to parse.
      * @param Image (Optional) the image of the Xml.
      * @return A new instance of `FlxAtlasFrames`
      */
-    public static function fromSparrow(Path:FlxSparrow, ?Image:FlxGraphicAsset):FlxAtlasFrames
+    public static function fromSparrow(sparrowPath:FlxSparrow, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-        if (Path is String && !Assets.exists(Path))
+        if (sparrowPath is String && !Assets.exists(sparrowPath))
 			return null;
 
-		var data:Access = new Access((Path is String) ? Xml.parse(Assets.getText(Path)).firstElement() : Path.firstElement());
+		var data:Access = new Access((sparrowPath is String) ? Xml.parse(Assets.getText(sparrowPath)).firstElement() : sparrowPath.firstElement());
         if (Image == null)
         {
-            if (Path is String)
+            if (sparrowPath is String)
             {
-                Image = haxe.io.Path.directory(Path) + data.att.imagePath;
+                Image = haxe.io.Path.directory(sparrowPath) + data.att.imagePath;
             }
             else
                 return null;
@@ -260,20 +260,20 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	}
     /**
      * 
-     * @param Path the Json in specific, can be the path of it or the actual json
+     * @param jsonPath the Json in specific, can be the path of it or the actual json
      * @param Image the image which the file is referencing **WARNING:** if you set the path as a json, it's obligatory to set the image!
      * @return A new instance of `FlxAtlasFrames`
      */
-    public static function fromJson(Path:FlxJson, ?Image:FlxGraphicAsset):FlxAtlasFrames
+    public static function fromJson(jsonPath:FlxJson, ?Image:FlxGraphicAsset):FlxAtlasFrames
     {
-        if (Path is String && !Assets.exists(Path))
+        if (jsonPath is String && !Assets.exists(jsonPath))
             return null;
-        var data:JsonNormal = (Path is String) ? haxe.Json.parse(Assets.getText(Path)) : Path;
+        var data:JsonNormal = (jsonPath is String) ? haxe.Json.parse(Assets.getText(jsonPath)) : jsonPath;
         if (Image == null)
         {
-            if (Path is String)
+            if (jsonPath is String)
             {
-                var splitDir = Path.split("/");
+                var splitDir = jsonPath.split("/");
                 splitDir.pop();
                 splitDir.push(data.meta.image);
                 Image = splitDir.join("/");

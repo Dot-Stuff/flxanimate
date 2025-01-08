@@ -64,15 +64,16 @@ class FlxAnimate extends FlxSprite
 	 *
 	 * @param X 		The initial X position of the sprite.
 	 * @param Y 		The initial Y position of the sprite.
-	 * @param Path      The path to the texture atlas, **NOT** the path of the any of the files inside the texture atlas (`Animation.json`, `spritemap.json`, etc).
+	 * @param directoryPath	The directory/folder where the atlas is located, or a zip compressed directory of our texture atlas json + spritesheet.
+	 * 				 		**NOT** the path of the any of the files inside the texture atlas (`Animation.json`, `spritemap.json`, etc).
 	 * @param Settings  Optional settings for the animation (antialiasing, framerate, reversed, etc.).
 	 */
-	public function new(X:Float = 0, Y:Float = 0, ?Path:String, ?Settings:Settings)
+	public function new(X:Float = 0, Y:Float = 0, ?directoryPath:String, ?Settings:Settings)
 	{
 		super(X, Y);
 		anim = new FlxAnim(this);
-		if (Path != null)
-			loadAtlas(Path);
+		if (directoryPath != null)
+			loadAtlas(directoryPath);
 		if (Settings != null)
 			setTheSettings(Settings);
 	}
@@ -89,16 +90,17 @@ class FlxAnimate extends FlxSprite
 
 	/**
 	 * Loads a regular atlas.
-	 * @param Path The path where the atlas is located. Must be the folder, **NOT** any of the contents of it! 
+	 * @param directoryPath The directory/folder where the atlas is located, or a zip compressed directory of our texture atlas json + spritesheet. 
+	 * 						Must be the folder, **NOT** any of the contents of it! 
 	 */
-	public function loadAtlas(Path:String)
+	public function loadAtlas(directoryPath:String)
 	{
-		if (!Assets.exists('$Path/Animation.json') && haxe.io.Path.extension(Path) != "zip")
+		if (!Assets.exists('$directoryPath/Animation.json') && haxe.io.Path.extension(directoryPath) != "zip")
 		{
-			FlxG.log.error('Animation file not found in specified path: "$path", have you written the correct path?');
+			FlxG.log.error('Animation file not found in specified directory: "$directoryPath", have you written the correct path?');
 			return;
 		}
-		loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
+		loadSeparateAtlas(atlasSetting(directoryPath), FlxAnimateFrames.fromTextureAtlas(directoryPath));
 	}
 
 	/**
@@ -404,12 +406,12 @@ class FlxAnimate extends FlxSprite
 		}
 	}
 
-	function atlasSetting(Path:String)
+	function atlasSetting(directoryPath:String)
 	{
 		var jsontxt:String = null;
-		if (haxe.io.Path.extension(Path) == "zip")
+		if (haxe.io.Path.extension(directoryPath) == "zip")
 		{
-			var thing = Zip.readZip(Assets.getBytes(Path));
+			var thing = Zip.readZip(Assets.getBytes(directoryPath));
 
 			for (list in Zip.unzip(thing))
 			{
@@ -424,7 +426,7 @@ class FlxAnimate extends FlxSprite
 			FlxAnimateFrames.zip = thing;
 		}
 		else
-			jsontxt = openfl.Assets.getText('$Path/Animation.json');
+			jsontxt = openfl.Assets.getText('$directoryPath/Animation.json');
 
 		return jsontxt;
 	}
