@@ -120,7 +120,6 @@ class PlayState extends FlxState
 
 		if (specialAnim) return;
 
-
 		var keyPressed:FlxKey = FlxG.keys.firstPressed();
 		
 		if (keyPressed != NONE)

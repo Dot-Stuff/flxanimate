@@ -14,7 +14,11 @@ import flixel.FlxG;
 import flixel.math.FlxMatrix;
 import flxanimate.data.AnimationData;
 #if FLX_SOUND_SYSTEM
+#if (flixel >= "5.3.0")
 import flixel.sound.FlxSound;
+#else
+import flixel.system.FlxSound;
+#end
 #end
 
 typedef SymbolStuff = {var instance:FlxElement; var frameRate:Float;};
@@ -100,6 +104,7 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public var framerate(default, set):Float;
 
+
 	/**
 	 * Internal, used for each skip between frames.
 	 */
@@ -109,6 +114,7 @@ class FlxAnim implements IFlxDestroyable
 	 * The frame the animation is currently.
 	 */
 	public var curFrame(get, set):Int;
+
 
 	var animsMap:Map<String, SymbolStuff> = new Map();
 
@@ -137,7 +143,9 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public var symbolType(get, set):SymbolT;
 
+
 	var _parent:FlxAnimate;
+
 
 	var _tick:Float;
 
@@ -176,7 +184,9 @@ class FlxAnim implements IFlxDestroyable
 
 		stageInstance = (animationFile.AN.STI != null) ? ((!bta) ? FlxElement.fromJSON(cast animationFile.AN.STI) : FlxElement.fromJSONEx(cast animationFile.AN.STI)) : new FlxElement(new SymbolParameters(animationFile.AN.SN));
 
+
 		curInstance = stageInstance;
+
 
 		curFrame = stageInstance.symbol.firstFrame;
 
@@ -284,7 +294,6 @@ class FlxAnim implements IFlxDestroyable
 			else
 			{
 				var curThing = animsMap.get(Name);
-
 
 				framerate = (curThing.frameRate == 0) ? metadata.frameRate : curThing.frameRate;
 
@@ -396,6 +405,7 @@ class FlxAnim implements IFlxDestroyable
 		if (frameDelay == 0 || !isPlaying || finished) return;
 
 		_tick += elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end;
+
 
 		while (_tick > frameDelay)
 		{
@@ -521,6 +531,7 @@ class FlxAnim implements IFlxDestroyable
 			var i = Indices[index];
 			var keyframe = new FlxKeyFrame(index);
 
+
 			var params = new SymbolParameters(SymbolName, params.symbol.loop);
 			params.firstFrame = i;
 			keyframe.add(new FlxElement(params));
@@ -531,8 +542,10 @@ class FlxAnim implements IFlxDestroyable
 
 		symbolDictionary.set(symbol.name, symbol);
 
+
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
+
 
 	function set_framerate(value:Float):Float
 	{
@@ -581,6 +594,7 @@ class FlxAnim implements IFlxDestroyable
 		pause();
 
 		var label = getFrameLabel(name, layer);
+
 
 		if (label != null)
 			curFrame = label.index;
@@ -655,14 +669,21 @@ class FlxAnim implements IFlxDestroyable
 	{
 		return animsMap.get(name);
 	}
+	inline public function existsByName(name:String)
+	{
+		return animsMap.exists(name);
+	}
+
 
 	public function getByInstance(instance:String, ?frame:Int = null, ?layer:EitherType<String, Int>)
 	{
 		if (frame == null) frame = curFrame;
 
+
 		var symbol:FlxSymbol = null;
 
 		var layers = (layer == null) ? curSymbol.timeline.getList() : [curSymbol.timeline.get(layer)];
+
 		for (layer in layers)
 		{
 			if (layer == null) continue;
@@ -684,9 +705,20 @@ class FlxAnim implements IFlxDestroyable
 		return null;
 	}
 
+
 	function get_curSymbol()
 	{
 		return (symbolDictionary != null) ? symbolDictionary.get(curInstance.symbol.name) : null;
+	}
+
+	inline function fireCallback():Void
+	{
+		if (callback != null)
+		{
+			var name:String = (curSymbol != null) ? curSymbol.name : null;
+			callback(name, curFrame);
+		}
+			
 	}
 
 	public function destroy()
@@ -697,12 +729,10 @@ class FlxAnim implements IFlxDestroyable
 		_tick = 0;
 		buttonMap = null;
 		animsMap = null;
-		curInstance.destroy();
-		curInstance = null;
-		stageInstance.destroy();
-		stageInstance = null;
-		metadata.destroy();
-		metadata = null;
+		callback = null;
+		curInstance = FlxDestroyUtil.destroy(curInstance);
+		stageInstance = FlxDestroyUtil.destroy(stageInstance);
+		metadata = FlxDestroyUtil.destroy(metadata);
 		swfRender = false;
 		_parent = null;
 		for (symbol in symbolDictionary.iterator())
@@ -716,7 +746,7 @@ class FlxAnim implements IFlxDestroyable
  * This class shows what framerate the animation was initially set.
  * (Remind myself to include more than this, like more metadata to stuff lmao)
  */
-class FlxMetaData
+class FlxMetaData implements IFlxDestroyable
 {
 	public var name:String;
 	/**

@@ -22,7 +22,11 @@ import flxanimate.animate.*;
 import flxanimate.zip.Zip;
 import openfl.Assets;
 import haxe.io.BytesInput;
+#if (flixel >= "5.3.0")
 import flixel.sound.FlxSound;
+#else
+import flixel.system.FlxSound;
+#end
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
 import flixel.FlxSprite;
@@ -32,6 +36,7 @@ import flixel.math.FlxMatrix;
 import openfl.geom.ColorTransform;
 import flixel.math.FlxMath;
 import flixel.FlxBasic;
+import flixel.graphics.frames.FlxFramesCollection;
 
 using flixel.util.FlxColorTransformUtil;
 
@@ -64,7 +69,7 @@ class FlxAnimate extends FlxSprite
 
 	public var filters:Array<BitmapFilter> = null;
 
-	public var showPivot(default, set):Bool;
+	public var showPivot(default, set):Bool = false;
 
 	var _pivot:FlxFrame;
 	var _indicator:FlxFrame;
@@ -86,10 +91,11 @@ class FlxAnimate extends FlxSprite
 	 *
 	 * @param X 		The initial X position of the sprite.
 	 * @param Y 		The initial Y position of the sprite.
-	 * @param Path      The path to the texture atlas, **NOT** the path of the any of the files inside the texture atlas (`Animation.json`, `spritemap.json`, etc).
+	 * @param directoryPath	The directory/folder where the atlas is located, or a zip compressed directory of our texture atlas json + spritesheet.
+	 * 				 		**NOT** the path of the any of the files inside the texture atlas (`Animation.json`, `spritemap.json`, etc).
 	 * @param Settings  Optional settings for the animation (antialiasing, framerate, reversed, etc.).
 	 */
-	public function new(X:Float = 0, Y:Float = 0, ?Path:String, ?Settings:Settings)
+	public function new(X:Float = 0, Y:Float = 0, ?directoryPath:String, ?Settings:Settings)
 	{
 		super(X, Y);
 		anim = new FlxAnim(this);
@@ -119,13 +125,10 @@ class FlxAnimate extends FlxSprite
 			loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
 		else
 		{
-
-			trace("ALAL");
 			loadSeparateAtlas(null, FlxAnimateFrames.fromTextureAtlas(Path));
 			
 			anim._loadExAtlas(Path);
 		}
-	}
 	/**
 	 * Function in handy to load atlases that share same animation/frames but dont necessarily mean it comes together.
 	 * @param animation The animation file. This should be the content of the `JSON`, **NOT** the path of it.
@@ -208,6 +211,8 @@ class FlxAnimate extends FlxSprite
 	 */
 	public override function draw():Void
 	{
+    
+    if( alpha <= 0) return;
 		_matrix.identity();
 		if (flipX)
 		{
@@ -580,7 +585,7 @@ class FlxAnimate extends FlxSprite
 	{
 		var badPress:Bool = false;
 		var goodPress:Bool = false;
-		#if !mobile
+		#if FLX_MOUSE
 		if (FlxG.mouse.pressed && FlxG.mouse.overlaps(this))
 			goodPress = true;
 		if (FlxG.mouse.pressed && !FlxG.mouse.overlaps(this) && !goodPress)
@@ -819,12 +824,12 @@ class FlxAnimate extends FlxSprite
 	public static function fromSettings()
 	{}
 
-	function atlasSetting(Path:String)
+	function atlasSetting(directoryPath:String)
 	{
 		var jsontxt:String = null;
-		if (haxe.io.Path.extension(Path) == "zip")
+		if (haxe.io.Path.extension(directoryPath) == "zip")
 		{
-			var thing = Zip.readZip(Assets.getBytes(Path));
+			var thing = Zip.readZip(Assets.getBytes(directoryPath));
 
 			for (list in Zip.unzip(thing))
 			{
@@ -839,7 +844,7 @@ class FlxAnimate extends FlxSprite
 			FlxAnimateFrames.zip = thing;
 		}
 		else
-			jsontxt = openfl.Assets.getText('$Path/Animation.json');
+			jsontxt = openfl.Assets.getText('$directoryPath/Animation.json');
 
 		return jsontxt;
 	}

@@ -208,6 +208,13 @@ class FlxAnimateFrames extends FlxAtlasFrames
 				new Rectangle(0, 0, rect.width, rect.height);
 			}
 
+            if (size.width == 0 || size.height == 0)
+            {
+                size.setSize(1,1);
+                frames.addEmptyFrame(size);
+                continue;
+            }
+
 			var angle = rotated ? FlxFrameAngle.ANGLE_NEG_90 : FlxFrameAngle.ANGLE_0;
 
 			var offset = FlxPoint.get(-size.left, -size.top);
@@ -232,6 +239,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	public static function fromJson(Path:FlxJson, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
 		if (Path is String && !Assets.exists(Path))
+
 			return null;
 		var data:JsonNormal = (Path is String) ? haxe.Json.parse(Assets.getText(Path)) : Path;
 
