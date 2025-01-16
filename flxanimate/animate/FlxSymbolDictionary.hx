@@ -63,7 +63,10 @@ class FlxSymbolDictionary
 		symbol.location = loc;
 		symbol.name = name;
 
-		_symbols.set(symbol.name, symbol);
+		if (loc != "")
+			loc += "/";
+
+		_symbols.set(loc + symbol.name, symbol);
 
 		length++;
 	}
