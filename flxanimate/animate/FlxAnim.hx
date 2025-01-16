@@ -223,8 +223,6 @@ class FlxAnim implements IFlxDestroyable
 			l = path.substring(0, colon);
 			symbols = Assets.getLibrary(l).list("TEXT").filter(function (s)
 				{
-					if (StringTools.contains(s, "testing"))
-						trace(s);
 					return StringTools.startsWith(s, po + "/LIBRARY") && haxe.io.Path.extension(s) == "json";
 				});
 
@@ -233,10 +231,11 @@ class FlxAnim implements IFlxDestroyable
 
 
 
+
 		for (symbol in symbols)
 		{
 			var json = haxe.Json.parse(Assets.getText(l + symbol));
-			library.addSymbol(new FlxSymbol(haxe.io.Path.withoutDirectory(haxe.io.Path.withoutExtension(symbol.substring(po.length + 8))), FlxTimeline.fromJSONEx(json)));
+			library.addSymbol(new FlxSymbol(haxe.io.Path.withoutExtension(symbol.substring(po.length + 9)), FlxTimeline.fromJSONEx(json)));
 		}
 		symbolDictionary = library.getList();
 		library.frames = _parent.frames;
