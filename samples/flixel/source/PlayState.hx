@@ -26,6 +26,11 @@ class PlayState extends FlxState
 	 * Checks if the memory used should be only used for the texture atlas only.
 	 */
 	var optimiseMemory:Bool = false;
+
+	/**
+	 * Checks whether to use the ninja-girl using the old exporter AND the new exporter.
+	 */
+	var betterTA:Bool = true;
 	
 	// Controls.
 	
@@ -62,7 +67,7 @@ class PlayState extends FlxState
 			var bg = FlxGridOverlay.create(10, 10);
 			add(bg);
 		}
-		char = new FlxAnimate(0, 0, 'assets/images/ninja-girl');
+		char = new FlxAnimate(0, 0, 'assets/images/${(betterTA) ? "BetterTA/" : ""}ninja-girl${(optimised) ? "" : "-unoptimised"}');
 		char.screenCenter();
 		char.antialiasing = true;
 		add(char);
