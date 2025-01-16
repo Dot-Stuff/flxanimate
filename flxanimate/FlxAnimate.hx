@@ -33,6 +33,8 @@ import openfl.geom.ColorTransform;
 import flixel.math.FlxMath;
 import flixel.FlxBasic;
 
+using flixel.util.FlxColorTransformUtil;
+
 typedef Settings = {
 	?ButtonSettings:Map<String, flxanimate.animate.FlxAnim.ButtonSettings>,
 	?FrameRate:Float,
@@ -235,9 +237,26 @@ class FlxAnimate extends FlxSprite
 
 		if (showPivot)
 		{
-			drawLimb(_pivot, new FlxMatrix(1, 0, 0, 1, origin.x - _pivot.frame.width * 0.5, origin.y - _pivot.frame.height * 0.5), cameras);
-			drawLimb(_indicator, new FlxMatrix(1, 0, 0, 1, -_indicator.frame.width * 0.5, -_indicator.frame.height * 0.5), cameras);
+			_tmpMat.setTo(1, 0, 0, 1, origin.x - _pivot.frame.width * 0.5, origin.y - _pivot.frame.height * 0.5);
+			drawLimb(_pivot, _tmpMat, cameras);
+
+			_tmpMat.setTo(1, 0, 0, 1, -_indicator.frame.width * 0.5, -_indicator.frame.height * 0.5);
+			drawLimb(_indicator, _tmpMat, cameras);
 		}
+	}
+
+	var _camArr:Array<FlxCamera> = [null];
+	function _singleCam(cam:FlxCamera):Array<FlxCamera>
+	{
+		_camArr[0] = cam;
+		return _camArr;
+	}
+
+	var _elemObj:{instance:FlxElement} = {instance: null};
+	function _elemInstance(?instance:FlxElement)
+	{
+		_elemObj.instance = instance;
+		return _elemObj;
 	}
 
 	var st = 0;
@@ -292,8 +311,9 @@ class FlxAnimate extends FlxSprite
 
 				instance.symbol._filterMatrix.copyFrom(instance.symbol.cacheAsBitmapMatrix);
 
-				parseElement(instance, instance.symbol._filterMatrix, new ColorTransform(), {instance: instance}, [instance.symbol._filterCamera]);
-
+				_col.setMultipliers(1,1,1,1);
+				_col.setOffsets(0,0,0,0);
+				parseElement(instance, instance.symbol._filterMatrix, _col, _elemInstance(instance), _singleCam(instance.symbol._filterCamera));
 
 				@:privateAccess
 				renderFilter(instance.symbol, instance.symbol.filters, renderer);
@@ -361,7 +381,7 @@ class FlxAnimate extends FlxSprite
 				var isMasked = layer._clipper != null;
 				var isMasker = layer.type == Clipper;
 
-				var coloreffect = new ColorTransform();
+				var coloreffect = _col;
 				coloreffect.__copyFrom(colorEffect);
 				if (frame.colorEffect != null)
 					coloreffect.concat(frame.colorEffect.__create());
@@ -370,11 +390,11 @@ class FlxAnimate extends FlxSprite
 				{
 					if (!frame._renderDirty && layer._filterFrame != null)
 					{
-						var mat = new FlxMatrix();
+						var mat = _tmpMat;
 						mat.copyFrom(layer._filterMatrix);
 						mat.concat(matrix);
 
-						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer._clipper.maskCamera] : cameras);
+						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
 						continue;
 					}
 					else
@@ -399,8 +419,8 @@ class FlxAnimate extends FlxSprite
 						continue;
 				}
 
-				renderLayer(frame, (toBitmap || isMasker || isMasked) ? new FlxMatrix() : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? {instance: null} : filterInstance, (toBitmap || isMasker) ? [layer._filterCamera] : (isMasked) ? [layer._clipper.maskCamera] : cameras);
-
+				_tmpMat.identity();
+				renderLayer(frame, (toBitmap || isMasker || isMasked) ? _tmpMat : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? _elemInstance(null) : filterInstance, (toBitmap || isMasker) ? _singleCam(layer._filterCamera) : (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
 
 				if (toBitmap)
 				{
@@ -410,11 +430,11 @@ class FlxAnimate extends FlxSprite
 
 					frame._renderDirty = false;
 
-					var mat = new FlxMatrix();
+					var mat = _tmpMat;
 					mat.copyFrom(layer._filterMatrix);
 					mat.concat(matrix);
 
-					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? [layer._clipper.maskCamera] : cameras);
+					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
 				}
 				if (isMasker)
 				{
@@ -422,7 +442,7 @@ class FlxAnimate extends FlxSprite
 
 					renderMask(layer, renderer);
 
-					var mat = new FlxMatrix();
+					var mat = _tmpMat;
 					mat.copyFrom(layer._filterMatrix);
 					mat.concat(matrix);
 
@@ -438,7 +458,6 @@ class FlxAnimate extends FlxSprite
 	}
 	function renderFilter(filterInstance:IFilterable, filters:Array<BitmapFilter>, renderer:FlxAnimateFilterRenderer, ?mask:FlxCamera)
 	{
-		var masking = false;
 		var filterCamera = filterInstance._filterCamera;
 		filterCamera.render();
 
@@ -528,7 +547,7 @@ class FlxAnimate extends FlxSprite
 			mask.canvas.graphics.clear();
 			return;
 		}
-		var p = new FlxPoint(mBounds.x, mBounds.y);
+		var p = FlxPoint.get(mBounds.x, mBounds.y);
 
 		p.x -= bounds.x;
 		p.y -= bounds.y;
@@ -536,6 +555,7 @@ class FlxAnimate extends FlxSprite
 		var lMask = renderer.graphicstoBitmapData(mask.canvas.graphics, instance._bmp1, p);
 		var mrBmp = renderer.graphicstoBitmapData(masker.canvas.graphics, instance._bmp2);
 
+		p.put();
 
 
 		// instance._filterFrame.parent.bitmap.copyPixels(instance._bmp1, instance._bmp1.rect, instance._bmp1.rect.topLeft, instance._bmp2, instance._bmp2.rect.topLeft, true);
@@ -601,6 +621,9 @@ class FlxAnimate extends FlxSprite
 		return frame;
 	}
 	var _mat:FlxMatrix = new FlxMatrix();
+	var _tmpMat:FlxMatrix = new FlxMatrix();
+	var _col:ColorTransform = new ColorTransform();
+
 	function drawLimb(limb:FlxFrame, _matrix:FlxMatrix, ?colorTransform:ColorTransform = null, filterin:Bool = false, ?blendMode:BlendMode, ?scrollFactor:FlxPoint = null, cameras:Array<FlxCamera> = null)
 	{
 		if (colorTransform != null && (colorTransform.alphaMultiplier == 0 || colorTransform.alphaOffset == -255) || limb == null || limb.type == EMPTY)
@@ -614,9 +637,9 @@ class FlxAnimate extends FlxSprite
 
 		for (camera in cameras)
 		{
-			_mat.identity();
-			limb.prepareMatrix(_mat);
 			var matrix = _mat;
+			matrix.identity();
+			limb.prepareMatrix(matrix);
 			matrix.concat(_matrix);
 
 			if (camera == null || !camera.visible || !camera.exists)
@@ -717,9 +740,14 @@ class FlxAnimate extends FlxSprite
 
 	override function destroy()
 	{
-		if (anim != null)
-			anim.destroy();
-		anim = null;
+		anim = FlxDestroyUtil.destroy(anim);
+
+		_mat = null;
+		_tmpMat = null;
+		_col = null;
+
+		_camArr = null;
+		_elemObj = null;
 
 		// #if FLX_SOUND_SYSTEM
 		// if (audio != null)

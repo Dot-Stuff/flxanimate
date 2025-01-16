@@ -396,7 +396,7 @@ class FlxAnim implements IFlxDestroyable
 			curInstance.updateRender(elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end, curFrame, symbolDictionary, swfRender);
 		if (frameDelay == 0 || !isPlaying || finished) return;
 
-		_tick += elapsed;
+		_tick += elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end;
 
 		while (_tick > frameDelay)
 		{
