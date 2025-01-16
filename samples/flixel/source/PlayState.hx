@@ -66,27 +66,6 @@ class PlayState extends FlxState
 		char.screenCenter();
 		char.antialiasing = true;
 		add(char);
-		var bitmapData:BitmapData = null;
-
-		@:privateAccess
-		if (true)
-		{
-			bitmapData = new BitmapData(250, 250, 0);
-
-			bitmapData.fillRect(new openfl.geom.Rectangle(125, 125, 100, 100), 0xFF0000FF);
-
-			// var renderer:OpenGLRenderer = cast FlxG.stage.__renderer;
-			// var filter = new openfl.filters.BlurFilter(25, 0);
-
-			// var shader = new FlxShader();
-			// var context3D = FlxG.stage.context3D;
-			// var bmp = new Bitmap(bitmapData);
-			// bmp.filters = new openfl.filters.BlurFilter();
-		}
-		@:privateAccess
-		sprite = new FlxSprite();
-		sprite.screenCenter();
-		add(sprite);
 
 		var stuff = char.anim.getFrameLabels();
 		labels = [];
