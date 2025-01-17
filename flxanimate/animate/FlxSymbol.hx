@@ -1,5 +1,9 @@
 package flxanimate.animate;
 
+import flixel.util.FlxDestroyUtil;
+import flxanimate.display.FlxAnimateFilterRenderer;
+import openfl.filters.BitmapFilter;
+import openfl.display.BitmapData;
 import openfl.events.Event;
 import openfl.events.EventType;
 import openfl.display.Sprite;
@@ -9,361 +13,424 @@ import flixel.math.FlxMatrix;
 import flixel.FlxG;
 import flxanimate.data.AnimationData;
 
-class FlxSymbol
+class FlxSymbol implements IFlxDestroyable
 {
-    public var timeline(default, null):FlxTimeline;
+	@:allow(flxanimate.animate.FlxElement)
+	var filterPool:Map<Array<BitmapFilter>, BitmapData> = [];
 
-    public var length(get, null):Int;
+	var _sprite:Sprite;
+	@:allow(flxanimate.FlxAnimate)
+	var _checking:Bool = false;
+	@:allow(flxanimate.FlxAnimate)
+	var activeCount:Int = 0;
 
-    public var name(default, null):String;
-    @:noCompletion
-    @:deprecated("")
-    public var labels(default, null):Map<String, FlxLabel>;
-    
-    public var layers(get, null):Array<String>;
-    
-    public var curFrame(get, set):Int;
-    
-    @:allow(flxanimate.animate.FlxAnim)
-    var _curFrame:Int;
+	var _parent:FlxSymbolDictionary = null;
 
-    @:allow(flxanimate.FlxAnimate)
-    var _shootCallback:Bool;
+	var _sprites:Array<Sprite> = [];
 
-    var _tick:Float;
-    
-    @:allow(flxanimate.animate.FlxAnim)
-    function new(name:String, timeline:FlxTimeline)
-    {
-        layers = [];
-        curFrame = 0;
-        this.timeline = timeline;
-        this.name = name;
-    }
-    @:access(flxanimate.FlxAnimate)
-    function toSprite()
-    {
-        var sprite = new Sprite();
-        var list = timeline.getList();
-        for (layer in list)
-        {
-            var spr = new Sprite();
-            spr.name = layer.name;
-            sprite.addChildAt(spr, 0);
-        }
-        return sprite;
-    }
-    public function hideLayer(layer:String)
-    {
-        timeline.hide(layer);
-    }
-    public function showLayer(layer:String)
-    {
-        timeline.show(layer);
-    }
-    public function addCallbackTo(label:String, callback:Function, ?layer:EitherType<Int, String>)
-    {
-        var label = getFrameLabel(label, layer);
-        if (label == null)
-        {
-            return false;
-        }
-        
-        if (label.callbacks.indexOf(callback) != -1)
-        {
-            FlxG.log.error("this callback already exists!");
-            return false;
-        }
-        label.callbacks.push(callback);
-        return true;
-    }
-    public function getCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
-    {
-        var label = getFrameLabel(name, layer);
-        if (label == null)
-        {
-            return null;
-        }
-        var c:Function = label.callbacks[(callback is Int) ? callback : label.callbacks.indexOf(callback)];
-        return c;
-    }
-    public function removeCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
-    {
-        var label = getFrameLabel(name, layer);
-        if (label == null)
-        {
-            return false;
-        }
-        var callback = (callback is Int) ? label.callbacks[callback] : callback;
-        if (label.callbacks.indexOf(callback) == -1)
-        {
-            FlxG.log.error("this callback doesn't exist!");
-        }
-        label.callbacks.remove(callback);
-        return true;
-    }
-    public function removeAllCallbacksFrom(label:String, ?layer:EitherType<Int, String> = null)
-    {
-        var label = getFrameLabel(label, layer);
-        if (label == null)
-        {
-            return false;
-        }
-        label.removeCallbacks();
-        return true;
-    }
-    public function getNextToFrameLabel(label:String, ?layer:EitherType<Int, String> = null)
-    {
-        if (layer == null) layer = 0;
-        var label = getFrameLabel(label, layer);
-        if (label == null) return null;
+	public var timeline(default, null):FlxTimeline;
+	/**
+	 * The amount of frames the symbol has.
+	 */
+	public var length(get, never):Int;
+	/**
+	 * The name of the symbol.
+	 */
+	public var name(default, set):String;
+	
+	@:allow(flxanimate.animate.FlxSymbolDictionary)
+	public var location(default, null):String;
+	@:noCompletion
+	@:deprecated("ASDONASDOn")
+	public var labels(default, null):Map<String, FlxLabel>;
 
-        var layer = timeline.get(layer);
-        @:privateAccess
-        var j = layer._keyframes.indexOf(label);
-        @:privateAccess
-        while (j++ < layer._keyframes.length)
-        {
-            @:privateAccess
-            if ([null, label.name].indexOf(layer._keyframes[j].name) == -1)
-                return layer._keyframes[j];
-        }
+	/**
+	 * The callback that's called for every `fireCallbacks()`.
+	 */
+	public var onCallback:()->Void;
 
-        return null;
-    }
-    public function getFrameLabel(name:String, ?layer:EitherType<Int, String> = null)
-    {
-        var frame:FlxKeyFrame = null;
-        var layers = (layer == null) ? timeline.getList() : [timeline.get(layer)];
-        
-        for (layer in layers)
-        {
-            if (layer == null) continue;
-            
-            var fr = layer.get(name);
-            if (fr != null)
-            {
-                frame = fr;
-                break;
-            } 
-        }
+	/**
+	 * The amount of layers structured in names.
+	 */
+	public var layers(get, never):Array<String>;
 
-        if (frame == null)
-        {
-            FlxG.log.error('The frame label "$name" does not exist! maybe you misspelled it?');
-        }
+	/**
+	 * The current frame.
+	 */
+	public var curFrame(get, set):Int;
 
-        return frame;
-    }
-    public function frameControl(frame:Int, loopType:LoopType)
-    {
-        if (frame < 0)
+	@:allow(flxanimate.animate.FlxAnim)
+	var _curFrame:Int;
+
+	var _tick:Float;
+
+	public function new(name:String, timeline:FlxTimeline)
+	{
+		curFrame = 0;
+		this.timeline = timeline;
+		timeline._parent = this;
+
+		this.name = name;
+
+		activeCount = 0;
+	}
+	/**
+	 * Hides a layer from the timeline.
+	 * @param layer The name of the layer.
+	 */
+	public function hideLayer(layer:String)
+	{
+		timeline.hide(layer);
+	}
+	/**
+	 * Shows a layer from the timeline.
+	 * @param layer The name of the layer.
+	 */
+	public function showLayer(layer:String)
+	{
+		timeline.show(layer);
+	}
+	/**
+	 * Adds a callback to a specific frame label.
+	 * @param label
+	 * @param callback
+	 * @param layer
+	 */
+	public function addCallbackTo(label:String, callback:Function, ?layer:EitherType<Int, String>)
+	{
+		var label = getFrameLabel(label, layer);
+		if (label == null)
 		{
-			if ([loop, "loop"].indexOf(loopType) != -1)
-				frame += (length > 0) ? length - 1 : frame;
-			else
-			{
-				frame = 0;
-			}
-			
-		}
-		else if (frame > length - 1)
-		{
-			if ([loop, "loop"].indexOf(loopType) != -1)
-			{
-				frame -= (length > 0) ? length - 1 : frame;
-			}
-			else
-			{
-				frame = length - 1;
-			}
+			return false;
 		}
 
-        return frame;
-    }
+		if (label.callbacks.indexOf(callback) != -1)
+		{
+			FlxG.log.error("this callback already exists!");
+			return false;
+		}
+		label.callbacks.push(callback);
+		return true;
+	}
+	public function getCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
+	{
+		var label = getFrameLabel(name, layer);
+		if (label == null)
+		{
+			return null;
+		}
+		var c:Function = label.callbacks[(callback is Int) ? callback : label.callbacks.indexOf(callback)];
+		return c;
+	}
+	/**
+	 * Removes a callback from a certain label. can be extracted from a certain layer.
+	 * @param label The label in question.
+	 * @param callback The callback. Can be the actual function or an `Int` referring to its index.
+	 * @param layer The layer in question.
+	 */
+	public function removeCallbackFrom(label:String, callback:EitherType<Function, Int>, ?layer:EitherType<Int, String>)
+	{
+		var label = getFrameLabel(name, layer);
+		if (label == null)
+		{
+			return false;
+		}
+		var callback = (callback is Int) ? label.callbacks[callback] : callback;
+		if (label.callbacks.indexOf(callback) == -1)
+		{
+			FlxG.log.error("this callback doesn't exist!");
+		}
+		label.callbacks.remove(callback);
+		return true;
+	}
+	public function removeAllCallbacksFrom(label:String, ?layer:EitherType<Int, String> = null)
+	{
+		var label = getFrameLabel(label, layer);
+		if (label == null)
+		{
+			return false;
+		}
+		label.removeCallbacks();
+		return true;
+	}
+	public function destroy()
+	{
+		name = "";
 
-    public function update(framerate:Float, reversed:Bool)
-    {
-        // _tick += FlxG.elapsed;
-        // var delay = 1 / framerate;
+		timeline.destroy();
+	}
+	public function getNextToFrameLabel(label:String, ?layer:EitherType<Int, String> = null)
+	@:privateAccess {
+		if (layer == null) layer = 0;
+		var label = getFrameLabel(label, layer);
+		if (label == null) return null;
 
-        // while (_tick > delay)
-        // {
-        //     curFrame++;
-        //     _tick -= delay;
-        // }
-    }
-    /**
-     * Gets an element through a specific index from a frame.
-     * @param index The element index.
-     * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
-     * @return an `FlxElement` instance.
-     */
-    public function getElement(index:Int, ?frame:Int = null)
-    {
-        if (frame == null)
-            frame = curFrame;
-        for (layer in timeline.getList())
-        {
-            var keyframe = layer.get(frame);
+		var layer = timeline.get(layer);
+		var j = layer._keyframes.indexOf(label);
+		while (j++ < layer._keyframes.length)
+		{
+			var name = layer._keyframes[j].name;
+			//if ([null, label.name].indexOf(layer._keyframes[j].name) == -1)
+			if (name != null && name != label.name)
+				return layer._keyframes[j];
+		}
 
-            if (keyframe == null) continue;
+		return null;
+	}
+	public function getFrameLabel(name:String, ?layer:EitherType<Int, String> = null)
+	{
+		var frame:FlxKeyFrame = null;
+		var layers = (layer == null) ? timeline.getList() : [timeline.get(layer)];
 
-            var elements = keyframe.getList();
+		for (layer in layers)
+		{
+			if (layer == null) continue;
 
-            if (index > elements.length - 1)
-            {
-                index -= elements.length - 1;
-                continue;
-            }
+			var fr = layer.get(name);
+			if (fr != null)
+			{
+				frame = fr;
+				break;
+			}
+		}
 
-            return elements[index];
-        }
-        return null;
-    }
-    public function getFrameLabels(?layer:EitherType<Int, String> = null)
-    {
-        var array = [];
-        var labels = [];
-        if (layer == null)
-        {
-            for (layer in timeline.getList())
-            {
-                @:privateAccess
-                for (label in layer._labels.iterator())
-                {
-                    labels.push(label);
-                }
-            }
-        }
-        else
-        {
-            @:privateAccess
-            for (label in timeline.get(layer)._labels.iterator())
-            {
-                labels.push(label);
-            }
-        }
-        labels.sort((a, b) -> a.index - b.index);
-        for (label in labels)
-        {
-            array.push(label.name);
-        }
-        
-        return array;
-    }
-    /**
-     * Gets an element with a name
-     * @param name this can be either the name of the symbol or the instance.
-     * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
-     * @param layer Which layer it should take as a reference. if set to `null`, it'll take every layer available.
-     * @return an `FlxElement` instance.
-     */
-    public function getElementByName(name:String, ?frame:Int = null, ?layer:EitherType<Int, String> = null)
-    {
-        if (frame == null)
-            frame = curFrame;
+		if (frame == null)
+		{
+			FlxG.log.error('The frame label "$name" does not exist! maybe you misspelled it?');
+		}
 
-        if (layer != null)
-        {
-            var keyframe = timeline.get(layer).get(frame);
+		return frame;
+	}
 
-            if (keyframe == null) return null;
+	public inline function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+	{
+		timeline.updateRender(elapsed, curFrame, dictionary, swfRender);
+	}
+	/**
+	 * Gets an element through a specific index from a frame.
+	 * @param index The element index.
+	 * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
+	 * @return an `FlxElement` instance.
+	 */
+	public function getElement(index:Int, ?frame:Int = null)
+	{
+		if (frame == null)
+			frame = curFrame;
+		for (layer in timeline.getList())
+		{
+			var keyframe = layer.get(frame);
 
-            for (element in keyframe.getList())
-            {
-                if (element.symbol == null)
-                    continue;
+			if (keyframe == null) continue;
 
-                var instance = (element.symbol.instance == "") ? element.symbol.name : element.symbol.instance;
+			var elements = keyframe.getList();
 
-                if (instance == name) 
-                    return element;
-                else
-                    continue;
-            }
-        }
-        else
-        {
-            for (layer in timeline.getList())
-            {
-                var keyframe = layer.get(frame);
+			if (elements.length <= 0)
+				continue;
 
-                if (keyframe == null) continue;
+			if (index > elements.length - 1)
+			{
+				index -= elements.length - 1;
+				continue;
+			}
 
-                for (element in keyframe.getList())
-                {
-                    if (element.symbol == null)
-                        continue;
+			return elements[index];
+		}
+		return null;
+	}
+	/**
+	 * Gets a list of frames that have a label of any kind.
+	 * @param layer A specific layer to get the list. if set to `null`, it'll get a list from every layer.
+	 */
+	public function getFrameLabels(?layer:EitherType<Int, String> = null)
+	{
+		var array = [];
+		var labels = [];
+		if (layer == null)
+		{
+			for (layer in timeline.getList())
+			{
+				@:privateAccess
+				for (label in layer._labels.iterator())
+				{
+					labels.push(label);
+				}
+			}
+		}
+		else
+		{
+			@:privateAccess
+			for (label in timeline.get(layer)._labels.iterator())
+			{
+				labels.push(label);
+			}
+		}
+		labels.sort((a, b) -> a.index - b.index);
+		for (label in labels)
+		{
+			array.push(label);
+		}
 
-                    var instance = (element.symbol.instance == "") ? element.symbol.name : element.symbol.instance;
+		return array;
+	}
+	public function getFrameLabelNames(?layer:EitherType<Int, String> = null)
+	{
+		var labels = getFrameLabels(layer);
+		var array = [];
+		for (label in labels)
+		{
+			array.push(label.name);
+		}
 
-                    if (instance == name)
-                        return element;
-                    else
-                        continue;
-                }
-            }
-        }
-        return null;
-    }
-    public function getElementIndex(element:FlxElement, ?frame:Int = null)
-    {
-        if (frame == null)
-            frame = curFrame;
+		return array;
+	}
+	/**
+	 * Gets a symbol element via the symbol's name or the instance's name inside a frame.
+	 * @param name this can be either the name of the symbol or the instance.
+	 * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
+	 * @param layer Which layer it should take as a reference. if set to `null`, it'll take every layer available.
+	 * @return an `FlxElement` instance.
+	 */
+	public function getElementByName(name:String, ?frame:Int = null, ?layer:EitherType<Int, String> = null)
+	{
+		if (frame == null)
+			frame = curFrame;
 
-        var list:Int = 0;
-        for (layer in timeline.getList())
-        {
-            var keyframe = layer.get(frame);
-            
-            if (keyframe == null) continue;
+		if (layer != null)
+		{
+			var keyframe = timeline.get(layer).get(frame);
 
-            for (e in keyframe.getList())
-            {
-                if (element == e)
-                    return list;
+			if (keyframe == null) return null;
 
-                list++;
-            }
-        }
-        return -1;
-    }
-    public function swapElements(oldElement:FlxElement, newElement:FlxElement, ?frame:Int = null)
-    {
-        if (frame == null)
-            frame = curFrame;
+			for (element in keyframe.getList())
+			{
+				if (element.symbol == null)
+					continue;
 
-        var index = getElementIndex(oldElement);
+				if (element.symbol.name == name || element.symbol.instance == name)
+					return element;
+				else
+					continue;
+			}
+		}
+		else
+		{
+			for (layer in timeline.getList())
+			{
+				var keyframe = layer.get(frame);
 
-        if (index == -1)
-        {
-            FlxG.log.error("oldElement doesnt exist in this symbol!");
-            return;
-        }
-        var oldElement = getElement(index);
-        oldElement = newElement;
-    }
+				if (keyframe == null) continue;
 
-    function get_length()
-    {
-        return timeline.totalFrames;
-    }
-    function get_layers()
-    {
-        return timeline.getListNames();
-    }
-    function get_curFrame()
-    {
-        return _curFrame;
-    }
-    function set_curFrame(value:Int)
-    {
-        _curFrame = value;
-        _shootCallback = false;
+				for (element in keyframe.getList())
+				{
+					if (element.symbol == null)
+						continue;
 
-        return value;
-    }
+					if (element.symbol.name == name || element.symbol.instance == name)
+						return element;
+					else
+						continue;
+				}
+			}
+		}
+		return null;
+	}
+	/**
+	 * Gets the element's position inside a frame.
+	 * @param element The element in question.
+	 * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
+	 */
+	public function getElementIndex(element:FlxElement, ?frame:Int = null)
+	{
+		if (frame == null)
+			frame = curFrame;
 
-    public static function prepareMatrix(d:Dynamic, e:Dynamic) {return new FlxMatrix();}
+		var list:Int = 0;
+		for (layer in timeline.getList())
+		{
+			var keyframe = layer.get(frame);
+
+			if (keyframe == null) continue;
+
+			for (e in keyframe.getList())
+			{
+				if (element == e)
+					return list;
+
+				list++;
+			}
+		}
+		return -1;
+	}
+	/**
+	 * Swaps an element with another one.
+	 * @param oldElement The element you wanna replace
+	 * @param newElement The new element that's gonna replace the old one
+	 * @param frame The keyframe the element is located. If set to `null`, it will take `curFrame` as a reference.
+	 */
+	public function swapElements(oldElement:FlxElement, newElement:FlxElement, ?frame:Int = null)
+	{
+		if (frame == null)
+			frame = curFrame;
+
+		var index = getElementIndex(oldElement);
+
+		if (index == -1)
+		{
+			FlxG.log.error("oldElement doesnt exist in this symbol!");
+			return;
+		}
+		var oldElement = getElement(index);
+		oldElement = newElement;
+	}
+	public function fireCallbacks(?frame:Int)
+	{
+		if (frame == null)
+			frame = _curFrame;
+
+		for (layer in timeline.getList())
+		{
+			for (label in layer._labels.iterator())
+			{
+				if (label.index != frame)
+					continue;
+
+				label.fireCallbacks();
+			}
+		}
+		if (onCallback != null)
+			onCallback();
+	}
+
+	function get_length()
+	{
+		return timeline.totalFrames;
+	}
+	function get_layers()
+	{
+		return timeline.getListNames();
+	}
+	function get_curFrame()
+	{
+		return _curFrame;
+	}
+	function set_curFrame(value:Int)
+	{
+		return _curFrame = value;
+	}
+	function set_name(value:String = "")
+	{
+		if (value == "")
+			return name;
+
+		if (_parent != null)
+		{
+			_parent.removeSymbol(this);
+
+			name = value;
+
+			_parent.addSymbol(this);
+		}
+		
+		return name = value;
+	}
 }

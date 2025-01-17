@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project xmlns="http://lime.software/project/1.0.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://lime.software/project/1.0.2 http://lime.software/xsd/project-1.0.2.xsd">
+<project xmlns="http://lime.openfl.org/project/1.0.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/xsd/project-1.0.4.xsd">
 
 	<!-- _________________________ Application Settings _________________________ -->
 
@@ -16,7 +16,7 @@
 	<!-- ____________________________ Window Settings ___________________________ -->
 
 	<!--These window settings apply to all targets-->
-	<window width="1280" height="720" fps="" background="#000000" hardware="true" vsync="false" />
+	<window width="1280" height="720" fps="60" background="#000000" hardware="true" vsync="false" allow-high-dpi="true" />
 
 	<!--HTML5-specific-->
 	<window if="html5" resizable="true" />
@@ -37,7 +37,7 @@
 
 	<haxelib name="flixel" />
 	<haxelib name="flixel-addons" />
-	<haxelib name="flxAnimate" />
+	<haxelib name="flxanimate" path="../../" />
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
 
@@ -54,6 +54,9 @@
 
 	<!--Enable this for Nape release builds for a serious peformance improvement-->
 	<haxedef name="NAPE_RELEASE_BUILD" unless="debug" />
+
+	<!--No need for the save system in a simple sample project.-->
+	<haxedef name="FLX_NO_SAVE"/>
 
 	<!-- _________________________________ Custom _______________________________ -->
 

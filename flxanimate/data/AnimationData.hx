@@ -1,6 +1,7 @@
 package flxanimate.data;
 
-
+import flxanimate.effects.*;
+import flxanimate.motion.AdjustColor;
 import flixel.util.FlxDirection;
 import flixel.util.FlxColor;
 import openfl.geom.ColorTransform;
@@ -10,41 +11,75 @@ import openfl.filters.*;
 @:noCompletion
 class AnimationData
 {
-	@:noCompletion
-	public static function setFieldBool(abstracto:Dynamic, things:Array<String>, ?set:Dynamic):Dynamic
+	// public static var internalParam:EReg = ~/_FA{/;
+
+	// public static var bracketReg:EReg = ~/(\{([^{}]|(?R))*\})/s;.
+
+	/**
+	 * Checks a value, using `Reflection`.
+	 * @param abstracto The abstract in specific.
+	 * @param things The fields you want to use.
+	 * @return The value in specific casted as `Dynamic`.
+	 */
+	public static function getFieldBool(abstracto:Dynamic, things:Array<String>):Dynamic
 	{
 		//TODO: The comment below this comment.
 		// GeoKureli told me that Reflect is shit, but I have literally no option but to use this.
 		// If I have another thing to use that works the same, should replace this lol
 		if (abstracto == null)
-			return Reflect.field({}, "");
+			return null;
 		for (thing in things)
 		{
-			if (set != null)
-			{
-				Reflect.setField(abstracto, thing, set);
-				return set;
-			}
 			if (Reflect.hasField(abstracto, thing))
 			{
 				return Reflect.field(abstracto, thing);
 			}
 		}
-		return Reflect.field(abstracto, "");
+		return null;
 	}
+
+	/**
+	 * Checks a value, using `Reflection`.
+	 * @param abstracto The abstract in specific.
+	 * @param things The fields you want to use.
+	 * @param set What value you want to set.
+	 * @return The value in specific casted as `Dynamic`.
+	 */
+	public static function setFieldBool(abstracto:Dynamic, things:Array<String>, set:Dynamic):Dynamic
+	{
+		//TODO: The comment below this comment.
+		// GeoKureli told me that Reflect is shit, but I have literally no option but to use this.
+		// If I have another thing to use that works the same, should replace this lol
+		if (abstracto == null)
+			return null;
+		for (thing in things)
+		{
+			if (Reflect.hasField(abstracto, thing))
+			{
+				Reflect.setField(abstracto, thing, set);
+				return set;
+			}
+		}
+		if(things.length == 0)
+			return null;
+		Reflect.setField(abstracto, things[0], set);
+		return set;
+	}
+	/**
+	 * Parses a Color Effect from a JSON file into a enumeration of `ColorEffect`.
+	 * @param effect The json field.
+	 */
 	public static function fromColorJson(effect:ColorEffects = null)
 	{
 		var colorEffect = None;
 
 
 		if (effect == null) return colorEffect;
-		
+
 		switch (effect.M)
 		{
 			case Tint, "Tint":
-				var tc = "0x" + effect.TC.substring(1);
-				
-				colorEffect = Tint(Std.parseInt(tc), effect.TM);
+				colorEffect = Tint(colorFromString(effect.TC), effect.TM);
 			case Alpha, "Alpha":
 				colorEffect = Alpha(effect.AM);
 			case Brightness, "Brightness":
@@ -67,94 +102,176 @@ class AnimationData
 		}
 		return colorEffect;
 	}
-	public static function fromFilterJson(filters:Filters = null) 
+	static function colorFromString(color:String)
+	{
+		return Std.parseInt( "0x" + color.substring(1));
+	}
+
+	/**
+	 * Parses a filter from a JSON file into a `BitmapFilter`
+	 * @param filters The JSON field.
+	 */
+	public static function fromFilterJson(filters:Filters = null)
 	{
 		if (filters == null) return null;
-		
-		var bitmapFilter:Array<BitmapFilter> = [];
 
+		var bitmapFilter:Array<BitmapFilter> = [];
 
 		for (filter in Reflect.fields(filters))
 		{
-			switch (filter)
-			{
-				case "GF":
-				{
-					var glow:GlowFilter = Reflect.field(filters, filter);
-					bitmapFilter.push(new openfl.filters.GlowFilter(FlxColor.fromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK));
-				}
-				case "BLF":
-				{
-					var blur:BlurFilter = Reflect.field(filters, filter);
-					bitmapFilter.push(new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q));
-				}
-			}
+			bitmapFilter.unshift(filterFromString(filter.split("_")[0], Reflect.field(filters, filter)));
 		}
-
 
 		return bitmapFilter;
 	}
+	public static function fromFilterJsonEx(filters:Array<Dynamic> = null)
+	{
+		if (filters == null) return null;
+
+		var bitmapFilter:Array<BitmapFilter> = [];
+
+		for (filter in filters)
+		{
+			bitmapFilter.unshift(filterFromString(MacroAnimationData.getFieldBool(filter, ["N", "name"]), filter));
+		}
+
+		return bitmapFilter;
+	}
+
+	static function filterFromString(field:String, value:Dynamic):BitmapFilter
+	{
+		switch (field)
+		{
+			case "DSF", "DropShadowFilter":
+			{
+				var drop:DropShadowFilter = value;
+				return new openfl.filters.DropShadowFilter(drop.DST, drop.AL, colorFromString(drop.C), drop.A, drop.BLX, drop.BLY, drop.STR, drop.Q, drop.IN, drop.KK);
+			}
+			case "GF", "GlowFilter":
+			{
+				var glow:GlowFilter = value;
+				return new openfl.filters.GlowFilter(colorFromString(glow.C), glow.A, glow.BLX, glow.BLY, glow.STR, glow.Q, glow.IN, glow.KK);
+			}
+			case "BF", "BevelFilter": // Friday Night Funkin reference ?!??!?!''1'!'?1'1''?1''
+			{
+				var bevel:BevelFilter = value;
+				return new flxanimate.filters.BevelFilter(bevel.DST, bevel.AL, colorFromString(bevel.HC), bevel.HA, colorFromString(bevel.SC), bevel.SA, bevel.BLX, bevel.BLY, bevel.STR, bevel.Q, bevel.TP, bevel.KK);
+			}
+			case "BLF", "BlurFilter":
+			{
+				var blur:BlurFilter = value;
+				return new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q);
+			}
+			case "ACF", "AdjustColorFilter":
+			{
+				var adjustColor:AdjustColorFilter = value;
+
+				var colorAdjust = new AdjustColor();
+
+				colorAdjust.hue = adjustColor.H;
+				colorAdjust.brightness = adjustColor.BRT;
+				colorAdjust.contrast = adjustColor.CT;
+				colorAdjust.saturation = adjustColor.SAT;
+
+				return new openfl.filters.ColorMatrixFilter(colorAdjust.calculateFinalFlatArray());
+			}
+
+			case "GGF", "GradientGlowFilter":
+			{
+				var gradient:GradientFilter = value;
+				var colors:Array<Int> = [];
+				var alphas:Array<Float> = [];
+				var ratios:Array<Int> = [];
+
+				for (entry in gradient.GE)
+				{
+					colors.push(colorFromString(entry.C));
+					alphas.push(entry.A);
+					ratios.push(Std.int(entry.R * 255));
+				}
+
+
+				return new flxanimate.filters.GradientGlowFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK);
+			}
+			case "GBF", "GradientBevelFilter":
+			{
+				var gradient:GradientFilter = value;
+				var colors:Array<Int> = [];
+				var alphas:Array<Float> = [];
+				var ratios:Array<Int> = [];
+
+				for (entry in gradient.GE)
+				{
+					colors.push(colorFromString(entry.C));
+					alphas.push(entry.A);
+					ratios.push(Math.round(entry.R * 255));
+				}
+
+
+				return new flxanimate.filters.GradientBevelFilter(gradient.DST, gradient.AL, colors, alphas, ratios, gradient.BLX, gradient.BLY, gradient.STR, gradient.Q, gradient.TP, gradient.KK);
+			}
+		}
+
+		return null;
+	}
+	/**
+	 * Transforms a `ColorEffect` into a `ColorTransform`.
+	 * @param colorEffect The `ColorEffect`.
+	 */
 	public static function parseColorEffect(colorEffect:ColorEffect = None)
 	{
-		var CT = new ColorTransform();
-        
-        if ([None, null].indexOf(colorEffect) == -1)
-        {
-            var params = colorEffect.getParameters();
-            switch (colorEffect.getName())
-            {
-                case "Tint":
-                    var color:flixel.util.FlxColor = params[0];
-                    var opacity:Float = params[1];
-					
-                    CT.redMultiplier -= opacity;
-                    CT.redOffset = Math.round(color.red * opacity);
-                    CT.greenMultiplier -= opacity;
-                    CT.greenOffset = Math.round(color.green * opacity);
-                    CT.blueMultiplier -= opacity;
-                    CT.blueOffset = Math.round(color.blue * opacity);
-					
-                case "Alpha":
-                    CT.alphaMultiplier = params[0];
-                case "Brightness":
+		var CT = null;
 
-
-                    CT.redMultiplier = CT.greenMultiplier = CT.blueMultiplier -= Math.abs(params[0]);
-                    if (params[0] >= 0)
-                        CT.redOffset = CT.greenOffset = CT.blueOffset = 255 * params[0];
-                case "Advanced":
-                    CT.concat(params[0]);
-            }
-        }
+		//if ([None, null].indexOf(colorEffect) == -1)
+		if(colorEffect != None && colorEffect != null)
+		{
+			var params = colorEffect.getParameters();
+			CT = switch (colorEffect.getName())
+			{
+				case "Tint": new FlxTint(params[0], params[1]);
+				case "Alpha": new FlxAlpha(params[0]);
+				case "Brightness": new FlxBrightness(params[0]);
+				case "Advanced": new FlxAdvanced(params[0]);
+				default: new FlxColorEffect();
+			}
+		}
 
 
 		return CT;
 	}
 }
-
-
+/**
+ * The types of Color Effects the symbol can have.
+ */
 enum ColorEffect
 {
-    None;
-    Brightness(Bright:Float);
-    Tint(Color:flixel.util.FlxColor, Opacity:Float);
-    Alpha(Alpha:Float);
-    Advanced(transform:ColorTransform);
+	None;
+	Brightness(Bright:Float);
+	Tint(Color:flixel.util.FlxColor, Opacity:Float);
+	Alpha(Alpha:Float);
+	Advanced(transform:ColorTransform);
 }
+/**
+ * The looping method for the current symbol.
+ */
 enum Loop
 {
 	Loop;
 	PlayOnce;
 	SingleFrame;
 }
+/**
+ * The type the symbol can be.
+ */
 enum SymbolT
 {
 	Graphic;
 	MovieClip;
 	Button;
 }
-
-
+/**
+ * The type of behaviour `FlxLayer` can become.
+ */
 enum LayerType
 {
 	Normal;
@@ -163,7 +280,9 @@ enum LayerType
 	Folder;
 }
 
-
+/**
+ * The main structure of a basic Animation file in the texture atlas.
+ */
 abstract AnimAtlas({}) from {}
 {
 	/**
@@ -175,28 +294,28 @@ abstract AnimAtlas({}) from {}
 	 */
 	public var SD(get, never):SymbolDictionary;
 	/**
-	 * Minor stuff, this checks the framerate the anim is and nothing much tbh
+	 * A metadata, consisting of the framerate the document had been exported.
 	 */
 	public var MD(get, never):MetaData;
 
 
 	function get_AN():Animation
 	{
-		return AnimationData.setFieldBool(this, ["AN", "ANIMATION"]);
+		return MacroAnimationData.getFieldBool(this, ["AN", "ANIMATION"]);
 	}
 
 
 	function get_MD():MetaData
 	{
-		return AnimationData.setFieldBool(this, ["MD", "metadata"]);
+		return MacroAnimationData.getFieldBool(this, ["MD", "metadata"]);
 	}
 	function get_SD()
 	{
-		return AnimationData.setFieldBool(this, ["SD", "SYMBOL_DICTIONARY"]);
+		return MacroAnimationData.getFieldBool(this, ["SD", "SYMBOL_DICTIONARY"]);
 	}
 }
 /**
- * The Dictionary itself, where all the symbols are stored.
+ * An `Array` of multiple symbols. All symbols in the Dictionary are supposedly used in the main Animation or in other symbols.
  */
 abstract SymbolDictionary({}) from {}
 {
@@ -208,55 +327,39 @@ abstract SymbolDictionary({}) from {}
 
 	function get_S():Array<SymbolData>
 	{
-		return AnimationData.setFieldBool(this, ["S", "Symbols"]);
+		return MacroAnimationData.getFieldBool(this, ["S", "Symbols"]);
 	}
 }
+@:forward
 /**
- * The main animation Thing
+ *
  */
-abstract Animation({}) from {}
+abstract Animation(SymbolData) from {}
 {
 	/**
-	 * The name of the symbol.
-	 */
-	public var SN(get, never):String;
-	/**
-	 * The name of the fla document.
+	 * The name of the Flash document the texture atlas was exported with.
 	 */
 	public var N(get, never):String;
 	/**
-	 * The timeline of the symbol.
-	 */
-	public var TL(get, never):Timeline;
-	/**
-	 * Its the stage instance of the timeline, basically how was the texture atlas set when it was on "the stage" of Adobe Animate.
-	 * Can be included or not depending if you export the atlas on stage or on the symbol dictionary.
+	 * The Stage Instance. This represents the element settings the texture atlas was exported when clicking on-stage
+	 * **WARNING:** if you export the texture atlas inside the symbol dictionary, this field won't appear, meaning it can be `null`.
 	 */
 	public var STI(get, never):StageInstance;
 
-
-	function get_SN():String 
-	{
-		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
-	}
 	function get_N():String
 	{
-		return AnimationData.setFieldBool(this, ["N", "name"]);
-	}
-	function get_TL():Timeline
-	{
-		return AnimationData.setFieldBool(this, ["TL", "TIMELINE"]);
+		return MacroAnimationData.getFieldBool(this, ["N", "name"]);
 	}
 	function get_STI()
 	{
-		return AnimationData.setFieldBool(this, ["STI", "StageInstance"]);
+		return MacroAnimationData.getFieldBool(this, ["STI", "StageInstance"]);
 	}
 }
 /**
  * The main position how the symbol you exported was set, Acting almost identically as an `Element`, with the exception of not having an Atlas Sprite to call (not that I'm aware of).
  * **WARNING:** This may depend on how you exported your texture atlas, Meaning that this can be `null`
  */
-abstract StageInstance({}) 
+abstract StageInstance({})
 {
 	/**
 	 * The instance of the Element flagged as a `Symbol`.
@@ -267,55 +370,50 @@ abstract StageInstance({})
 
 	function get_SI():SymbolInstance
 	{
-		return AnimationData.setFieldBool(this, ["SI", "SYMBOL_Instance"]);
+		return MacroAnimationData.getFieldBool(this, ["SI", "SYMBOL_Instance"]);
 	}
 }
 /**
- * the SymbolData that the symbol has for checking stuff
+ * A small Symbol specifier, consisting of the name of the Symbol and its timeline.
  */
 abstract SymbolData({}) from {}
 {
 	/**
-	 * The name of the symbol
+	 * The name of the symbol.
 	 */
 	public var SN(get, never):String;
 	/**
-	 * The timeline of the Symbol, aka the frames of the symbols, with all the layers and stuff
+	 * The timeline of the Symbol.
 	 */
 	public var TL(get, never):Timeline;
 
-
-	function get_SN():String 
+	function get_SN():String
 	{
-		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
+		return MacroAnimationData.getFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 	function get_TL():Timeline
 	{
-		return AnimationData.setFieldBool(this, ["TL", "TIMELINE"]);
+		return MacroAnimationData.getFieldBool(this, ["TL", "TIMELINE"]);
 	}
 }
 /**
- * The timeline that the animation is based
+ * The main timeline of the symbol.
  */
 abstract Timeline({}) from {}
 {
 	/**
-	 * The layers that are in the timeline
+	 * An `Array` that goes in a inverted order, from the bottom to the top.
 	 */
-	public var L(get, set):Array<Layers>;
+	public var L(get, never):Array<Layers>;
 
 
 	function get_L():Array<Layers>
 	{
-		return AnimationData.setFieldBool(this, ["L", "LAYERS"]);
-	}
-	function set_L(value:Array<Layers>)
-	{
-		return AnimationData.setFieldBool(this, ["L", "LAYERS"], value);
+		return MacroAnimationData.getFieldBool(this, ["L", "LAYERS"]);
 	}
 }
 /**
- * the Layer abstract, nothing much to say here
+ * A layer instance inside the `Timeline`.
  */
 abstract Layers({}) from {}
 {
@@ -324,58 +422,63 @@ abstract Layers({}) from {}
 	 */
 	public var LN(get, never):String;
 	/**
-	 * Type of layer. Usually it's just to announce that the layer is a mask.
+	 * Type of layer, It's usually to indicate that the Layer is a mask or is masked.
 	 */
 	public var LT(get, never):String;
 	/**
-	 * To which layer it is clipped.
+	 * if the layer is masked, this field will appear to explain which layer is being clipped to, usually the next one.
 	 */
 	public var Clpb(get, never):String;
 	/**
-	 * The frames that the layer has.
+	 * An `Array` of KeyFrames inside the layer.
 	 */
-	public var FR(get, set):Array<Frame>;
+	public var FR(get, never):Array<Frame>;
 
 
 	function get_LN():String
 	{
-		return AnimationData.setFieldBool(this, ["LN", "Layer_name"]);
+		return MacroAnimationData.getFieldBool(this, ["LN", "Layer_name"]);
 	}
 	function get_LT():String
 	{
-		return AnimationData.setFieldBool(this, ["LT", "Layer_type"]);
+		return MacroAnimationData.getFieldBool(this, ["LT", "Layer_type"]);
 	}
 	function get_Clpb():String
 	{
-		return AnimationData.setFieldBool(this, ["Clpb", "Clipped_by"]);
+		return MacroAnimationData.getFieldBool(this, ["Clpb", "Clipped_by"]);
 	}
 	function get_FR():Array<Frame>
 	{
-		return AnimationData.setFieldBool(this, ["FR", "Frames"]);
-	}
-	function set_FR(value:Array<Frame>):Array<Frame>
-	{
-		return AnimationData.setFieldBool(this, ["FR", "Frames"], value);
+		return MacroAnimationData.getFieldBool(this, ["FR", "Frames"]);
 	}
 }
 /**
- * Only has the framerate for some reason
+ * The metadata, consisting of a single variable to indicate the framerate the texture atlas was exported with.
  */
 abstract MetaData({}) from {}
 {
-	
+
 	/**
-	 * Framerate of the anim, nothing much here.
+	 * The framerate.
 	 */
 	public var FRT(get, never):Float;
 	
+	/**
+	 * the current version of the exporter (Used in BetterTA)
+	 */
+	public var V(get, never):String;
+
 	function get_FRT()
 	{
-		return AnimationData.setFieldBool(this, ["FRT", "framerate"]);
+		return MacroAnimationData.getFieldBool(this, ["FRT", "framerate"]);
+	}
+	function get_V()
+	{
+		return MacroAnimationData.getFieldBool(this, ["V", "version"]);
 	}
 }
 /**
- * the frame abstract that has the essential
+ * A KeyFrame with everything essential + labels and ColorEffects/Filters.
  */
 abstract Frame({}) from {}
 {
@@ -400,44 +503,40 @@ abstract Frame({}) from {}
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
-	public var C(get, set):ColorEffects;
+	public var C(get, never):ColorEffects;
 
 
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
 	 */
-	public var F(get, never):Filters;
+	public var F(get, never):OneOfTwo<Array<Dynamic>, Filters>;
 
 
 	function get_N():String
 	{
-		return AnimationData.setFieldBool(this, ["N", "name"]);
+		return MacroAnimationData.getFieldBool(this, ["N", "name"]);
 	}
 	function get_I():Int
 	{
-		return AnimationData.setFieldBool(this, ["I", "index"]);
+		return MacroAnimationData.getFieldBool(this, ["I", "index"]);
 	}
 	function get_DU():Int
 	{
-		return AnimationData.setFieldBool(this, ["DU", "duration"]);
+		return MacroAnimationData.getFieldBool(this, ["DU", "duration"]);
 	}
 	function get_E():Array<Element>
 	{
-		return AnimationData.setFieldBool(this, ["E", "elements"]);
+		return MacroAnimationData.getFieldBool(this, ["E", "elements"]);
 	}
 	function get_C()
 	{
-		return AnimationData.setFieldBool(this, ["C", "color"]);
-	}
-	function set_C(value:ColorEffects)
-	{
-		return AnimationData.setFieldBool(this, ["C", "color"], value);
+		return MacroAnimationData.getFieldBool(this, ["C", "color"]);
 	}
 
 
 	function get_F()
 	{
-		return AnimationData.setFieldBool(this, ["F", "filters"]);
+		return MacroAnimationData.getFieldBool(this, ["F", "filters"]);
 	}
 }
 /**
@@ -454,7 +553,7 @@ abstract Element(StageInstance)
 
 	function get_ASI():AtlasSymbolInstance
 	{
-		return AnimationData.setFieldBool(this, ["ASI", "ATLAS_SPRITE_instance"]);
+		return MacroAnimationData.getFieldBool(this, ["ASI", "ATLAS_SPRITE_instance"]);
 	}
 }
 /**
@@ -487,6 +586,7 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var bitmap(get, never):Bitmap;
 
+	public var B(get, never):String;
 
 	/**
 	 * this sets on which frame it's the symbol, Graphic only
@@ -507,77 +607,90 @@ abstract SymbolInstance({}) from {}
 	 * The Matrix of the Symbol, Be aware of Neo! He can be anywhere!!! :fearful:
 	 */
 	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
+
+	/**
+	 * a 2D version of the matrix. (used only in BetterTA)
+	 */
+	public var MX(get, never):Array<Float>;
+	
 	/**
 	 * The Color Effect of the symbol, it says color but it affects alpha too lol.
 	 */
-	public var C(get, set):ColorEffects;
+	public var C(get, never):ColorEffects;
 
 
 	/**
 	 * Filter stuff, this is the reason why you can't add custom shaders, srry
 	 */
-	public var F(get, never):Filters;
+	public var F(get, never):OneOfTwo<Array<Dynamic>, Filters>;
 
 
 	function get_SN()
 	{
-		return AnimationData.setFieldBool(this, ["SN", "SYMBOL_name"]);
+		return MacroAnimationData.getFieldBool(this, ["SN", "SYMBOL_name"]);
 	}
 
 
 	function get_IN()
 	{
-		return AnimationData.setFieldBool(this, ["IN", "Instance_Name"]);
+		return MacroAnimationData.getFieldBool(this, ["IN", "Instance_Name"]);
 	}
 
 
 	function get_ST()
 	{
-		return AnimationData.setFieldBool(this, ["ST", "symbolType"]);
+		return MacroAnimationData.getFieldBool(this, ["ST", "symbolType"]);
 	}
 
 
 	function get_bitmap()
 	{
-		return AnimationData.setFieldBool(this, ["BM", "bitmap"]);
+		return MacroAnimationData.getFieldBool(this, ["BM", "bitmap"]);
 	}
+
+	function get_B()
+	{
+		return MacroAnimationData.getFieldBool(this, ["B", "blend"]);
+	}
+
 	function get_FF()
 	{
-		return AnimationData.setFieldBool(this, ["FF", "firstFrame"]);
+		var ff:Null<Int> = MacroAnimationData.getFieldBool(this, ["FF", "firstFrame"]);
+		return (ff == null) ? 0 : ff;
 	}
 
 
 	function get_LP()
 	{
-		return AnimationData.setFieldBool(this, ["LP", "loop"]);
+		return MacroAnimationData.getFieldBool(this, ["LP", "loop"]);
 	}
 
 
 	function get_TRP()
 	{
-		return AnimationData.setFieldBool(this, ["TRP", "transformationPoint"]);
+		return MacroAnimationData.getFieldBool(this, ["TRP", "transformationPoint"]);
 	}
 
 
 	function get_M3D()
 	{
-		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
+		return MacroAnimationData.getFieldBool(this, ["M3D", "Matrix3D"]);
 	}
 
+	function get_MX()
+	{
+		return MacroAnimationData.getFieldBool(this, ["MX", "Matrix"]);
+	}
 
 	function get_C()
 	{
-		return AnimationData.setFieldBool(this, ["C", "color"]);
-	}
-	function set_C(value:ColorEffects)
-	{
-		return AnimationData.setFieldBool(this, ["C", "color"], value);
+		return MacroAnimationData.getFieldBool(this, ["C", "color"]);
 	}
 
 
 	function get_F()
 	{
-		return AnimationData.setFieldBool(this, ["F", "filters"]);
+		return MacroAnimationData.getFieldBool(this, ["F", "filters"]);
 	}
 }
 abstract ColorEffects({}) from {}
@@ -616,51 +729,51 @@ abstract ColorEffects({}) from {}
 
 	function get_M()
 	{
-		return AnimationData.setFieldBool(this, ["M", "mode"]);
+		return MacroAnimationData.getFieldBool(this, ["M", "mode"]);
 	}
 	function get_TC()
 	{
-		return AnimationData.setFieldBool(this, ["TC", "tintColor"]);
+		return MacroAnimationData.getFieldBool(this, ["TC", "tintColor"]);
 	}
 	function get_TM()
 	{
-		return AnimationData.setFieldBool(this, ["TM", "tintMultiplier"]);
+		return MacroAnimationData.getFieldBool(this, ["TM", "tintMultiplier"]);
 	}
 	function get_AM()
 	{
-		return AnimationData.setFieldBool(this, ["AM", "alphaMultiplier"]);
+		return MacroAnimationData.getFieldBool(this, ["AM", "alphaMultiplier"]);
 	}
 	function get_AO()
 	{
-		return AnimationData.setFieldBool(this, ["AO", "AlphaOffset"]);
+		return MacroAnimationData.getFieldBool(this, ["AO", "AlphaOffset"]);
 	}
 	function get_RM()
 	{
-		return AnimationData.setFieldBool(this, ["RM", "RedMultiplier"]);
+		return MacroAnimationData.getFieldBool(this, ["RM", "RedMultiplier"]);
 	}
 	function get_RO()
 	{
-		return AnimationData.setFieldBool(this, ["RO", "redOffset"]);
+		return MacroAnimationData.getFieldBool(this, ["RO", "redOffset"]);
 	}
 	function get_GM()
 	{
-		return AnimationData.setFieldBool(this, ["GM", "greenMultiplier"]);
+		return MacroAnimationData.getFieldBool(this, ["GM", "greenMultiplier"]);
 	}
 	function get_GO()
 	{
-		return AnimationData.setFieldBool(this, ["GO", "greenOffset"]);
+		return MacroAnimationData.getFieldBool(this, ["GO", "greenOffset"]);
 	}
 	function get_BM()
 	{
-		return AnimationData.setFieldBool(this, ["BM", "blueMultiplier"]);
+		return MacroAnimationData.getFieldBool(this, ["BM", "blueMultiplier"]);
 	}
 	function get_BO()
 	{
-		return AnimationData.setFieldBool(this, ["BO", "blueOffset"]);
+		return MacroAnimationData.getFieldBool(this, ["BO", "blueOffset"]);
 	}
 	function get_BRT()
 	{
-		return AnimationData.setFieldBool(this, ["BRT", "Brightness"]);
+		return MacroAnimationData.getFieldBool(this, ["BRT", "Brightness"]);
 	}
 }
 abstract Filters({})
@@ -675,13 +788,15 @@ abstract Filters({})
 	 */
 	public var ACF(get, never):AdjustColorFilter;
 
-
 	public var GF(get, never):GlowFilter;
-
 
 	function get_ACF()
 	{
-		return AnimationData.setFieldBool(this, ["ACF", "AdjustColorFilter"]);
+		return MacroAnimationData.getFieldBool(this, ["ACF", "AdjustColorFilter"]);
+	}
+	function get_GF()
+	{
+		return MacroAnimationData.getFieldBool(this, ["GF"]);
 	}
 	function get_GF()
 	{
@@ -713,20 +828,214 @@ abstract AdjustColorFilter({})
 
 	function get_BRT()
 	{
-		return AnimationData.setFieldBool(this, ["BRT", "brightness"]);
+		return MacroAnimationData.getFieldBool(this, ["BRT", "brightness"]);
 	}
 	function get_CT()
 	{
-		return AnimationData.setFieldBool(this, ["CT", "contrast"]);
+		return MacroAnimationData.getFieldBool(this, ["CT", "contrast"]);
 	}
 	function get_SAT()
 	{
-		return AnimationData.setFieldBool(this, ["SAT", "saturation"]);
+		return MacroAnimationData.getFieldBool(this, ["SAT", "saturation"]);
 	}
 	function get_H()
 	{
-		return AnimationData.setFieldBool(this, ["H", "hue"]);
+		return MacroAnimationData.getFieldBool(this, ["H", "hue"]);
 	}
+}
+/**
+ * This blur filter gives instructions of how the blur should be applied onto the symbol/frame.
+ */
+abstract BlurFilter({})
+{
+	/**
+	 * The amount of blur horizontally.
+	 */
+	public var BLX(get, never):Float;
+	/**
+	 * The amount of blur vertically.
+	 */
+	public var BLY(get, never):Float;
+	/**
+	 * The number of passes the filter has.
+	 * When the quality is set to three, it should approximate to a Gaussian Blur.
+	 * Obviously you can go beyond three, but it'll take more time to render.
+	 */
+	public var Q(get, never):Int;
+
+	function get_BLX()
+	{
+		return MacroAnimationData.getFieldBool(this, ["BLX", "blurX"]);
+	}
+	function get_BLY()
+	{
+		return MacroAnimationData.getFieldBool(this, ["BLY", "blurY"]);
+	}
+	function get_Q()
+	{
+		return MacroAnimationData.getFieldBool(this, ["Q", "quality"]);
+	}
+}
+
+@:forward
+abstract GlowFilter(BlurFilter)
+{
+	public var C(get, never):String;
+	public var A(get, never):Float;
+	public var STR(get, never):Float;
+	public var KK(get, never):Bool;
+	public var IN(get, never):Bool;
+
+	function get_C()
+	{
+		return MacroAnimationData.getFieldBool(this, ["C", "color"]);
+	}
+	function get_A()
+	{
+		return MacroAnimationData.getFieldBool(this, ["A", "alpha"]);
+	}
+	function get_STR()
+	{
+		return MacroAnimationData.getFieldBool(this, ["STR", "strength"]);
+	}
+	function get_KK()
+	{
+		return MacroAnimationData.getFieldBool(this, ["KK", "knockout"]);
+	}
+	function get_IN()
+	{
+		return MacroAnimationData.getFieldBool(this, ["IN", "inner"]);
+	}
+}
+
+@:forward
+abstract DropShadowFilter(GlowFilter)
+{
+	public var HO(get, never):Bool;
+	public var AL(get, never):Float;
+	public var DST(get, never):Float;
+
+	function get_HO()
+	{
+		return MacroAnimationData.getFieldBool(this, ["HO", "hideObject"]);
+	}
+	function get_AL()
+	{
+		return MacroAnimationData.getFieldBool(this, ["AL", "angle"]);
+	}
+	function get_DST()
+	{
+		return MacroAnimationData.getFieldBool(this, ["DST", "distance"]);
+	}
+}
+
+@:forward
+abstract BevelFilter(BlurFilter)
+{
+	public var SC(get, never):String;
+	public var SA(get, never):Float;
+	public var HC(get, never):String;
+	public var HA(get, never):Float;
+	public var STR(get, never):Float;
+	public var KK(get, never):Bool;
+	public var AL(get, never):Float;
+	public var DST(get, never):Float;
+	public var TP(get, never):String;
+
+	function get_SC()
+	{
+		return MacroAnimationData.getFieldBool(this, ["SC", "shadowColor"]);
+	}
+	function get_SA()
+	{
+		return MacroAnimationData.getFieldBool(this, ["SA", "shadowAlpha"]);
+	}
+	function get_HC()
+	{
+		return MacroAnimationData.getFieldBool(this, ["HC", "highlightColor"]);
+	}
+	function get_HA()
+	{
+		return MacroAnimationData.getFieldBool(this, ["HA", "highlightAlpha"]);
+	}
+	function get_STR()
+	{
+		return MacroAnimationData.getFieldBool(this, ["STR", "strength"]);
+	}
+	function get_KK()
+	{
+		return MacroAnimationData.getFieldBool(this, ["KK", "knockout"]);
+	}
+	function get_AL()
+	{
+		return MacroAnimationData.getFieldBool(this, ["AL", "angle"]);
+	}
+	function get_DST()
+	{
+		return MacroAnimationData.getFieldBool(this, ["DST", "distance"]);
+	}
+	function get_TP()
+	{
+		return MacroAnimationData.getFieldBool(this, ["TP", "type"]);
+	}
+}
+@:forward
+abstract GradientFilter(BlurFilter)
+{
+	public var STR(get, never):Float;
+	public var KK(get, never):Bool;
+	public var AL(get, never):Float;
+	public var DST(get, never):Float;
+	public var TP(get, never):String;
+	public var GE(get, never):Array<GradientEntry>;
+
+
+	function get_STR()
+	{
+		return MacroAnimationData.getFieldBool(this, ["STR", "strength"]);
+	}
+	function get_KK()
+	{
+		return MacroAnimationData.getFieldBool(this, ["KK", "knockout"]);
+	}
+	function get_AL()
+	{
+		return MacroAnimationData.getFieldBool(this, ["AL", "angle"]);
+	}
+	function get_DST()
+	{
+		return MacroAnimationData.getFieldBool(this, ["DST", "distance"]);
+	}
+	function get_TP()
+	{
+		return MacroAnimationData.getFieldBool(this, ["TP", "type"]);
+	}
+	function get_GE()
+	{
+		return MacroAnimationData.getFieldBool(this, ["GE", "GradientEntries"]);
+	}
+}
+
+abstract GradientEntry({})
+{
+	public var R(get, never):Float;
+	public var C(get, never):String;
+	public var A(get, never):Float;
+
+
+	function get_R()
+	{
+		return MacroAnimationData.getFieldBool(this, ["R", "ratio"]);
+	}
+	function get_C()
+	{
+		return MacroAnimationData.getFieldBool(this, ["C", "color"]);
+	}
+	function get_A()
+	{
+		return MacroAnimationData.getFieldBool(this, ["A", "alpha"]);
+	}
+
 }
 /**
  * This blur filter gives instructions of how the blur should be applied onto the symbol/frame.
@@ -816,11 +1125,11 @@ abstract Bitmap({}) from {}
 	public var POS(get, never):TransformationPoint;
 	function get_N()
 	{
-		return AnimationData.setFieldBool(this, ["N", "name"]);
+		return MacroAnimationData.getFieldBool(this, ["N", "name"]);
 	}
 	function get_POS()
 	{
-		return AnimationData.setFieldBool(this, ["POS", "Position"]);
+		return MacroAnimationData.getFieldBool(this, ["POS", "Position"]);
 	}
 }
 /**
@@ -834,20 +1143,28 @@ abstract AtlasSymbolInstance(Bitmap) from {}
 	 */
 	public var M3D(get, never):OneOfTwo<Array<Float>, Matrix3D>;
 
+	/**
+	 * a 2D version of the matrix. (used only in BetterTA)
+	 */
+	public var MX(get, never):Array<Float>;
 
 	function get_M3D()
 	{
-		return AnimationData.setFieldBool(this, ["M3D", "Matrix3D"]);
+		return MacroAnimationData.getFieldBool(this, ["M3D", "Matrix3D"]);
+	}
+
+	function get_MX()
+	{
+		return MacroAnimationData.getFieldBool(this, ["MX", "Matrix"]);
 	}
 }
 
-
-typedef Matrix3D = 
+typedef Matrix3D =
 {
-	var m00:Float; 
-	var m01:Float; 
-	var m02:Float; 
-	var m03:Float; 
+	var m00:Float;
+	var m01:Float;
+	var m02:Float;
+	var m03:Float;
 	var m10:Float;
 	var m11:Float;
 	var m12:Float;
@@ -864,7 +1181,7 @@ typedef Matrix3D =
 /**
  * Position Stuff
  */
-typedef TransformationPoint = 
+typedef TransformationPoint =
 {
 	var x:Float;
 	var y:Float;

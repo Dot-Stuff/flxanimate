@@ -1,86 +1,85 @@
-![](./logo.svg)
+<p align="center">
+    <img src="./logo.svg" width="500" alt="FlxAnimate's logo, constituting of the HaxeFlixel logo sliced into pieces and then 4 arrows pointing where the parts should be to create a result."/> 
+</p>
 
 # FlxAnimate
 
-FlxAnimate is a repository made by [CheemsAndFriends](https://github.com/CheemsAndFriends) and [DotWith](https://github.com/DotWith) made for playing all spritesheet formats and the mysterious but interesting export called `Texture Atlas`
+FlxAnimate is an open source plugin focused on parsing spritesheets and implementing Texture Atlases exported by the computer animation program [Adobe Animate](https://www.adobe.com/es/products/animate.html) (formerly known as Adobe Flash) on [HaxeFlixel](https://haxeflixel.com). <a href="https://helpx.adobe.com/animate/using/create-sprite-sheet.html"> <sub>More Information</sub> </a>
 
-## Support
-You don't have to do it, but if you feel like you want to support this repo, Please check my Discord `CheemsNFriends#8930` And send an issue of what's it's giving you problems
+
+It can be useful when you need to export spritesheets that are not supported by the game engine, such as Cocos 2D, Starling, Sparrow v1, among others. Not to mention the possibility to play efficiently Texture Atlases on runtime, while mimicking Animate's structure as much fidelity as possible.
+
+
+## Questions/Support
+
+In case that you have any questions or problems about the project, you can contact CheemsAndFriends on: 
+
+<div align="center">
+&ensp;<a href="https://discord.gg/n2YBsfv2JH"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a69f118df70ad7828d4_icon_clyde_blurple_RGB.svg" width="250px"/></a>
+&emsp;&emsp;&emsp;&emsp;&emsp;<a href="https://twitter.com/CheemsnFriendos/"><img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Logo_of_Twitter.svg" width="251px"/></a>
+<p>(as <b>cheemsnfriends</b>) &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;(as <a href="https://twitter.com/CheemsnFriendos/"><b>@CheemsnFriendos</b><a/>) </p>
+</div>
+
+
+# Limitations
+
+* No support on symbols that require 3D transformation ([See More](https://en.wikipedia.org/wiki/Transformation_matrix#Examples_in_3D_computer_graphics))
 
 ## TODO
-* Filters are a feature in early days of Flash that are commonly used to "spice up" the animation. Although the texture atlas does export these filters, they aren't supported. **IMPORTANT**
-* Masks are clipping masks. not really important in our plans but still in our plans to support.
-* Put a solution to the memory leakage 
 
-# Installation
+* Blend mode support for shader based blends.
+* Support on layer masks.
+* A wiki or website API related + samples to tweak on. Something similar as [HaxeFlixel's demos](https://haxeflixel.com/demos) and [HaxeFlixel's API](https://api.haxeflixel.com).
 
-there are two ways of downloading FlxAnimate:
+# How to install?
 
-## 1. By haxelib:
+## 1. Haxelib
 
-Normally, haxelib tries (but sometimes fails) to be the most stable version of it.
+The Haxe Library Manager (also known as Haxelib) is the manager that lets you use, download and upload libraries that are inside Haxe's ecosystem.
 
-You can download it by typing:
-```
-haxelib install flxanimate
-```
-in your terminal or command prompt.
+you can download it by typing `haxelib install flxanimate` on your terminal or command prompt.
 
-## 2. By git:
+## 2. Git
 
-if you want to use the latest commits that are released from time to time, type this command:
-```
-haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate
-```
-on your terminal or command prompt.
+Git is an open-sourced version control system designed to handle every type of project in Github, in this case, FlxAnimate. You should check first of all if you have [Git](https://git-scm.com) 
+installed before typing `haxelib git flxanimate https://github.com/Dot-Stuff/flxanimate` on your terminal or command prompt.
 
+# How to use it?
 
-# Texture Atlas
+There are two usages that you can apply to FlxAnimate: One is the Texture Atlas export and the Spritesheet export.
 
-**WARNING:** This repo's texture atlas player does not support **SPRITESHEET EXPORTS!!!** if you want to translate from atlases to spritesheets (even though I 100% don't recommend), use [Smokey's repo](https://github.com/Smokey555/Flixel-TextureAtlas)
+## Texture Atlas
 
+**WARNING:** This repository **DOES NOT** transform texture atlases into spritesheets! If you wish to use this, It's better to use [Smokey555's repo](https://github.com/Smokey555/Flixel-TextureAtlas).
 
-A Texture Atlas is one of the methods of exporting animations in Adobe Animate which it can only export a single symbol. In every texture atlas, no matter if it is 2018 or the latest one, there will be atleast 2 main types:
-- `Animation` - explains the timelines of the main animation plus the symbols that the main one uses.
-- `spritemap` - slices the limbs that are used in the animation, it can variate from 1 to infinite really.
-
-"FlxAnimate is literally so fuckin fragile I don't wanna call it a final version unless it has all the fuckin functions." - CheemsAndFriends
-
-As you can see, even though this is trying to do it's best to work properly, it is very fragile, so it might break up sometimes in some versions, not to mention, it is kinda irregular and it will have breaking changes all the time. Hope you can understand and we apologize for the inconveniences.
-
-## Usage
-Using FlxAnimate is really simple! First, you have to create a new instance of FlxAnimate, just like you would with an FlxSprite.
+In order to use FlxAnimate's texture atlas support, you will need to create a new instance of FlxAnimate, as you would do with FlxSprite.
 
 ```haxe
-var character:FlxAnimate = new FlxAnimate(X, Y, PathToAtlas);
+var character:FlxAnimate = new FlxAnimate(X, Y, "Path/To/Atlas");
 ```
-**WARNING:** You will need to set the Path of the folder, not the Animation file nor the Spritemap file, just the folder.
+`Path/To/Atlas` has to be from the folder that you exported the atlas texture atlas with, not with any of the contents in there.
 
-There is also a settings option when creating an FlxAnimate object used just in case if you wanted to initialise the variables in a JSON, and it's up to you if you wanted to use it.
+Example:
 
-**CURRENTLY** you can add animations from frame labels, symbols and indices. Support for stamping symbols is planned for later updates.
-Adding animations from a symbol:
+✅ Correct Path:
 ```haxe
-character.anim.addBySymbol(AnimationName, SymbolName, X, Y, Framerate);
+var ninja_girl:FlxAnimate = new FlxAnimate(X, Y, "assets/images/ninja-girl");
 ```
 
-Adding animations from indices:
+❎ Incorrect Path:
+
 ```haxe
-character.anim.addByAnimIndices(AnimationName, Indices ([0, 1, 2, 3...] etc.), Framerate);
+var ninja_girl:FlxAnimate = new FlxAnimate(X, Y, "assets/images/ninja-girl/Animation.json"); // This also applies with spritemaps!
 ```
 
-**WARNING:** Adding animations by indices works only with the exported timeline and the main animation, don't try with different symbols as it will not work.
+## Spritesheet
 
+There are several formats that Adobe Animate offers to use for different kinds of uses, but mostly for storing animations without having to do big calculations, unlike Texture Atlases.
+To use a spritesheet with the format that Animate offers, you would need to type the name of the Spritesheet, excluding the version if it has several.
 
-## SpriteSheet
-It's basically the same thing you were doing when you were loading the frames, like Sparrow or JSON (Hash or Array).
-But this time it adds even more formats to use like Edge Animate, Starling and Cocos2D, and adds the possibility to only add one Path as obligatory, in case that you only want to add only one thing and the document you want to parse is in the same directory or in a subdirectory inside that directory.
-
-I think you know how to load a spritesheet but just in case:
+For example:
 
 ```haxe
     var sprite:FlxSprite = new FlxSprite(X,Y);
-    sprite.frames = FlxAnimateFrames.from[the name of the format youre exporting]('${PathOfTheDocument}.${extensionofthedocument}');
+    sprite.frames = FlxAnimateFrames.fromCocos2D(Path);
 ```
-
-and if you're using an image that is not in the same directory but in a whole another directory, ex: the document is in `data` and your image is in `images`, you should add another field describing the Path of that image.
