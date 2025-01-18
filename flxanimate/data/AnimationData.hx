@@ -798,10 +798,6 @@ abstract Filters({})
 	{
 		return MacroAnimationData.getFieldBool(this, ["GF"]);
 	}
-	function get_GF()
-	{
-		return AnimationData.setFieldBool(this, ["GF"]);
-	}
 }
 /**
  * A full matrix calculation thing that seems to behave like a special HSV adjust.
@@ -1037,72 +1033,6 @@ abstract GradientEntry({})
 	}
 
 }
-/**
- * This blur filter gives instructions of how the blur should be applied onto the symbol/frame.
- */
-abstract BlurFilter({})
-{
-	/**
-	 * The amount of blur horizontally.
-	 */
-	public var BLX(get, never):Float;
-	/**
-	 * The amount of blur vertically.
-	 */
-	public var BLY(get, never):Float;
-	/**
-	 * The number of passes the filter has.
-	 * When the quality is set to three, it should approximate to a Gaussian Blur.
-	 * Obviously you can go beyond three, but it'll take more time to render.
-	 */
-	public var Q(get, never):Int;
-
-
-	function get_BLX()
-	{
-		return AnimationData.setFieldBool(this, ["BLX", "blurX"]);
-	}
-	function get_BLY()
-	{
-		return AnimationData.setFieldBool(this, ["BLY", "blurY"]);
-	}
-	function get_Q()
-	{
-		return AnimationData.setFieldBool(this, ["Q", "quality"]);
-	}
-}
-@:forward
-abstract GlowFilter(BlurFilter) 
-{
-	public var C(get, never):String;
-	public var A(get, never):Float;
-	public var STR(get, never):Float;
-	public var KK(get, never):Bool;
-	public var IN(get, never):Bool;
-
-
-	function get_C()
-	{
-		return AnimationData.setFieldBool(this, ["C"]);
-	}
-	function get_A()
-	{
-		return AnimationData.setFieldBool(this, ["A"]);
-	}
-	function get_STR()
-	{
-		return AnimationData.setFieldBool(this, ["STR"]);
-	}
-	function get_KK()
-	{
-		return AnimationData.setFieldBool(this, ["KK"]);
-	}
-	function get_IN()
-	{
-		return AnimationData.setFieldBool(this, ["IN"]);
-	}
-}
-
 
 enum abstract ColorMode(String) from String to String
 {
