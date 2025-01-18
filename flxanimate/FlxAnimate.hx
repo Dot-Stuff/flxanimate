@@ -100,8 +100,8 @@ class FlxAnimate extends FlxSprite
 		super(X, Y);
 		anim = new FlxAnim(this);
 		showPivot = false;
-		if (Path != null)
-			loadAtlas(Path);
+		if (directoryPath != null)
+			loadAtlas(directoryPath);
 		if (Settings != null)
 			setTheSettings(Settings);
 
@@ -113,22 +113,23 @@ class FlxAnimate extends FlxSprite
 	 * Loads a regular atlas.
 	 * @param Path The path where the atlas is located. Must be the folder, **NOT** any of the contents of it!
 	 */
-	public function loadAtlas(Path:String)
+	public function loadAtlas(atlasDirectory:String)
 	{
-		var p = haxe.io.Path.removeTrailingSlashes(haxe.io.Path.normalize(Path));
-		if (!Assets.exists('$p/Animation.json') && haxe.io.Path.extension(p) != "zip")
+		var p = haxe.io.Path.removeTrailingSlashes(haxe.io.Path.normalize(atlasDirectory));
+		if (!Assets.exists('$atlasDirectory/Animation.json') && haxe.io.Path.extension(atlasDirectory) != "zip")
 		{
-			FlxG.log.error('Animation file not found in specified path: "${Path}", have you written the correct path?');
+			FlxG.log.error('Animation file not found in specified path: "${atlasDirectory}", have you written the correct path?');
 			return;
 		}
-		if (!Assets.exists('$p/metadata.json'))
-			loadSeparateAtlas(atlasSetting(Path), FlxAnimateFrames.fromTextureAtlas(Path));
+		if (!Assets.exists('$atlasDirectory/metadata.json'))
+			loadSeparateAtlas(atlasSetting(atlasDirectory), FlxAnimateFrames.fromTextureAtlas(atlasDirectory));
 		else
 		{
-			loadSeparateAtlas(null, FlxAnimateFrames.fromTextureAtlas(Path));
+			loadSeparateAtlas(null, FlxAnimateFrames.fromTextureAtlas(atlasDirectory));
 			
-			anim._loadExAtlas(Path);
+			anim._loadExAtlas(atlasDirectory);
 		}
+	}
 	/**
 	 * Function in handy to load atlases that share same animation/frames but dont necessarily mean it comes together.
 	 * @param animation The animation file. This should be the content of the `JSON`, **NOT** the path of it.

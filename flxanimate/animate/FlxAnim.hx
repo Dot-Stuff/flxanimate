@@ -9,7 +9,7 @@ import flixel.util.FlxStringUtil;
 import openfl.geom.ColorTransform;
 import flixel.util.FlxSignal;
 import flixel.util.FlxSignal.FlxTypedSignal;
-import flixel.util.FlxDestroyUtil.IFlxDestroyable;
+import flixel.util.FlxDestroyUtil;
 import flixel.FlxG;
 import flixel.math.FlxMatrix;
 import flxanimate.data.AnimationData;
@@ -711,16 +711,6 @@ class FlxAnim implements IFlxDestroyable
 		return (symbolDictionary != null) ? symbolDictionary.get(curInstance.symbol.name) : null;
 	}
 
-	inline function fireCallback():Void
-	{
-		if (callback != null)
-		{
-			var name:String = (curSymbol != null) ? curSymbol.name : null;
-			callback(name, curFrame);
-		}
-			
-	}
-
 	public function destroy()
 	{
 		isPlaying = false;
@@ -729,7 +719,6 @@ class FlxAnim implements IFlxDestroyable
 		_tick = 0;
 		buttonMap = null;
 		animsMap = null;
-		callback = null;
 		curInstance = FlxDestroyUtil.destroy(curInstance);
 		stageInstance = FlxDestroyUtil.destroy(stageInstance);
 		metadata = FlxDestroyUtil.destroy(metadata);

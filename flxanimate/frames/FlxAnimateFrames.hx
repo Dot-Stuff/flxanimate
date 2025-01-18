@@ -200,12 +200,12 @@ class FlxAnimateFrames extends FlxAtlasFrames
 
 			var size = if (trimmed)
 			{
-				new Rectangle(Std.parseInt(texture.att.frameX), Std.parseInt(texture.att.frameY), Std.parseInt(texture.att.frameWidth),
+				new FlxRect(Std.parseInt(texture.att.frameX), Std.parseInt(texture.att.frameY), Std.parseInt(texture.att.frameWidth),
 					Std.parseInt(texture.att.frameHeight));
 			}
 			else
 			{
-				new Rectangle(0, 0, rect.width, rect.height);
+				new FlxRect(0, 0, rect.width, rect.height);
 			}
 
             if (size.width == 0 || size.height == 0)
