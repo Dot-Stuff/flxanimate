@@ -126,7 +126,6 @@ class FlxSymbolDictionary
 
 	public function fromJSONEx(animation:AnimAtlas)
 	{
-		trace(animation.AN.SN);
 		addSymbol(new FlxSymbol(animation.AN.SN, FlxTimeline.fromJSONEx(animation.AN.TL)));
 
 		if (animation.SD != null)

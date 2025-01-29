@@ -303,16 +303,21 @@ class SymbolParameters implements IFilterable
 
 	function set_blendMode(value:BlendMode)
 	{
+		if (type == Graphic) return blendMode = NORMAL;
+
 		if (value == null)
 			value = NORMAL;
-
-		if (type == Graphic) return blendMode = NORMAL;
 
 		if (blendMode != value)
 		{
 			blendMode = value;
-			if (blendMode != NORMAL && _filterFrame == null)
-				_renderDirty = true;
+			
+			switch (value) {
+				case NORMAL | ADD | /*DIFFERENCE | INVERT |*/ MULTIPLY | SCREEN | SUBTRACT:
+				default: // only rasterize non gpu supported blends
+					if (_filterFrame == null)
+						_renderDirty = true;
+			}
 		}
 		return value;
 	}
@@ -321,8 +326,14 @@ class SymbolParameters implements IFilterable
 	{
 		if (type == Graphic) return false;
 
+		if (filters != null && filters.length > 0)
+			return true;
 
-		if (filters != null && filters.length > 0 || blendMode != NORMAL) return true;
+		switch (blendMode) {
+			case NORMAL | ADD | /*DIFFERENCE | INVERT |*/ MULTIPLY | SCREEN | SUBTRACT:
+			default: // only rasterize non gpu supported blends
+				return true;
+		}
 
 		return _cacheAsBitmap;
 	}
