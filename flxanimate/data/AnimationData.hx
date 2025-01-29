@@ -1,5 +1,6 @@
 package flxanimate.data;
 
+import openfl.display.BlendMode;
 import flxanimate.effects.*;
 import flxanimate.motion.AdjustColor;
 import flixel.util.FlxDirection;
@@ -160,7 +161,7 @@ class AnimationData
 			case "BLF", "BlurFilter":
 			{
 				var blur:BlurFilter = value;
-				return new openfl.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q);
+				return new flxanimate.filters.BlurFilter(blur.BLX, blur.BLY, blur.Q);
 			}
 			case "ACF", "AdjustColorFilter":
 			{
@@ -586,7 +587,7 @@ abstract SymbolInstance({}) from {}
 	 */
 	public var bitmap(get, never):Bitmap;
 
-	public var B(get, never):String;
+	public var B(get, never):BlendMode;
 
 	/**
 	 * this sets on which frame it's the symbol, Graphic only

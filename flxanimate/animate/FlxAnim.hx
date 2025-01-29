@@ -245,6 +245,7 @@ class FlxAnim implements IFlxDestroyable
 		for (symbol in symbols)
 		{
 			var json = haxe.Json.parse(Assets.getText(l + symbol));
+
 			library.addSymbol(new FlxSymbol(haxe.io.Path.withoutExtension(symbol.substring(po.length + 9)), FlxTimeline.fromJSONEx(json)));
 		}
 		symbolDictionary = library.getList();

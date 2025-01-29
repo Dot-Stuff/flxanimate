@@ -67,12 +67,24 @@ class FlxSymbol implements IFlxDestroyable
 	public function new(name:String, timeline:FlxTimeline)
 	{
 		curFrame = 0;
-		this.timeline = timeline;
-		timeline._parent = this;
-
+		
 		this.name = name;
+		attachTimeline(timeline);
+
 
 		activeCount = 0;
+	}
+
+	public function attachTimeline(timeline:FlxTimeline)
+	{
+		if (timeline == null)
+		{
+			timeline = new FlxTimeline([new FlxLayer("Layer 1")]);
+			FlxG.log.error('the current Timeline attached to symbol ${name} is null!');
+		}
+
+		this.timeline = timeline;
+		timeline._parent = this;
 	}
 	/**
 	 * Hides a layer from the timeline.

@@ -152,6 +152,7 @@ class PlayState extends FlxState
 
 	function setAnimationLabel(label:Int, reset:Bool = false, onComplete:()->Void = null)
 	{
+		if (labels.length == 0) return;
 		var txt = grpLabels.members[1];
 		if (txt.text == labels[label] && !reset)
 			return;
@@ -161,6 +162,8 @@ class PlayState extends FlxState
 			char.anim.removeAllCallbacksFrom(txt.text);
 			char.anim.removeAllCallbacksFrom(labels[(labels.indexOf(txt.text) + 1) % labels.length]);
 		}
+
+		
 
 		char.anim.getFrameLabel(labels[(label + 1) % labels.length]).add(()-> 
 		{
