@@ -211,7 +211,6 @@ import lime._internal.graphics.ImageDataUtil; // TODO
 			return rend.__defaultDisplayShader;
 		}
 		
-		rend.__context3D.setScissorRectangle(new Rectangle(0, 0, 500, 500));
 		if (pass < __horizontalPasses)
 		{
 			var scale = Math.pow(0.5, pass >> 1);
