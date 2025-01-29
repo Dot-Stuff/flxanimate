@@ -258,15 +258,8 @@ class FlxAnimate extends FlxSprite
 		return _camArr;
 	}
 
-	var _elemObj:{instance:FlxElement} = {instance: null};
-	function _elemInstance(?instance:FlxElement)
-	{
-		_elemObj.instance = instance;
-		return _elemObj;
-	}
-
 	var st = 0;
-	function parseElement(instance:FlxElement, m:FlxMatrix, colorFilter:ColorTransform, ?filterInstance:{?instance:FlxElement} = null, ?cameras:Array<FlxCamera> = null, ?scrollFactor:FlxPoint = null)
+	function parseElement(instance:FlxElement, m:FlxMatrix, colorFilter:ColorTransform, ?filterInstance:FlxElement, ?cameras:Array<FlxCamera> = null, ?scrollFactor:FlxPoint = null, ?parentInstance:FlxElement)
 	{
 		if (instance == null || !instance.visible)
 			return;
@@ -303,10 +296,11 @@ class FlxAnimate extends FlxSprite
 
 		if (instance.bitmap != null)
 		{
-			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect, filterin, cameras);
+			var blend = (parentInstance != null && parentInstance.symbol != null) ? parentInstance.symbol.blendMode : NORMAL;
+			drawLimb(frames.getByName(instance.bitmap), matrix, colorEffect, filterin, blend, null, cameras);
 			return;
 		}
-		var cacheToBitmap = !skipFilters && (instance.symbol.cacheAsBitmap || this.filters != null && mainSymbol) && (!filterin || filterin && filterInstance.instance != instance);
+		var cacheToBitmap = !skipFilters && (instance.symbol.cacheAsBitmap || this.filters != null && mainSymbol) && (!filterin || filterin && filterInstance != instance);
 
 		if (cacheToBitmap)
 		{
@@ -319,12 +313,11 @@ class FlxAnimate extends FlxSprite
 
 				_col.setMultipliers(1,1,1,1);
 				_col.setOffsets(0,0,0,0);
-				parseElement(instance, instance.symbol._filterMatrix, _col, _elemInstance(instance), _singleCam(instance.symbol._filterCamera));
+				parseElement(instance, instance.symbol._filterMatrix, _col, instance, _singleCam(instance.symbol._filterCamera));
 
 				@:privateAccess
 				renderFilter(instance.symbol, instance.symbol.filters, renderer);
 				instance.symbol._renderDirty = false;
-
 			}
 			if (instance.symbol._filterFrame != null)
 			{
@@ -340,7 +333,7 @@ class FlxAnimate extends FlxSprite
 		}
 		else
 		{
-			if (instance.symbol.colorEffect != null && (!filterin || filterin && filterInstance.instance != instance))
+			if (instance.symbol.colorEffect != null && (!filterin || filterin && filterInstance != instance))
 				colorEffect.concat(instance.symbol.colorEffect.c_Transform);
 
 			var firstFrame:Int = instance.symbol._curFrame;
@@ -426,7 +419,8 @@ class FlxAnimate extends FlxSprite
 				}
 
 				_tmpMat.identity();
-				renderLayer(frame, (toBitmap || isMasker || isMasked) ? _tmpMat : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? _elemInstance(null) : filterInstance, (toBitmap || isMasker) ? _singleCam(layer._filterCamera) : (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
+
+				renderLayer(frame, (toBitmap || isMasker || isMasked) ? _tmpMat : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? null : filterInstance, (toBitmap || isMasker) ? _singleCam(layer._filterCamera) : (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras, instance);
 
 				if (toBitmap)
 				{
@@ -457,10 +451,10 @@ class FlxAnimate extends FlxSprite
 			}
 		}
 	}
-	inline function renderLayer(frame:FlxKeyFrame, matrix:FlxMatrix, colorEffect:ColorTransform, ?instance:{?instance:FlxElement} = null, ?cameras:Array<FlxCamera>)
+	inline function renderLayer(frame:FlxKeyFrame, matrix:FlxMatrix, colorEffect:ColorTransform, ?instance:FlxElement, ?cameras:Array<FlxCamera>, ?parentInstance:FlxElement)
 	{
 		for (element in frame.getList())
-			parseElement(element, matrix, colorEffect, instance, cameras);
+			parseElement(element, matrix, colorEffect, instance, cameras, null, parentInstance);
 	}
 	function renderFilter(filterInstance:IFilterable, filters:Array<BitmapFilter>, renderer:FlxAnimateFilterRenderer, ?mask:FlxCamera)
 	{
@@ -651,7 +645,6 @@ class FlxAnimate extends FlxSprite
 			if (camera == null || !camera.visible || !camera.exists)
 				return;
 
-
 			if (!filterin)
 			{
 				getScreenPosition(_point, camera).subtractPoint(offset);
@@ -751,9 +744,7 @@ class FlxAnimate extends FlxSprite
 		_mat = null;
 		_tmpMat = null;
 		_col = null;
-
 		_camArr = null;
-		_elemObj = null;
 
 		// #if FLX_SOUND_SYSTEM
 		// if (audio != null)

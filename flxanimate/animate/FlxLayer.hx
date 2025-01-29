@@ -390,7 +390,7 @@ class FlxLayer extends FlxObject implements IFilterable
 	public static function fromJSON(layer:Layers)
 	{
 		if (layer == null) return null;
-		var frames = [];
+		//var frames = [];
 		var l = new FlxLayer(layer.LN);
 		if (layer.LT != null || layer.Clpb != null)
 		{
@@ -410,7 +410,7 @@ class FlxLayer extends FlxObject implements IFilterable
 	public static function fromJSONEx(layer:Layers)
 	{
 		if (layer == null) return null;
-		var frames = [];
+		//var frames = [];
 		var l = new FlxLayer(layer.LN);
 		if (layer.LT != null || layer.Clpb != null)
 		{
