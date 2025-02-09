@@ -1,5 +1,6 @@
 package flxanimate;
 
+import haxe.Constraints.Function;
 import haxe.io.Bytes;
 import openfl.display.BitmapData;
 
@@ -8,6 +9,8 @@ import openfl.utils.AssetType as OpenFLAssetType;
 
 import flixel.FlxG;
 import flixel.system.frontEnds.AssetFrontEnd;
+
+using StringTools;
 
 // wrapper for assets to allow flixel 6+ and flixel 5- compat
 class AssetWrapper {
@@ -43,10 +46,25 @@ class AssetWrapper {
         #end
     }
 
-    public static dynamic function list(?type:AssetType):Array<String> {
+    public static dynamic function list(?type:AssetType, ?library:String):Array<String> {
         #if (flixel >= "5.9.0")
-        return FlxG.assets.list(type);
+        final list:Function = FlxG.assets.list;
+        if(library != null && library.length != 0) {
+            // flixel assets doesn't have a library argument so
+            // i have to filter it myself :p
+            return list(type).filter(function(p:String) {
+                return p.startsWith(library + ":"); // i think this is how it works?? iirc it goes like library:assets/sex.png or some shit
+            });
+        }
+        return list(type);
         #else
+        if(library != null && library.length != 0) {
+            // openfl assets doesn't have a library argument so
+            // i have to filter it myself :p
+            return OpenFLAssets.list(type).filter(function(p:String) {
+                return p.startsWith(library + ":"); // i think this is how it works?? iirc it goes like library:assets/sex.png or some shit
+            });
+        }
         return OpenFLAssets.list(type);
         #end
     }
