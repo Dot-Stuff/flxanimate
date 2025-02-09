@@ -12,7 +12,9 @@ import flixel.system.frontEnds.AssetFrontEnd;
 
 using StringTools;
 
-// wrapper for assets to allow flixel 6+ and flixel 5- compat
+/**
+ * Wrapper for assets to allow HaxeFlixel 5.9.0+ and HaxeFlixel 5.8.0- compatibility
+ */
 class AssetWrapper {
     public static dynamic function exists(path:String):Bool {
         #if (flixel >= "5.9.0")
