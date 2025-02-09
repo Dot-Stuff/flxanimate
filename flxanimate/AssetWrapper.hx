@@ -11,7 +11,7 @@ import flixel.system.frontEnds.AssetFrontEnd;
 
 // wrapper for assets to allow flixel 6+ and flixel 5- compat
 class AssetWrapper {
-    public static function exists(path:String):Bool {
+    public static dynamic function exists(path:String):Bool {
         #if (flixel >= "6.0.0")
         return FlxG.assets.exists(path);
         #else
@@ -19,7 +19,7 @@ class AssetWrapper {
         #end
     }
 
-    public static function getText(path:String):String {
+    public static dynamic function getText(path:String):String {
         #if (flixel >= "6.0.0")
         return FlxG.assets.getText(path);
         #else
@@ -27,7 +27,7 @@ class AssetWrapper {
         #end
     }
 
-    public static function getBytes(path:String):Bytes {
+    public static dynamic function getBytes(path:String):Bytes {
         #if (flixel >= "6.0.0")
         return FlxG.assets.getBytes(path);
         #else
@@ -35,7 +35,7 @@ class AssetWrapper {
         #end
     }
 
-    public static function getBitmapData(path:String):BitmapData {
+    public static dynamic function getBitmapData(path:String):BitmapData {
         #if (flixel >= "6.0.0")
         return FlxG.assets.getBitmapData(path);
         #else
@@ -43,7 +43,7 @@ class AssetWrapper {
         #end
     }
 
-    public static function list(?type:AssetType):Array<String> {
+    public static dynamic function list(?type:AssetType):Array<String> {
         #if (flixel >= "6.0.0")
         return FlxG.assets.list(type);
         #else
