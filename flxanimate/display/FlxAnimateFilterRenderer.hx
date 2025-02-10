@@ -122,14 +122,18 @@ class FlxAnimateFilterRenderer
 			if (mask != null)
 				filters.pop();
 
-			var gl = renderer.__gl;
 
-			var renderBuffer = bitmap.getTexture(renderer.__context3D);
-			@:privateAccess
-			gl.readPixels(0, 0, bitmap.width, bitmap.height, renderBuffer.__format, gl.UNSIGNED_BYTE, bitmap.image.data);
-			bitmap.image.version = 0;
-			@:privateAccess
-			bitmap.__textureVersion = -1;
+			if (bitmap.image != null)
+			{
+				var gl = renderer.__gl;
+	
+				var renderBuffer = bitmap.getTexture(renderer.__context3D);
+				@:privateAccess
+				gl.readPixels(0, 0, bitmap.width, bitmap.height, renderBuffer.__format, gl.UNSIGNED_BYTE, bitmap.image.data);
+				bitmap.image.version = 0;
+				@:privateAccess
+				bitmap.__textureVersion = -1;
+			}
 		}
 	}
 
