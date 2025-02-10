@@ -330,124 +330,126 @@ class FlxAnimate extends FlxSprite
 
 				drawLimb(instance.symbol._filterFrame, matrix, colorEffect, filterin, instance.symbol.blendMode, cameras);
 			}
+			return;
 		}
-		else
+
+		if (instance.symbol.colorEffect != null && (!filterin || filterin && filterInstance != instance))
 		{
-			if (instance.symbol.colorEffect != null && (!filterin || filterin && filterInstance != instance))
-				colorEffect.concat(instance.symbol.colorEffect.c_Transform);
+			colorEffect.concat(instance.symbol.colorEffect.c_Transform);
+		}
 
-			var firstFrame:Int = instance.symbol._curFrame;
-			switch (instance.symbol.type)
+
+		var firstFrame:Int = instance.symbol._curFrame;
+		switch (instance.symbol.type)
+		{
+			case Button: firstFrame = setButtonFrames(firstFrame);
+			default:
+		}
+
+		var layers = symbol.timeline.getList();
+
+		for (i in 0...layers.length)
+		{
+			var layer = layers[layers.length - 1 - i];
+
+			if (!layer.visible && (!filterin && mainSymbol || !anim.metadata.showHiddenLayers) /*|| layer.type == Clipper && layer._correctClip*/) continue;
+
+			/*
+			if (layer._clipper != null)
 			{
-				case Button: firstFrame = setButtonFrames(firstFrame);
-				default:
-			}
-
-			var layers = symbol.timeline.getList();
-
-			for (i in 0...layers.length)
-			{
-				var layer = layers[layers.length - 1 - i];
-
-				if (!layer.visible && (!filterin && mainSymbol || !anim.metadata.showHiddenLayers) /*|| layer.type == Clipper && layer._correctClip*/) continue;
-
-				/*
-				if (layer._clipper != null)
-				{
-					var layer = layer._clipper;
-					layer._setCurFrame(firstFrame);
-					var frame = layer._currFrame;
-					if (layer._filterCamera == null)
-						layer._filterCamera = new FlxCamera();
-					if (frame._renderDirty)
-					{
-						renderLayer(frame, new FlxMatrix(), new ColorTransform(), {instance: null}, [layer._filterCamera]);
-
-				// 		layer._filterMatrix.identity();
-
-						frame._renderDirty = false;
-					}
-				}
-				*/
-
+				var layer = layer._clipper;
 				layer._setCurFrame(firstFrame);
-
 				var frame = layer._currFrame;
-
-				if (frame == null) continue;
-
-				var toBitmap = !skipFilters && frame.filters != null;
-				var isMasked = layer._clipper != null;
-				var isMasker = layer.type == Clipper;
-
-				var coloreffect = _col;
-				coloreffect.__copyFrom(colorEffect);
-				if (frame.colorEffect != null)
-					coloreffect.concat(frame.colorEffect.__create());
-
-				if (toBitmap || isMasker)
+				if (layer._filterCamera == null)
+					layer._filterCamera = new FlxCamera();
+				if (frame._renderDirty)
 				{
-					if (!frame._renderDirty && layer._filterFrame != null)
-					{
-						var mat = _tmpMat;
-						mat.copyFrom(layer._filterMatrix);
-						mat.concat(matrix);
+					renderLayer(frame, new FlxMatrix(), new ColorTransform(), {instance: null}, [layer._filterCamera]);
 
-						drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
-						continue;
-					}
-					else
-					{
-						if (layer._filterCamera == null)
-							layer._filterCamera = new FlxCamera();
-						if (isMasker && layer._filterFrame != null && frame.getList().length == 0)
-							layer.updateBitmaps(layer._bmp1.rect);
-					}
-				}
-
-				if (isMasked && (layer._clipper == null || layer._clipper._currFrame == null || layer._clipper._currFrame.getList().length == 0))
-				{
-					isMasked = false;
-				}
-
-				if (isMasked)
-				{
-					if (layer._clipper.maskCamera == null)
-						layer._clipper.maskCamera = new FlxCamera();
-					if (!frame._renderDirty)
-						continue;
-				}
-
-				_tmpMat.identity();
-
-				renderLayer(frame, (toBitmap || isMasker || isMasked) ? _tmpMat : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? null : filterInstance, (toBitmap || isMasker) ? _singleCam(layer._filterCamera) : (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras, instance);
-
-				if (toBitmap)
-				{
-					layer._filterMatrix.identity();
-
-					renderFilter(layer, frame.filters, renderer, null);
+			// 		layer._filterMatrix.identity();
 
 					frame._renderDirty = false;
+				}
+			}
+			*/
 
+			layer._setCurFrame(firstFrame);
+
+			var frame = layer._currFrame;
+
+			if (frame == null) continue;
+
+			var toBitmap = !skipFilters && frame.filters != null;
+			var isMasked = layer._clipper != null;
+			var isMasker = layer.type == Clipper;
+
+			var coloreffect = _col;
+			coloreffect.__copyFrom(colorEffect);
+			if (frame.colorEffect != null)
+				coloreffect.concat(frame.colorEffect.__create());
+
+			if (toBitmap || isMasker)
+			{
+				if (!frame._renderDirty && layer._filterFrame != null)
+				{
 					var mat = _tmpMat;
 					mat.copyFrom(layer._filterMatrix);
 					mat.concat(matrix);
 
 					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
+					continue;
 				}
-				if (isMasker)
+				else
 				{
-					layer._filterMatrix.identity();
-
-					renderMask(layer, renderer);
-
-					var mat = _tmpMat;
-					mat.copyFrom(layer._filterMatrix);
-					mat.concat(matrix);
-
-					drawLimb(layer._filterFrame, mat, coloreffect, filterin, cameras);
+					if (layer._filterCamera == null)
+						layer._filterCamera = new FlxCamera();
+					if (isMasker && layer._filterFrame != null && frame.getList().length == 0)
+						layer.updateBitmaps(layer._bmp1.rect);
 				}
+			}
+
+			if (isMasked && (layer._clipper == null || layer._clipper._currFrame == null || layer._clipper._currFrame.getList().length == 0))
+			{
+				isMasked = false;
+			}
+
+			if (isMasked)
+			{
+				if (layer._clipper.maskCamera == null)
+					layer._clipper.maskCamera = new FlxCamera();
+				if (!frame._renderDirty)
+					continue;
+			}
+
+			_tmpMat.identity();
+
+			renderLayer(frame, (toBitmap || isMasker || isMasked) ? _tmpMat : matrix, coloreffect, (toBitmap || isMasker || isMasked) ? null : filterInstance, (toBitmap || isMasker) ? _singleCam(layer._filterCamera) : (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras, instance);
+
+			if (toBitmap)
+			{
+				layer._filterMatrix.identity();
+
+				renderFilter(layer, frame.filters, renderer, null);
+
+				frame._renderDirty = false;
+
+				var mat = _tmpMat;
+				mat.copyFrom(layer._filterMatrix);
+				mat.concat(matrix);
+
+				drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
+			}
+			if (isMasker)
+			{
+				layer._filterMatrix.identity();
+
+				renderMask(layer, renderer);
+
+				var mat = _tmpMat;
+				mat.copyFrom(layer._filterMatrix);
+				mat.concat(matrix);
+
+				drawLimb(layer._filterFrame, mat, coloreffect, filterin, cameras);
 			}
 		}
 	}
