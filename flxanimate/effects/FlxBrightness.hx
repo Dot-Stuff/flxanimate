@@ -22,6 +22,8 @@ class FlxBrightness extends FlxColorEffect
 	function set_brightness(value:Float)
 	{
 		if (brightness != value) renderDirty = true;
+		if (value < -1) value = -1;
+		if (value > 1) value = 1;
 
 		return brightness = value;
 	}

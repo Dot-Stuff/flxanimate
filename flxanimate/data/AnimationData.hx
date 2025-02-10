@@ -231,9 +231,9 @@ class AnimationData
 			{
 				case "Tint": new FlxTint(params[0], params[1]);
 				case "Alpha": new FlxAlpha(params[0]);
-				case "Brightness": new FlxBrightness(params[0]);
+				case "Brightness": new FlxBrightness(params[0] * 0.01);
 				case "Advanced": new FlxAdvanced(params[0]);
-				default: new FlxColorEffect();
+				default: null;
 			}
 		}
 

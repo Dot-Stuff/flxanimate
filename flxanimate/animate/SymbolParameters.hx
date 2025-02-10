@@ -107,11 +107,6 @@ class SymbolParameters implements IFilterable
 	@:allow(flxanimate.animate.FlxKeyFrame)
 	var _renderDirty:Bool = false;
 
-	@:allow(flxanimate.animate.FlxKeyFrame)
-
-	@:allow(flxanimate.FlxAnimate)
-	@:allow(flxanimate.animate.FlxAnim)
-	var _colorEffect(get, never):ColorTransform;
 
 	public var transformationPoint:FlxPoint;
 
@@ -242,18 +237,12 @@ class SymbolParameters implements IFilterable
 		colorEffect = None;
 	}
 
-	function get__colorEffect()
-	{
-		return null;
-	}
-
 	function set_colorEffect(value:EitherType<ColorEffect, FlxColorEffect>)
 	{
 		if (cacheAsBitmap)
 			_renderDirty = true;
 
-		if (value == null)
-			value = None;
+		
 
 		if ((value is ColorEffect))
 		{
