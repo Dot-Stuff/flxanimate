@@ -50,22 +50,21 @@ class AssetWrapper {
 
     public static dynamic function list(?type:AssetType, ?library:String):Array<String> {
         #if (flixel >= "5.9.0")
-        final list:Function = FlxG.assets.list;
         if(library != null && library.length != 0) {
-            // flixel assets doesn't have a library argument so
-            // i have to filter it myself :p
-            return list(type).filter(function(p:String) {
-                return p.startsWith(library + ":"); // i think this is how it works?? iirc it goes like library:assets/sex.png or some shit
-            });
+            var lib = OpenFLAssets.getLibrary(library);
+            if(lib != null)
+                return lib.list(cast type.toOpenFlType());
+            else
+                FlxG.log.error('Could not find asset library: ${library}, falling back to FlxG.assets');
         }
-        return list(type);
+        return FlxG.assets.list(type);
         #else
         if(library != null && library.length != 0) {
-            // openfl assets doesn't have a library argument so
-            // i have to filter it myself :p
-            return OpenFLAssets.list(type).filter(function(p:String) {
-                return p.startsWith(library + ":"); // i think this is how it works?? iirc it goes like library:assets/sex.png or some shit
-            });
+            var lib = OpenFLAssets.getLibrary(library);
+            if(lib != null)
+                return lib.list(cast type);
+            else
+                FlxG.log.error('Could not find asset library: ${library}, listing for all libraries instead');
         }
         return OpenFLAssets.list(type);
         #end
