@@ -1,6 +1,5 @@
 package flxanimate.animate;
 
-import openfl.Assets;
 import flxanimate.geom.FlxMatrix3D;
 import flixel.math.FlxMath;
 import haxe.extern.EitherType;
@@ -20,6 +19,7 @@ import flixel.sound.FlxSound;
 import flixel.system.FlxSound;
 #end
 #end
+using StringTools;
 
 typedef SymbolStuff = {var instance:FlxElement; var frameRate:Float;};
 typedef ClickStuff = {
@@ -205,9 +205,9 @@ class FlxAnim implements IFlxDestroyable
 		library._parent = this;
 		stageInstance = null;
 
-		var animationFile:AnimAtlas = haxe.Json.parse(Assets.getText(path + "/Animation.json"));
+		var animationFile:AnimAtlas = haxe.Json.parse(AssetWrapper.getText(path + "/Animation.json"));
 
-		var md:MetaData = haxe.Json.parse(Assets.getText(path + "/metadata.json"));
+		var md:MetaData = haxe.Json.parse(AssetWrapper.getText(path + "/metadata.json"));
 		
 
 		var colon = path.indexOf(":");
@@ -221,7 +221,7 @@ class FlxAnim implements IFlxDestroyable
 
 		if (colon == -1)
 		{
-			symbols = Assets.list().filter(function (s)
+			symbols = AssetWrapper.list().filter(function (s)
 				{
 					if (StringTools.contains(s, "testing"))
 						trace(s);
@@ -231,7 +231,7 @@ class FlxAnim implements IFlxDestroyable
 		else
 		{
 			l = path.substring(0, colon);
-			symbols = Assets.getLibrary(l).list("TEXT").filter(function (s)
+			symbols = openfl.Assets.getLibrary(l).list("TEXT").filter(function (s)
 				{
 					return StringTools.startsWith(s, po + "/LIBRARY") && haxe.io.Path.extension(s) == "json";
 				});
@@ -244,7 +244,7 @@ class FlxAnim implements IFlxDestroyable
 
 		for (symbol in symbols)
 		{
-			var json = haxe.Json.parse(Assets.getText(l + symbol));
+			var json = haxe.Json.parse(l.contains(":") ? openfl.Assets.getText(l + symbol) : AssetWrapper.getText(l + symbol));
 
 			library.addSymbol(new FlxSymbol(haxe.io.Path.withoutExtension(symbol.substring(po.length + 9)), FlxTimeline.fromJSONEx(json)));
 		}
