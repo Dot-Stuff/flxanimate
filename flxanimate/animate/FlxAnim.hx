@@ -43,12 +43,12 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * The Instance the texture atlas was exported when it was on stage.
 	 */
-	public var stageInstance:FlxElement;
+	public var stageInstance(default, set):FlxElement;
 
 	/**
 	 * The current instance the animation is playing.
 	 */
-	public var curInstance:FlxElement;
+	public var curInstance(default, null):FlxElement;
 
 	/**
 	 * Metadata. shortcut to display the name of the document and the default framerate.
@@ -69,10 +69,13 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public var reversed(get, set):Bool;
 
+	@:deprecated("Deprecated in favor of library since 4.1.0")
 	/**
 	 * A map containing all `FlxSymbol` instances, whether prefabricated or not.
 	 */
 	public var symbolDictionary:Map<String, FlxSymbol>;
+
+	public var animLibrary:FlxSymbolDictionary = null;
 
 	public var library:FlxSymbolDictionary = null;
 
@@ -374,27 +377,26 @@ class FlxAnim implements IFlxDestroyable
 
 	function setSymbols(Anim:AnimAtlas)
 	{
-
-		symbolDictionary.set(Anim.AN.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(Anim.AN.SN), FlxTimeline.fromJSON(Anim.AN.TL)));
+		library.addSymbol(new FlxSymbol(Anim.AN.SN, FlxTimeline.fromJSON(Anim.AN.TL)));
 
 		if (Anim.SD != null)
 		{
 			for (symbol in Anim.SD.S)
 			{
-				symbolDictionary.set(symbol.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(symbol.SN), FlxTimeline.fromJSON(symbol.TL)));
+				library.addSymbol(new FlxSymbol(symbol.SN, FlxTimeline.fromJSON(symbol.TL)));
 			}
 		}
 	}
 
 	function setSymbolsEx(Anim:AnimAtlas)
 	{
-		symbolDictionary.set(Anim.AN.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(Anim.AN.SN), FlxTimeline.fromJSONEx(Anim.AN.TL)));
+		library.addSymbol(new FlxSymbol(Anim.AN.SN, FlxTimeline.fromJSONEx(Anim.AN.TL)));
 
 		if (Anim.SD != null)
 		{
 			for (symbol in Anim.SD.S)
 			{
-				symbolDictionary.set(symbol.SN, new FlxSymbol(haxe.io.Path.withoutDirectory(symbol.SN), FlxTimeline.fromJSONEx(symbol.TL)));
+				library.addSymbol(new FlxSymbol(symbol.SN, FlxTimeline.fromJSONEx(symbol.TL)));
 			}
 		}
 	}
@@ -634,6 +636,7 @@ class FlxAnim implements IFlxDestroyable
 
 	public function getFrameLabels(?layer:EitherType<Int, String>):Array<FlxKeyFrame>
 	{
+		if (curSymbol == null) return [];
 		return curSymbol.getFrameLabels(layer);
 	}
 
@@ -710,6 +713,15 @@ class FlxAnim implements IFlxDestroyable
 	function get_curSymbol()
 	{
 		return (symbolDictionary != null) ? symbolDictionary.get(curInstance.symbol.name) : null;
+	}
+
+	function set_stageInstance(value:FlxElement)
+	{
+
+		if (value == null)
+			value = new FlxElement();
+
+		return stageInstance = value;
 	}
 
 	public function destroy()
