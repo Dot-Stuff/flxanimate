@@ -20,7 +20,6 @@ import flixel.math.FlxPoint;
 import flixel.FlxCamera;
 import flxanimate.animate.*;
 import flxanimate.zip.Zip;
-import openfl.Assets;
 import haxe.io.BytesInput;
 #if (flixel >= "5.3.0")
 import flixel.sound.FlxSound;
@@ -117,12 +116,12 @@ class FlxAnimate extends FlxSprite
 	public function loadAtlas(atlasDirectory:String)
 	{
 		var p = haxe.io.Path.removeTrailingSlashes(haxe.io.Path.normalize(atlasDirectory));
-		if (!Assets.exists('$atlasDirectory/Animation.json') && haxe.io.Path.extension(atlasDirectory) != "zip")
+		if (!AssetWrapper.exists('$atlasDirectory/Animation.json') && haxe.io.Path.extension(atlasDirectory) != "zip")
 		{
 			FlxG.log.error('Animation file not found in specified path: "${atlasDirectory}", have you written the correct path?');
 			return;
 		}
-		if (!Assets.exists('$atlasDirectory/metadata.json'))
+		if (!AssetWrapper.exists('$atlasDirectory/metadata.json'))
 			loadSeparateAtlas(atlasSetting(atlasDirectory), FlxAnimateFrames.fromTextureAtlas(atlasDirectory));
 		else
 		{
@@ -788,8 +787,8 @@ class FlxAnimate extends FlxSprite
 
 			if (showPivot && _pivot == null)
 			{
-				_pivot = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/pivot.png"), "__pivot").imageFrame.frame;
-				_indicator = FlxGraphic.fromBitmapData(Assets.getBitmapData("flxanimate/images/indicator.png"), "__indicator").imageFrame.frame;
+				_pivot = FlxGraphic.fromBitmapData(AssetWrapper.getBitmapData("flxanimate/images/pivot.png"), "__pivot").imageFrame.frame;
+				_indicator = FlxGraphic.fromBitmapData(AssetWrapper.getBitmapData("flxanimate/images/indicator.png"), "__indicator").imageFrame.frame;
 			}
 		}
 
@@ -837,7 +836,7 @@ class FlxAnimate extends FlxSprite
 		var jsontxt:String = null;
 		if (haxe.io.Path.extension(directoryPath) == "zip")
 		{
-			var thing = Zip.readZip(Assets.getBytes(directoryPath));
+			var thing = Zip.readZip(AssetWrapper.getBytes(directoryPath));
 
 			for (list in Zip.unzip(thing))
 			{
@@ -852,7 +851,7 @@ class FlxAnimate extends FlxSprite
 			FlxAnimateFrames.zip = thing;
 		}
 		else
-			jsontxt = openfl.Assets.getText('$directoryPath/Animation.json');
+			jsontxt = AssetWrapper.getText('$directoryPath/Animation.json');
 
 		return jsontxt;
 	}

@@ -12,7 +12,6 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 import flxanimate.data.SpriteMapData;
 import flxanimate.format.PropertyList;
 import haxe.xml.Access;
-import openfl.Assets;
 import openfl.geom.Rectangle;
 
 /**
@@ -42,12 +41,12 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	{
 		var frames:FlxAnimateFrames = new FlxAnimateFrames();
 
-		var texts = Assets.list(TEXT).filter((text) -> StringTools.startsWith(text, '$Path/sprite'));
+		var texts = AssetWrapper.list(TEXT).filter((text) -> StringTools.startsWith(text, '$Path/sprite'));
 
 		var texts = [];
 		var isDone = false;
 
-		if (Assets.exists('$Path/spritemap.json'))
+		if (AssetWrapper.exists('$Path/spritemap.json'))
 		{
 			texts.push('$Path/spritemap.json');
 			isDone = true;
@@ -56,7 +55,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		var i = 1;
 		while (!isDone)
 		{
-			if (Assets.exists('$Path/spritemap$i.json'))
+			if (AssetWrapper.exists('$Path/spritemap$i.json'))
 				texts.push('$Path/spritemap$i.json');
 			else
 				isDone = true;
@@ -97,7 +96,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		if (Path is String)
 		{
 			var str:String = haxe.io.Path.normalize(cast(Path, String));
-			var text = (StringTools.contains(str, "/")) ? Assets.getText(str) : str;
+			var text = (StringTools.contains(str, "/")) ? AssetWrapper.getText(str) : str;
 			json = haxe.Json.parse(text.split(String.fromCharCode(0xFEFF)).join(""));
 		}
 		else
@@ -150,10 +149,10 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	 */
 	public static function fromSparrow(Path:FlxSparrow, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-		if (Path is String && !Assets.exists(Path))
+		if (Path is String && !AssetWrapper.exists(Path))
 			return null;
 
-		var data:Xml = (Path is String) ? Xml.parse(Assets.getText(Path)).firstElement() : Path.firstElement();
+		var data:Xml = (Path is String) ? Xml.parse(AssetWrapper.getText(Path)).firstElement() : Path.firstElement();
 		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.get("imagePath"));
 
 		if (f.crash == true)
@@ -238,10 +237,10 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	 */
 	public static function fromJson(Path:FlxJson, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-		if (Path is String && !Assets.exists(Path))
+		if (Path is String && !AssetWrapper.exists(Path))
 
 			return null;
-		var data:JsonNormal = (Path is String) ? haxe.Json.parse(Assets.getText(Path)) : Path;
+		var data:JsonNormal = (Path is String) ? haxe.Json.parse(AssetWrapper.getText(Path)) : Path;
 
 		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.meta.image);
 
@@ -263,7 +262,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 		var i = 1;
 
 		var imgs:Array<FlxGraphic> = [];
-		while (Assets.exists(Path + Std.string(10000 + i).substring(1) + '.$ext'))
+		while (AssetWrapper.exists(Path + Std.string(10000 + i).substring(1) + '.$ext'))
 		{
 			imgs.push(FlxG.bitmap.add(Path + Std.string(10000 + i).substring(1) + '.$ext'));
 			i++;
@@ -311,9 +310,9 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	 */
 	public static function fromCocos2D(Path:String, ?Image:FlxGraphicAsset):FlxAtlasFrames
 	{
-		if (!Assets.exists(Path))
+		if (!AssetWrapper.exists(Path))
 			return null;
-		var data:Plist = PropertyList.parse(Assets.getText(Path));
+		var data:Plist = PropertyList.parse(AssetWrapper.getText(Path));
 
 		var f = findImage(Image, haxe.io.Path.addTrailingSlash(haxe.io.Path.directory(Path)) + data.metadata.target.name);
 
@@ -370,7 +369,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 	public static function fromEaselJS(Path:String, ?Image:FlxGraphicAsset):FlxAnimateFrames
 	{
 		var hugeFrames:FlxAnimateFrames = new FlxAnimateFrames();
-		var separatedJS = Assets.getText(Path).split("\n");
+		var separatedJS = AssetWrapper.getText(Path).split("\n");
 		var lines:Array<String> = [];
 		for (line in separatedJS)
 		{
@@ -394,7 +393,7 @@ class FlxAnimateFrames extends FlxAtlasFrames
 			var times = 0;
 			var name = names[i];
 			var json = jsons[i];
-			var bitmap = FlxG.bitmap.add(Assets.getBitmapData((Image == null) ? '${imagePath.join("/")}/${json.images[0]}' : Image));
+			var bitmap = FlxG.bitmap.add(AssetWrapper.getBitmapData((Image == null) ? '${imagePath.join("/")}/${json.images[0]}' : Image));
 			var frames = new FlxAtlasFrames(bitmap);
 			var initialFrame = [json.frames[0][5], json.frames[0][6]];
 			for (frame in json.frames)
