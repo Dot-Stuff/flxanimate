@@ -146,7 +146,7 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 			params.firstFrame = element.SI.FF ?? 0;
 			params.colorEffect = AnimationData.fromColorJson(element.SI.C);
 			params.name = element.SI.SN;
-			params.transformationPoint = FlxPoint.weak(element.SI.TRP.x, element.SI.TRP.y);
+			params.transformationPoint = new FlxPoint(element.SI.TRP.x, element.SI.TRP.y);
 			params.filters = AnimationData.fromFilterJson(element.SI.F);
 		}
 
@@ -202,7 +202,7 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 			params.firstFrame = element.SI.FF ?? 0;
 			params.colorEffect = AnimationData.fromColorJson(element.SI.C);
 			params.name = element.SI.SN;
-			params.transformationPoint = FlxPoint.weak(element.SI.TRP.x, element.SI.TRP.y);
+			params.transformationPoint = new FlxPoint(element.SI.TRP.x, element.SI.TRP.y);
 			params.filters = AnimationData.fromFilterJsonEx(element.SI.F);
 		}
 
