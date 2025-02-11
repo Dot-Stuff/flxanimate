@@ -106,6 +106,7 @@ class FlxAnimate extends FlxSprite
 			setTheSettings(Settings);
 
 
+
 		rect = Rectangle.__pool.get();
 	}
 
@@ -215,19 +216,30 @@ class FlxAnimate extends FlxSprite
     
     if( alpha <= 0) return;
 		_matrix.identity();
+
+		_matrix.translate(-origin.x, -origin.y);
+
+		_matrix.scale(scale.x, scale.y);
+
 		if (flipX)
 		{
 			_matrix.a *= -1;
-
-			//_matrix.tx += width;
-
 		}
 		if (flipY)
 		{
 			_matrix.d *= -1;
-			//_matrix.ty += height;
 		}
 
+		if (bakedRotationAngle <= 0)
+		{
+			updateTrig();
+
+			if (angle != 0)
+				_matrix.rotateWithTrig(_cosAngle, _sinAngle);
+		}
+
+		_matrix.translate(origin.x, origin.y);
+		
 		_flashRect.setEmpty();
 
 
@@ -243,10 +255,26 @@ class FlxAnimate extends FlxSprite
 
 		if (showPivot)
 		{
-			_tmpMat.setTo(1, 0, 0, 1, origin.x - _pivot.frame.width * 0.5, origin.y - _pivot.frame.height * 0.5);
+			_tmpMat.setTo(1, 0, 0, 1, (origin.x) - _pivot.frame.width * 0.5, (origin.y) - _pivot.frame.height * 0.5);
+
 			drawLimb(_pivot, _tmpMat, cameras);
 
-			_tmpMat.setTo(1, 0, 0, 1, -_indicator.frame.width * 0.5, -_indicator.frame.height * 0.5);
+			_tmpMat.setTo(1, 0, 0, 1, 0, 0);
+
+			_tmpMat.translate(-origin.x, -origin.y);
+
+			if (bakedRotationAngle <= 0)
+			{
+				updateTrig();
+
+				if (angle != 0)
+					_tmpMat.rotateWithTrig(_cosAngle, _sinAngle);
+			}
+
+			_tmpMat.translate(origin.x, origin.y);
+
+			_tmpMat.setTo(1, 0, 0, 1, _tmpMat.tx - _indicator.frame.width * 0.5, _tmpMat.ty - _indicator.frame.height * 0.5);
+
 			drawLimb(_indicator, _tmpMat, cameras);
 		}
 	}
@@ -650,23 +678,7 @@ class FlxAnimate extends FlxSprite
 			if (!filterin)
 			{
 				getScreenPosition(_point, camera).subtractPoint(offset);
-				if (limb != _pivot && limb != _indicator)
-				{
-					matrix.translate(-origin.x, -origin.y);
-
-					matrix.scale(scale.x, scale.y);
-
-					if (bakedRotationAngle <= 0)
-					{
-						updateTrig();
-
-						if (angle != 0)
-							matrix.rotateWithTrig(_cosAngle, _sinAngle);
-					}
-
-					_point.addPoint(origin);
-				}
-				else
+				if (limb == _pivot || limb == _indicator)
 				{
 					matrix.scale(0.9, 0.9);
 
@@ -675,12 +687,6 @@ class FlxAnimate extends FlxSprite
 					matrix.tx /= camera.zoom;
 					matrix.ty /= camera.zoom;
 				}
-
-				//if (limb.name == "0003")
-				//{
-				//	// matrix.tx = 50;
-				//	// matrix.ty = -100;
-				//}
 
 
 				if (isPixelPerfectRender(camera))
