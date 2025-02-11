@@ -217,6 +217,9 @@ class FlxAnimate extends FlxSprite
     if( alpha <= 0) return;
 		_matrix.identity();
 
+		_matrix.tx -= offset.x;
+		_matrix.ty -= offset.y;
+
 		_matrix.translate(-origin.x, -origin.y);
 
 		_matrix.scale(scale.x, scale.y);
@@ -405,7 +408,7 @@ class FlxAnimate extends FlxSprite
 
 			var frame = layer._currFrame;
 
-			if (frame == null) continue;
+			if (frame == null || frame.getList().length == 0) continue;
 
 			var toBitmap = !skipFilters && frame.filters != null;
 			var isMasked = layer._clipper != null;
@@ -423,6 +426,9 @@ class FlxAnimate extends FlxSprite
 					var mat = _tmpMat;
 					mat.copyFrom(layer._filterMatrix);
 					mat.concat(matrix);
+
+					if (layer.name == "Capa_2")
+						trace(mat);
 
 					drawLimb(layer._filterFrame, mat, coloreffect, filterin, (isMasked) ? _singleCam(layer._clipper.maskCamera) : cameras);
 					continue;
@@ -469,6 +475,8 @@ class FlxAnimate extends FlxSprite
 			}
 			if (isMasker)
 			{
+
+				trace("HALLO");
 				layer._filterMatrix.identity();
 
 				renderMask(layer, renderer);
@@ -677,7 +685,7 @@ class FlxAnimate extends FlxSprite
 
 			if (!filterin)
 			{
-				getScreenPosition(_point, camera).subtractPoint(offset);
+				getScreenPosition(_point, camera);
 				if (limb == _pivot || limb == _indicator)
 				{
 					matrix.scale(0.9, 0.9);
