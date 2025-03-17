@@ -24,7 +24,7 @@ class MaskShader extends FlxShader
 		if ((maskPos.x < 0. || maskPos.x > 1.) || (maskPos.y < 0. || maskPos.y > 1.))
 			maskAlpha = 0.;
 
-		if (maskAlpha > 0)
+		if (maskAlpha > 0.)
 			maskAlpha = 1.;
 
 		gl_FragColor = texture2D(bitmap, openfl_TextureCoordv) * maskAlpha;
