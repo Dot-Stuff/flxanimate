@@ -56,18 +56,21 @@ class FlxAnimateFilterRenderer
 
 	public function new()
 	{
-		// context = new openfl.display3D.Context3D(null);
-		renderer = new OpenGLRenderer(FlxG.game.stage.context3D);
-		renderer.__worldTransform = new Matrix();
-		renderer.__worldColorTransform = new ColorTransform();
-		maskShader = new MaskShader();
-		maskFilter = new ShaderFilter(maskShader);
+		if (FlxG.game.stage.context3D != null)
+    {
+			// context = new openfl.display3D.Context3D(null);
+			renderer = new OpenGLRenderer(FlxG.game.stage.context3D);
+			renderer.__worldTransform = new Matrix();
+			renderer.__worldColorTransform = new ColorTransform();
+			maskShader = new MaskShader();
+			maskFilter = new ShaderFilter(maskShader);
+		}
 	}
 
 	@:noCompletion function setRenderer(renderer:DisplayObjectRenderer, rect:Rectangle)
 	{
 		@:privateAccess
-		if (true)
+		if (FlxG.game.stage.context3D != null)
 		{
 			var displayObject = FlxG.game;
 			var pixelRatio = FlxG.game.stage.__renderer.__pixelRatio;
@@ -100,6 +103,8 @@ class FlxAnimateFilterRenderer
 
 	public function applyFilter(bmp:BitmapData, target:BitmapData, target1:BitmapData, target2:BitmapData, filters:Array<BitmapFilter>, ?rect:Rectangle = null, ?mask:BitmapData, ?maskPos:FlxPoint)
 	{
+		if(FlxG.game.stage.context3D == null) return;
+
 		if (mask != null)
 		{
 			maskShader.relativePos.value[0] = 0;
@@ -171,6 +176,8 @@ class FlxAnimateFilterRenderer
 
 	public function applyBlend(blend:BlendMode, bitmap:BitmapData)
 	{
+		if(FlxG.game.stage.context3D == null) return bitmap;
+
 		bitmap.__update(false, true);
 		var bmp = new BitmapData(bitmap.width, bitmap.height, 0);
 
@@ -204,7 +211,7 @@ class FlxAnimateFilterRenderer
 
 	public function graphicstoBitmapData(gfx:Graphics, ?target:BitmapData = null, point:FlxPoint = null) // TODO!: Support for CPU based games (Cairo/Canvas only renderers)
 	{
-		if (gfx.__bounds == null) return null;
+		if (gfx.__bounds == null || FlxG.game.stage.context3D == null) return null;
 
 		var cacheRTT = renderer.__context3D.__state.renderToTexture;
 		var cacheRTTDepthStencil = renderer.__context3D.__state.renderToTextureDepthStencil;
