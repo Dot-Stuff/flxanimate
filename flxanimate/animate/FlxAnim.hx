@@ -73,7 +73,9 @@ class FlxAnim implements IFlxDestroyable
 	/**
 	 * A map containing all `FlxSymbol` instances, whether prefabricated or not.
 	 */
-	public var symbolDictionary(get, never):Map<String, FlxSymbol>;
+	public var symbolDictionary:Map<String, FlxSymbol>;
+
+	public var animLibrary:FlxSymbolDictionary = null;
 
 	public var library:FlxSymbolDictionary = null;
 
@@ -165,6 +167,7 @@ class FlxAnim implements IFlxDestroyable
 	@:allow(flxanimate.FlxAnimate)
 	function _loadAtlas(animationFile:AnimAtlas)
 	{
+		symbolDictionary = [];
 		library = new FlxSymbolDictionary();
 		library._parent = this;
 		stageInstance = null;
@@ -178,6 +181,7 @@ class FlxAnim implements IFlxDestroyable
 		else
 			library.fromJSONEx(animationFile);
 
+		symbolDictionary = library.getList();
 		
 		library.frames = _parent.frames;
 
@@ -199,6 +203,7 @@ class FlxAnim implements IFlxDestroyable
 	@:allow(flxanimate.FlxAnimate)
 	function _loadExAtlas(path:String)
 	{
+		symbolDictionary = [];
 		library = new FlxSymbolDictionary();
 		library._parent = this;
 		stageInstance = null;
@@ -237,14 +242,18 @@ class FlxAnim implements IFlxDestroyable
 			l += ":";
 		}
 
+
+
+
 		for (symbol in symbols)
 		{
 			var json = haxe.Json.parse(l.contains(":") ? openfl.Assets.getText(l + symbol) : AssetWrapper.getText(l + symbol));
 
 			library.addSymbol(new FlxSymbol(haxe.io.Path.withoutExtension(symbol.substring(po.length + 9)), FlxTimeline.fromJSONEx(json)));
 		}
-
+		symbolDictionary = library.getList();
 		library.frames = _parent.frames;
+		
 		
 		metadata = new FlxMetaData(animationFile.AN.N, md.FRT);
 		metadata.version = md.V;
@@ -278,7 +287,7 @@ class FlxAnim implements IFlxDestroyable
 			{
 				if (Name == metadata.name)
 					curInstance = stageInstance;
-				else if (library.existsSymbol(Name))
+				else if (symbolDictionary.exists(Name))
 				{
 					curInstance.symbol.reset();
 					curInstance.symbol.name = Name;
@@ -395,7 +404,7 @@ class FlxAnim implements IFlxDestroyable
 	public function update(elapsed:Float)
 	{
 		if (curInstance != null)
-			curInstance.updateRender(elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end, curFrame, library.getList(), swfRender);
+			curInstance.updateRender(elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end, curFrame, symbolDictionary, swfRender);
 		if (frameDelay == 0 || !isPlaying || finished) return;
 
 		_tick += elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end;
@@ -455,12 +464,12 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public function addBySymbol(Name:String, SymbolName:String, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
-		if (library == null)
+		if (symbolDictionary == null)
 		{
 			return;
 		}
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce), new FlxMatrix(1,0,0,1,X,Y));
-		for (name in library.getList().keys())
+		for (name in symbolDictionary.keys())
 		{
 			if (startsWith(name, SymbolName))
 			{
@@ -507,11 +516,11 @@ class FlxAnim implements IFlxDestroyable
 
 	public function addBySymbolIndices(Name:String, SymbolName:String, Indices:Array<Int>, FrameRate:Float = 0, Looped:Bool = true, X:Float = 0, Y:Float = 0)
 	{
-		if (library == null)
+		if (symbolDictionary == null)
 		{
 			return;
 		}
-		if (!library.existsSymbol(SymbolName))
+		if (!symbolDictionary.exists(SymbolName))
 		{
 			FlxG.log.error('$SymbolName does not exist as a symbol! maybe you misspelled it?');
 			return;
@@ -534,7 +543,8 @@ class FlxAnim implements IFlxDestroyable
 		var symbol = new FlxSymbol(Name, timeline);
 		params.symbol.name = symbol.name;
 
-		library.addSymbol(symbol);
+		symbolDictionary.set(symbol.name, symbol);
+
 
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
@@ -556,7 +566,7 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public function addByCustomTimeline(Name:String, Timeline:FlxTimeline, FrameRate:Float = 0, Looped:Bool = true):Void
 	{
-		library.addSymbol(new FlxSymbol(haxe.io.Path.withoutDirectory(Name), Timeline));
+		symbolDictionary.set(Name, new FlxSymbol(haxe.io.Path.withoutDirectory(Name), Timeline));
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce));
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
@@ -574,7 +584,7 @@ class FlxAnim implements IFlxDestroyable
 	public function toString():String
 	{
 		return FlxStringUtil.getDebugString([
-			LabelValuePair.weak("library", library.getList()),
+			LabelValuePair.weak("symbolDictionary", symbolDictionary),
 			LabelValuePair.weak("framerate", framerate)
 		]);
 	}
@@ -690,7 +700,7 @@ class FlxAnim implements IFlxDestroyable
 				if (element.symbol == null) continue;
 				if (element.symbol.instance != "" && element.symbol.instance == instance)
 				{
-					return library.getSymbol(element.symbol.name);
+					return symbolDictionary.get(element.symbol.name);
 				}
 			}
 		}
@@ -702,7 +712,7 @@ class FlxAnim implements IFlxDestroyable
 
 	function get_curSymbol()
 	{
-		return (library != null) ? library.getSymbol(curInstance.symbol.name) : null;
+		return (symbolDictionary != null) ? symbolDictionary.get(curInstance.symbol.name) : null;
 	}
 
 	function set_stageInstance(value:FlxElement)
@@ -727,16 +737,11 @@ class FlxAnim implements IFlxDestroyable
 		metadata = FlxDestroyUtil.destroy(metadata);
 		swfRender = false;
 		_parent = null;
-
-		for (symbol in library.getList().iterator())
+		for (symbol in symbolDictionary.iterator())
+		{
 			symbol.destroy();
-
-		library  = null;
-	}
-
-	// TODO: remove this when ``symbolDictionary`` is fully deprecated
-	inline function get_symbolDictionary() {
-		return library.getList();
+		}
+		symbolDictionary = null;
 	}
 }
 /**
