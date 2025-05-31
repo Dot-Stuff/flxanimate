@@ -1,29 +1,31 @@
 package flxanimate.animate;
 
+import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.graphics.frames.FlxFramesCollection;
 import flxanimate.data.AnimationData.AnimAtlas;
 import haxe.extern.EitherType;
 import haxe.io.Path;
 
-class FlxSymbolDictionary
+class FlxSymbolDictionary implements IFlxDestroyable
 {
 	@:allow(flxanimate.animate.FlxAnim)
 	var _parent:FlxAnim = null;
 
-	var _mcFrame:Map<String, Int> = [];
+	//var _mcFrame:Map<String, Int> = [];
 
 	var _symbols:Map<String, FlxSymbol> = [];
+	var _tmpSymbols:Map<String, FlxSymbol> = [];
 
 	public var length(default, null):Int;
 
 	public var frames:FlxFramesCollection;
 
-	public function new()
+	public function new(?parent:FlxAnim)
 	{
 		_symbols = [];
 		frames = null;
+		_parent = parent;
 	}
-
 
 	public function getLibrary(library:String):Map<String, FlxSymbol>
 	{
@@ -41,22 +43,20 @@ class FlxSymbolDictionary
 
 	public function existsSymbol(symbol:String):Bool
 	{
-		return _symbols.exists(symbol);
+		return _tmpSymbols.exists(symbol) || _symbols.exists(symbol);
 	}
 
 	public function getSymbol(symbol:String):Null<FlxSymbol>
 	{
+		return _tmpSymbols.exists(symbol) ? _tmpSymbols.get(symbol) : _symbols.get(symbol);
+	}
+
+	public function getLibrarySymbol(symbol:String):Null<FlxSymbol> {
 		return _symbols.get(symbol);
 	}
 
-	public function addSymbol(symbol:FlxSymbol, ?overrideSymbol:Bool = false)
+	public function addSymbol(symbol:FlxSymbol, ?isTempSymbol:Bool = false)
 	{
-		if (_symbols.exists(symbol.name) && !overrideSymbol)
-		{
-			symbol.name += " Copy";
-		}
-
-
 		var name = haxe.io.Path.withoutDirectory(symbol.name);
 		var loc = haxe.io.Path.directory(symbol.name);
 
@@ -66,16 +66,16 @@ class FlxSymbolDictionary
 		if (loc != "")
 			loc += "/";
 
-		_symbols.set(loc + symbol.name, symbol);
+		(isTempSymbol ? _tmpSymbols : _symbols).set(loc + symbol.name, symbol);
 
 		length++;
 	}
 
-	public function addLibrary(library:Map<String, FlxSymbol>, ?overrideSymbol:Bool = false)
+	public function addLibrary(library:Map<String, FlxSymbol>, ?isTempSymbol:Bool = false)
 	{
 		for (symbol in library)
 		{
-			addSymbol(symbol, overrideSymbol);
+			addSymbol(symbol, isTempSymbol);
 		}
 	}
 
@@ -93,11 +93,11 @@ class FlxSymbolDictionary
 
 		return bool;
 	}
+
 	public function removeSymbol(symbol:EitherType<FlxSymbol, String>)
 	{
-		var bool:Bool = false;
-
-		bool = _symbols.remove((Std.isOfType(symbol, FlxSymbol)) ? cast (symbol, FlxSymbol).name : symbol);
+		var id = (Std.isOfType(symbol, FlxSymbol)) ? cast (symbol, FlxSymbol).name : symbol;
+		var bool = (_tmpSymbols.exists(id) ? _tmpSymbols.remove(id) : _symbols.remove(id));
 
 		if (bool)
 			length--;
@@ -105,9 +105,34 @@ class FlxSymbolDictionary
 		return bool;
 	}
 
-	public function getList()
-	{
+	public function getList() {
 		return _symbols;
+	}
+
+	public function getTmpList() {
+		return _tmpSymbols;
+	}
+
+	public function getFullList() {
+		var _map = _symbols.copy();
+		for (key => symbol in _tmpSymbols)
+			_map.set(key, symbol);
+		return _map;
+	}
+
+	public function destroy()
+	{
+		for (symbol in _symbols.iterator())
+			symbol.destroy();
+
+		for (symbol in _tmpSymbols.iterator())
+			symbol.destroy();
+
+		_symbols.clear();
+		_symbols = null;
+
+		_tmpSymbols.clear();
+		_tmpSymbols = null;
 	}
 
 	public function fromJSON(animation:AnimAtlas)

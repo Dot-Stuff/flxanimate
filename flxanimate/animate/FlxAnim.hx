@@ -21,7 +21,10 @@ import flixel.system.FlxSound;
 #end
 using StringTools;
 
-typedef SymbolStuff = {var instance:FlxElement; var frameRate:Float;};
+typedef SymbolStuff = {
+	var instance:FlxElement;
+	var frameRate:Float;
+};
 typedef ClickStuff = {
 	?OnClick:Void->Void,
 	?OnRelease:Void->Void
@@ -69,13 +72,16 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public var reversed(get, set):Bool;
 
+	/**
+	 * Contains all `FlxSymbol` instances, whether prefabricated or not.
+	 */
+	public var library:FlxSymbolDictionary = null;
+	
 	@:deprecated("Deprecated in favor of library since 4.1.0")
 	/**
 	 * A map containing all `FlxSymbol` instances, whether prefabricated or not.
 	 */
 	public var symbolDictionary(get, never):Map<String, FlxSymbol>;
-
-	public var library:FlxSymbolDictionary = null;
 
 	/**
 		Checks whether MovieClips should move or not.
@@ -165,8 +171,7 @@ class FlxAnim implements IFlxDestroyable
 	@:allow(flxanimate.FlxAnimate)
 	function _loadAtlas(animationFile:AnimAtlas)
 	{
-		library = new FlxSymbolDictionary();
-		library._parent = this;
+		library = new FlxSymbolDictionary(this);
 		stageInstance = null;
 
 		if (animationFile == null) return;
@@ -199,8 +204,7 @@ class FlxAnim implements IFlxDestroyable
 	@:allow(flxanimate.FlxAnimate)
 	function _loadExAtlas(path:String)
 	{
-		library = new FlxSymbolDictionary();
-		library._parent = this;
+		library = new FlxSymbolDictionary(this);
 		stageInstance = null;
 
 		var animationFile:AnimAtlas = haxe.Json.parse(AssetWrapper.getText(path + "/Animation.json"));
@@ -395,7 +399,7 @@ class FlxAnim implements IFlxDestroyable
 	public function update(elapsed:Float)
 	{
 		if (curInstance != null)
-			curInstance.updateRender(elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end, curFrame, library.getList(), swfRender);
+			curInstance.updateRender(elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end, curFrame, library, swfRender);
 		if (frameDelay == 0 || !isPlaying || finished) return;
 
 		_tick += elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end;
@@ -534,17 +538,17 @@ class FlxAnim implements IFlxDestroyable
 		var symbol = new FlxSymbol(Name, timeline);
 		params.symbol.name = symbol.name;
 
-		library.addSymbol(symbol);
+		library.addSymbol(symbol, true);
 
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
-
 
 	function set_framerate(value:Float):Float
 	{
 		frameDelay = 1 / value;
 		return framerate = value;
 	}
+
 	/**
 	 * This adds a new animation by adding a custom timeline, obviously taking as a reference the timeline syntax!
 	 * **WARNING**: I, *CheemsAndFriends*, do **NOT** recommend this unless you're using an extern json file to do this!
@@ -556,7 +560,7 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public function addByCustomTimeline(Name:String, Timeline:FlxTimeline, FrameRate:Float = 0, Looped:Bool = true):Void
 	{
-		library.addSymbol(new FlxSymbol(haxe.io.Path.withoutDirectory(Name), Timeline));
+		library.addSymbol(new FlxSymbol(haxe.io.Path.withoutDirectory(Name), Timeline), true);
 		var params = new FlxElement(new SymbolParameters((Looped) ? Loop : PlayOnce));
 		animsMap.set(Name, {instance: params, frameRate: FrameRate});
 	}
@@ -575,6 +579,7 @@ class FlxAnim implements IFlxDestroyable
 	{
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("library", library.getList()),
+			LabelValuePair.weak("tmpLibrary", library.getTmpList()),
 			LabelValuePair.weak("framerate", framerate)
 		]);
 	}
@@ -663,16 +668,15 @@ class FlxAnim implements IFlxDestroyable
 	{
 		return animsMap.get(name);
 	}
+
 	inline public function existsByName(name:String)
 	{
 		return animsMap.exists(name);
 	}
 
-
 	public function getByInstance(instance:String, ?frame:Int = null, ?layer:EitherType<String, Int>)
 	{
 		if (frame == null) frame = curFrame;
-
 
 		var symbol:FlxSymbol = null;
 
@@ -727,16 +731,12 @@ class FlxAnim implements IFlxDestroyable
 		metadata = FlxDestroyUtil.destroy(metadata);
 		swfRender = false;
 		_parent = null;
-
-		for (symbol in library.getList().iterator())
-			symbol.destroy();
-
-		library  = null;
+		library = FlxDestroyUtil.destroy(library);
 	}
 
 	// TODO: remove this when ``symbolDictionary`` is fully deprecated
 	inline function get_symbolDictionary() {
-		return library.getList();
+		return library.getFullList();
 	}
 }
 /**

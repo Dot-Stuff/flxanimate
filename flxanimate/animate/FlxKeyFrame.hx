@@ -110,7 +110,7 @@ class FlxKeyFrame
 			}
 		}
 	}
-	public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+	public function updateRender(elapsed:Float, curFrame:Int, dictionary:FlxSymbolDictionary, ?swfRender:Bool = false)
 	{
 		var curFrame = curFrame - index;
 
