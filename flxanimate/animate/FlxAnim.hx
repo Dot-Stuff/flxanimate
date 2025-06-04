@@ -298,13 +298,13 @@ class FlxAnim implements IFlxDestroyable
 			}
 		}
 
-
-		if (Force)
-			curFrame = (Reverse) ? Frame - length : Frame;
-
 		reversed = Reverse;
 
-
+		if (Force)
+		{
+			curFrame = (Reverse) ? length - Frame : Frame;
+			_tick = 0;
+		}
 
 		resume();
 
@@ -400,7 +400,6 @@ class FlxAnim implements IFlxDestroyable
 
 		_tick += elapsed * timeScale #if (flixel >= "5.5.0") * FlxG.animationTimeScale #end;
 
-
 		while (_tick > frameDelay)
 		{
 			(reversed) ? curFrame-- : curFrame++;
@@ -409,7 +408,6 @@ class FlxAnim implements IFlxDestroyable
 
 			_tick -= frameDelay;
 		}
-
 
 		if (loopType != SingleFrame && curFrame == (reversed ? 0 : length - 1))
 		{
@@ -421,7 +419,7 @@ class FlxAnim implements IFlxDestroyable
 	}
 	function get_finished()
 	{
-		return (loopType == PlayOnce) && (reversed && curFrame == 0 || !reversed && curFrame >= length - 1);
+		return (loopType == PlayOnce) && (reversed ? (curFrame <= 0) : curFrame >= length - 1);
 	}
 	function get_curFrame()
 	{
@@ -441,7 +439,6 @@ class FlxAnim implements IFlxDestroyable
 
 		if (symbolType == MovieClip && !swfRender)
 			curSymbol.curFrame = 0;
-
 
 		return curSymbol.curFrame;
 	}
