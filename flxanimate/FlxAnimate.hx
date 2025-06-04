@@ -319,7 +319,7 @@ class FlxAnimate extends FlxSprite
 		colorEffect.__copyFrom(colorFilter);
 
 
-		var symbol = (instance.symbol != null) ? anim.library.getSymbol(instance.symbol.name) : null;
+		var symbol = (instance.symbol != null) ? anim.symbolDictionary.get(instance.symbol.name) : null;
 
 		if (instance.bitmap == null && symbol == null)
 			return;
