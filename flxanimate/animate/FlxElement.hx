@@ -81,13 +81,14 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 		matrix = null;
 	}
 
-	public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+	public function updateRender(elapsed:Float, curFrame:Int, dictionary:FlxSymbolDictionary, ?swfRender:Bool = false)
 	{
 		update(elapsed);
 
-		if (symbol != null && dictionary.exists(symbol.name))
+		if (symbol != null && dictionary.existsSymbol(symbol.name))
 		{
-			var length = dictionary[symbol.name].length;
+			var parentSymbol =  dictionary.getSymbol(symbol.name);
+			var length = parentSymbol.length;
 			var curFF = curFrame + symbol.firstFrame;
 			
 			curFF = switch (symbol.loop)
@@ -104,7 +105,8 @@ class FlxElement extends FlxObject implements IFlxDestroyable
 				symbol._renderDirty = false;
 				_parent._renderDirty = true;
 			}
-			dictionary[symbol.name].updateRender(elapsed, curFF, dictionary, swfRender);
+
+			parentSymbol.updateRender(elapsed, curFF, dictionary, swfRender);
 		}
 	}
 

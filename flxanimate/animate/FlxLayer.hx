@@ -116,7 +116,7 @@ class FlxLayer extends FlxObject implements IFilterable
 		_keyframes = null;
 	}
 
-	public function updateRender(elapsed:Float, curFrame:Int, dictionary:Map<String, FlxSymbol>, ?swfRender:Bool = false)
+	public function updateRender(elapsed:Float, curFrame:Int, dictionary:FlxSymbolDictionary, ?swfRender:Bool = false)
 	{
 		update(elapsed);
 		var _prevFrame = _currFrame;
