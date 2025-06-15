@@ -303,12 +303,13 @@ class FlxAnim implements IFlxDestroyable
 		}
 
 
-		if (Force)
-			curFrame = (Reverse) ? Frame - length : Frame;
-
 		reversed = Reverse;
 
-
+		if (Force)
+		{
+			curFrame = (Reverse) ? length - Frame : Frame;
+			_tick = 0;
+		}
 
 		resume();
 
@@ -351,15 +352,14 @@ class FlxAnim implements IFlxDestroyable
 	public function stop()
 	{
 		pause();
-		curFrame = 0;
+		curFrame = (reversed) ? length - 1 : 0;
 	}
 
 	public function finish()
 	{
 		stop();
 
-		if (!reversed)
-			curFrame = length - 1;
+		curFrame = (!reversed) ? length - 1 : 0;
 	}
 
 	/**
@@ -425,7 +425,7 @@ class FlxAnim implements IFlxDestroyable
 	}
 	function get_finished()
 	{
-		return (loopType == PlayOnce) && (reversed && curFrame == 0 || !reversed && curFrame >= length - 1);
+		return (loopType == PlayOnce) && (reversed ? (curFrame <= 0) : curFrame >= length - 1);
 	}
 	function get_curFrame()
 	{
