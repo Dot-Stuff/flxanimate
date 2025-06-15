@@ -352,15 +352,14 @@ class FlxAnim implements IFlxDestroyable
 	public function stop()
 	{
 		pause();
-		curFrame = 0;
+		curFrame = (reversed) ? length - 1 : 0;
 	}
 
 	public function finish()
 	{
 		stop();
 
-		if (!reversed)
-			curFrame = length - 1;
+		curFrame = (!reversed) ? length - 1 : 0;
 	}
 
 	/**
