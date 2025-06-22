@@ -77,7 +77,7 @@ class FlxAnim implements IFlxDestroyable
 	 */
 	public var library:FlxSymbolDictionary = null;
 	
-	@:deprecated("Deprecated in favor of library since 4.1.0")
+	@:deprecated("Deprecated in favor of library since 4.1.0, use `library.getFullList();` instead!")
 	/**
 	 * A map containing all `FlxSymbol` instances, whether prefabricated or not.
 	 */
@@ -587,7 +587,7 @@ class FlxAnim implements IFlxDestroyable
 	 * Redirects the frame into a frame with a frame label of that type.
 	 * @param name the name of the label.
 	 */
-	public function goToFrameLabel(name:String, ?layer:EitherType<Int, String>):Void
+	public function goToFrameLabel(name:String, ?layer:EitherType<Int, String>, ?stop:Bool = false):Void
 	{
 		pause();
 
@@ -597,7 +597,8 @@ class FlxAnim implements IFlxDestroyable
 		if (label != null)
 			curFrame = label.index;
 
-		resume();
+		if (!stop)
+			resume();
 	}
 	/**
 	 * Checks the next frame label name you're looking for.
@@ -745,14 +746,24 @@ class FlxAnim implements IFlxDestroyable
  */
 class FlxMetaData implements IFlxDestroyable
 {
+	/**
+	 * The name of the FLA that was exported with.
+	 */
 	public var name:String;
+
 	/**
 	 * The frame rate the animation was exported in the texture atlas in the beginning.
 	 */
 	public var frameRate:Float;
 
+	/**
+	 * Omits the `visible` variable in an `FlxLayer` or not when it's an auxiliar symbol element and not the main one.
+	 */
 	public var showHiddenLayers:Bool;
 
+	/**
+	 * Self explanatory, the filters are omitted to get better performance.
+	 */
 	public var skipFilters:Bool;
 
 	/**
@@ -768,7 +779,7 @@ class FlxMetaData implements IFlxDestroyable
 		this.frameRate = frameRate;
 		showHiddenLayers = true;
 		skipFilters = false;
-		version = "Generic Adobe Animate TA";
+		version = "Generic";
 	}
 	public function destroy()
 	{
