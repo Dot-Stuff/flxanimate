@@ -8,8 +8,9 @@ import openfl.utils.Assets as OpenFLAssets;
 import openfl.utils.AssetType as OpenFLAssetType;
 
 import flixel.FlxG;
+#if (flixel >= "5.9.0")
 import flixel.system.frontEnds.AssetFrontEnd;
-
+#end
 using StringTools;
 
 /**
