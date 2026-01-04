@@ -6,6 +6,6 @@
     "description": "Adobe Animate's texture atlas player for HaxeFlixel.",
     "version": "4.0.0",
     "releasenote": "Revamp several issues, and introducing filters on MovieClips/layers.",
-    "contributors": ["MrCheemsAndFriends", "DotWith"],
+    "contributors": ["DotWith", "MrCheemsAndFriends"],
     "dependencies": {}
 }
